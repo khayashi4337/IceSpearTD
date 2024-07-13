@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ice Spear Tower Defense</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        #game-container {
+            display: flex;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        #game-board {
+            width: 600px;
+            height: 400px;
+            background-color: #8fbc8f;
+            position: relative;
+            overflow: hidden;
+        }
+        #sidebar {
+            width: 200px;
+            padding: 20px;
+            background-color: #e0e0e0;
+        }
+        .cell {
+            width: 40px;
+            height: 40px;
+            position: absolute;
+            background-color: #8fbc8f;
+            box-sizing: border-box;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        .path {
+            background-color: #d2b48c !important;
+        }
+        .tower {
+            width: 30px;
+            height: 30px;
+            position: absolute;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+        .ice-tower { background-color: #ADD8E6; }
+        .fire-tower { background-color: #FF4500; }
+        .stone-tower { background-color: #A9A9A9; }
+        .wind-tower { background-color: #98FB98; }
+        .enemy {
+            width: 20px;
+            height: 20px;
+            position: absolute;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            transition: left 0.1s linear, top 0.1s linear;
+        }
+        .goblin { background-color: #32cd32; }
+        .orc { background-color: #8b0000; }
+        .skeleton { background-color: #f0f0f0; }
+        .slime { background-color: #00ff00; }
+        .projectile {
+            width: 6px;
+            height: 6px;
+            position: absolute;
+            border-radius: 50%;
+            background-color: #000;
+            z-index: 15;
+        }
+        .damage-text {
+            position: absolute;
+            color: red;
+            font-weight: bold;
+            pointer-events: none;
+            animation: fadeOut 0.5s forwards;
+            z-index: 20;
+        }
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+        #error-display {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ff6b6b;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+            z-index: 100;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div id="error-display"></div>
+    <div id="game-container">
+        <div id="game-board"></div>
+        <div id="sidebar">
+            <h2>Ice Spear Tower Defense</h2>
+            <div id="resources">
+                <p>Gold: <span id="gold">300</span></p>
+                <p>Mana: <span id="mana">50</span></p>
+            </div>
+            <div id="tower-buttons">
+                <button onclick="selectTower('ice')">Ice Tower (50g)</button>
+                <button onclick="selectTower('fire')">Fire Tower (100g)</button>
+                <button onclick="selectTower('stone')">Stone Tower (150g)</button>
+                <button onclick="selectTower('wind')">Wind Tower (150g)</button>
+            </div>
+            <div id="upgrades">
+                <button onclick="upgrade('damage')">Upgrade Damage (100g)</button>
+                <button onclick="upgrade('range')">Upgrade Range (100g)</button>
+                <button onclick="upgrade('speed')">Upgrade Speed (100g)</button>
+            </div>
+            <p>Wave: <span id="wave">1</span></p>
+            <p>Lives: <span id="lives">20</span></p>
+            <button onclick="startWave()">Start Wave</button>
+        </div>
+    </div>
+
+    <script>
+        const gameBoard = document.getElementById('game-board');
+        const goldDisplay = document.getElementById('gold');
+        const manaDisplay = document.getElementById('mana');
+        const waveDisplay = document.getElementById('wave');
+        const livesDisplay = document.getElementById('lives');
+        const errorDisplay = document.getElementById('error-display');
+
+        let gold = 300;
+        let mana = 50;
+        let wave = 1;
+        let lives = 20;
+        let towers = [];
+        let enemies = [];
+        let projectiles = [];
+        let path = [];
+        let selectedTower = null;
+        let upgrades = { damage: 0, range: 0, speed: 0 };
+        let totalEnemiesSpawned = 0;
+        
+        let isWaveInProgress = false;
+        let waveEnemyCount = 0;
+
+        const BOARD_WIDTH = 15;
+        const BOARD_HEIGHT = 10;
+
+        function showError(message) {
+            errorDisplay.textContent = message;
+            errorDisplay.style.display = 'block';
+            setTimeout(() => {
+                errorDisplay.style.display = 'none';
+            }, 3000);
+        }
+
+        function createGameBoard() {
+            for (let y = 0; y < BOARD_HEIGHT; y++) {
+                for (let x = 0; x < BOARD_WIDTH; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.style.left = `${x * 40}px`;
+                    cell.style.top = `${y * 40}px`;
+                    cell.addEventListener('click', () => placeTower(x, y));
+                    gameBoard.appendChild(cell);
+                }
+            }
+            
+            path = [
+                {x: 0, y: 5}, {x: 1, y: 5}, {x: 2, y: 5}, {x: 3, y: 5},
+                {x: 3, y: 4}, {x: 3, y: 3}, {x: 3, y: 2},
+                {x: 4, y: 2}, {x: 5, y: 2}, {x: 6, y: 2}, {x: 7, y: 2},
+                {x: 7, y: 3}, {x: 7, y: 4}, {x: 7, y: 5}, {x: 7, y: 6},
+                {x: 8, y: 6}, {x: 9, y: 6}, {x: 10, y: 6}, {x: 11, y: 6},
+                {x: 11, y: 5}, {x: 11, y: 4}, {x: 11, y: 3},
+                {x: 12, y: 3}, {x: 13, y: 3}, {x: 14, y: 3}
+            ];
+            
+            path.forEach(p => {
+                const pathCell = gameBoard.children[p.y * BOARD_WIDTH + p.x];
+                pathCell.classList.add('path');
+            });
+        }
+
+        function updateDisplays() {
+            goldDisplay.textContent = gold;
+            manaDisplay.textContent = mana;
+            waveDisplay.textContent = wave;
+            livesDisplay.textContent = lives;
+        }
+
+        function selectTower(type) {
+            selectedTower = type;
+        }
+
+        function placeTower(x, y) {
+            if (!selectedTower) return;
+            
+            const cost = { ice: 50, fire: 100, stone: 150, wind: 150 }[selectedTower];
+            if (gold < cost) {
+                showError("Not enough gold to place tower!");
+                return;
+            }
+            
+            if (path.some(p => p.x === x && p.y === y)) {
+                showError("Cannot place tower on the path!");
+                return;
+            }
+            
+            const tower = document.createElement('div');
+            tower.className = `tower ${selectedTower}-tower`;
+            tower.style.left = `${x * 40 + 20}px`;
+            tower.style.top = `${y * 40 + 20}px`;
+            gameBoard.appendChild(tower);
+            
+            towers.push({ 
+                x: x * 40 + 20, 
+                y: y * 40 + 20, 
+                type: selectedTower, 
+                element: tower, 
+                lastShot: 0,
+                level: 1,
+                damage: getTowerDamage(selectedTower, 1),
+                range: getTowerRange(selectedTower, 1),
+                fireRate: getTowerFireRate(selectedTower, 1)
+            });
+            gold -= cost;
+            updateDisplays();
+        }
+
+        function getTowerDamage(type, level) {
+            const baseDamage = { ice: 20, fire: 40, stone: 100, wind: 16 }[type];
+            return baseDamage * (1 + 0.1 * (level - 1)) * (1 + upgrades.damage * 0.1);
+        }
+
+        function getTowerRange(type, level) {
+            const baseRange = { ice: 80, fire: 80, stone: 50, wind: 160 }[type];
+            return baseRange * (1 + 0.05 * (level - 1)) * (1 + upgrades.range * 0.1);
+        }
+
+        function getTowerFireRate(type, level) {
+            const baseFireRate = { ice: 1, fire: 0.8, stone: 6, wind: 0.4 }[type];
+            return baseFireRate * (1 - 0.05 * (level - 1)) * (1 - upgrades.speed * 0.1);
+        }
+
+        function createEnemy(type) {
+            const enemy = document.createElement('div');
+            enemy.className = `enemy ${type}`;
+            gameBoard.appendChild(enemy);
+            
+            const health = { goblin: 40, orc: 115, skeleton: 30, slime: 120 }[type];
+            const speed = { goblin: 0.02, orc: 0.01, skeleton: 0.04, slime: 0.006 }[type];
+            
+            enemies.push({ type, health, maxHealth: health, speed, pathIndex: 0, element: enemy });
+            totalEnemiesSpawned++;
+        }
+
+        function moveEnemies() {
+            enemies.forEach((enemy, index) => {
+                enemy.pathIndex += enemy.speed;
+                
+                if (enemy.pathIndex >= path.length - 1) {
+                    gameBoard.removeChild(enemy.element);
+                    enemies.splice(index, 1);
+                    lives--;
+                    updateDisplays();
+                    return;
+                }
+                
+                const currentPos = path[Math.floor(enemy.pathIndex)];
+                const nextPos = path[Math.min(Math.ceil(enemy.pathIndex), path.length - 1)];
+                const progress = enemy.pathIndex - Math.floor(enemy.pathIndex);
+                
+                const x = currentPos.x * 40 + (nextPos.x - currentPos.x) * 40 * progress + 20;
+                const y = currentPos.y * 40 + (nextPos.y - currentPos.y) * 40 * progress + 20;
+                
+                enemy.element.style.left = `${x}px`;
+                enemy.element.style.top = `${y}px`;
+            });
+        }
+
+        function shootEnemies() {
+            towers.forEach(tower => {
+                const now = Date.now();
+                if (now - tower.lastShot > tower.fireRate * 1000) {
+                    const target = enemies.find(enemy => {
+                        const dx = parseInt(enemy.element.style.left) - tower.x;
+                        const dy = parseInt(enemy.element.style.top) - tower.y;
+                        return Math.sqrt(dx * dx + dy * dy) < tower.range;
+                    });
+                    
+                    if (target) {
+                        tower.lastShot = now;
+                        
+                        const projectile = document.createElement('div');
+                        projectile.className = 'projectile';
+                        projectile.style.left = `${tower.x}px`;
+                        projectile.style.top = `${tower.y}px`;
+                        gameBoard.appendChild(projectile);
+                        
+                        const targetX = parseInt(target.element.style.left);
+                        const targetY = parseInt(target.element.style.top);
+                        
+                        projectiles.push({ element: projectile, x: tower.x, y: tower.y, targetX, targetY, damage: tower.damage, target, towerType: tower.type });
+                    }
+                }
+            });
+        }
+
+        function moveProjectiles() {
+            projectiles.forEach((projectile, index) => {
+                const dx = projectile.targetX - projectile.x;
+                const dy = projectile.targetY - projectile.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < 5) {
+                    gameBoard.removeChild(projectile.element);
+                    projectiles.splice(index, 1);
+                    
+                    if (projectile.target && projectile.target.health) {
+                        projectile.target.health -= projectile.damage;
+                        showDamage(projectile.targetX, projectile.targetY, projectile.damage);
+                        
+                        applyTowerEffect(projectile.target, projectile.towerType);
+                        
+                        if (projectile.target.health <= 0) {
+                            if (projectile.target.element && projectile.target.element.parentNode) {
+                                gameBoard.removeChild(projectile.target.element);
+                            }
+                            enemies = enemies.filter(e => e !== projectile.target);
+                            gold += getEnemyGoldReward(projectile.target.type);
+                            updateDisplays();
+                        }
+                    }
+                } else {
+                    const speed = 5;
+                    projectile.x += dx / distance * speed;
+                    projectile.y += dy / distance * speed;
+                    projectile.element.style.left = `${projectile.x}px`;
+                    projectile.element.style.top = `${projectile.y}px`;
+                }
+            });
+        }
+        
+        function showDamage(x, y, damage) {
+            const damageText = document.createElement('div');
+            damageText.className = 'damage-text';
+            damageText.textContent = Math.round(damage);
+            damageText.style.left = `${x}px`;
+            damageText.style.top = `${y}px`;
+            gameBoard.appendChild(damageText);
+            
+            setTimeout(() => {
+                gameBoard.removeChild(damageText);
+            }, 500);
+        }
+
+        function applyTowerEffect(enemy, towerType) {
+            switch(towerType) {
+                case 'ice':
+                    enemy.speed *= 0.8;
+                    setTimeout(() => { enemy.speed /= 0.8; }, 3000);
+                    break;
+                case 'fire':
+                    setTimeout(() => {
+                        enemy.health -= 5;
+                        showDamage(parseInt(enemy.element.style.left), parseInt(enemy.element.style.top), 5);
+                    }, 1000);
+                    break;
+                case 'stone':
+                    if (Math.random() < 0.1) {
+                        enemy.health = 0;
+                    }
+                    break;
+                case 'wind':
+                    const backIndex = Math.max(0, enemy.pathIndex - 1);
+                    enemy.pathIndex = backIndex;
+                    break;
+            }
+        }
+
+        function getEnemyGoldReward(enemyType) {
+            return { goblin: 10, orc: 20, skeleton: 15, slime: 15 }[enemyType];
+        }
+
+        function upgrade(type) {
+            if (gold >= 100 && upgrades[type] < 5) {
+                gold -= 100;
+                upgrades[type]++;
+                updateDisplays();
+                towers.forEach(tower => {
+                    tower.damage = getTowerDamage(tower.type, tower.level);
+                    tower.range = getTowerRange(tower.type, tower.level);
+                    tower.fireRate = getTowerFireRate(tower.type, tower.level);
+                });
+            } else {
+                showError("Not enough gold or max upgrade reached!");
+            }
+        }
+
+        function startWave() {
+            if (isWaveInProgress) {
+                showError("Wave already in progress!");
+                return;
+            }
+            isWaveInProgress = true;
+            waveEnemyCount = wave * 5;
+            totalEnemiesSpawned = 0;
+            
+            let enemiesSpawned = 0;
+            const spawnInterval = setInterval(() => {
+                const types = ['goblin', 'orc', 'skeleton', 'slime'];
+                createEnemy(types[Math.floor(Math.random() * types.length)]);
+                enemiesSpawned++;
+                if (enemiesSpawned >= waveEnemyCount) {
+                    clearInterval(spawnInterval);
+                }
+            }, 2000 / wave);
+        }
+        
+        function gameLoop() {
+            moveEnemies();
+            shootEnemies();
+            moveProjectiles();
+            if (lives <= 0) {
+                showError('Game Over!');
+                isWaveInProgress = false;
+                return;
+            }
+            
+            if (isWaveInProgress && enemies.length === 0 && totalEnemiesSpawned >= waveEnemyCount) {
+                isWaveInProgress = false;
+                gold += 50;
+                wave++;
+                updateDisplays();
+                showError('Wave Cleared! +50 gold');
+                console.log(`Wave cleared. Total enemies spawned: ${totalEnemiesSpawned}, Wave enemy count: ${waveEnemyCount}`);
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        createGameBoard();
+        updateDisplays();
+        gameLoop();
+    </script>
+</body>
+</html>
