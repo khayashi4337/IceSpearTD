@@ -122,9 +122,9 @@
     <div id="error-display"></div>
     <div id="game-container">
         <div id="map-select">
-            <button onclick="selectMap('plain')">平原マップ</button>
-            <button onclick="selectMap('river')">川マップ</button>
-            <button onclick="selectMap('mountain')">岩山マップ</button>
+        <button onclick="selectMap('plain')">平原マップ</button>
+        <button onclick="selectMap('river')">川マップ</button>
+        <button onclick="selectMap('mountain')">岩山マップ</button>
         </div>
         <div id="game-board"></div>
         <div id="sidebar">
@@ -175,6 +175,8 @@
 
         const BOARD_WIDTH = 40;
         const BOARD_HEIGHT = 30;
+        const cellWidth = 600 / BOARD_WIDTH;
+        const cellHeight = 400 / BOARD_HEIGHT;       
 
 
         let grid = [];
@@ -400,13 +402,20 @@
 
         function createEnemy(type) {
             const enemy = document.createElement('div');
+            const initialPosition = path[0];
+            const initialX = initialPosition.x * cellWidth + cellWidth / 2;
+            const initialY = initialPosition.y * cellHeight + cellHeight / 2;            
             enemy.className = `enemy ${type}`;
             gameBoard.appendChild(enemy);
             
             const health = { goblin: 40, orc: 115, skeleton: 30, slime: 120 }[type];
             const speed = { goblin: 0.02, orc: 0.01, skeleton: 0.04, slime: 0.006 }[type];
             
-            enemies.push({ type, health, maxHealth: health, speed, pathIndex: 0, element: enemy });
+            enemies.push({ type, health, maxHealth: health, speed, path: findPath(0, 5, BOARD_WIDTH - 1, 5), // 敵ごとにパスを計算
+                pathIndex: 0,
+                element: enemy,
+                x: initialX,
+                y: initialY });
             totalEnemiesSpawned++;
         }
 
@@ -450,15 +459,30 @@
             const targetY = target.y * cellHeight + cellHeight / 2;
             const dx = targetX - parseInt(enemy.element.style.left);
             const dy = targetY - parseInt(enemy.element.style.top);
+            const angle = Math.atan2(dy, dx);
 
             if (Math.abs(dx) > 1 || Math.abs(dy) > 1) { 
-                const angle = Math.atan2(dy, dx);
                 enemy.element.style.left = `${parseInt(enemy.element.style.left) + enemy.speed * Math.cos(angle)}px`;
                 enemy.element.style.top = `${parseInt(enemy.element.style.top) + enemy.speed * Math.sin(angle)}px`;
                 enemy.pathIndex += enemy.speed;
             } else { 
                 enemy.pathIndex++; // ターゲットセルに到達したら、次のセルへ
             }
+
+            if (Math.abs(dx) > enemy.speed || Math.abs(dy) > enemy.speed) {
+                // まだターゲットセルから離れている場合
+
+                enemy.element.style.left = `${parseInt(enemy.element.style.left) + enemy.speed * Math.cos(angle)}px`;
+                enemy.element.style.top = `${parseInt(enemy.element.style.top) + enemy.speed * Math.sin(angle)}px`;
+                enemy.pathIndex += enemy.speed; // pathIndex を移動量に応じて更新
+            } else {
+                // ターゲットセルに到達した場合
+
+                enemy.element.style.left = `${targetX}px`; // ターゲットセルの中心に移動
+                enemy.element.style.top = `${targetY}px`;
+                enemy.pathIndex++;
+            }
+
         }        
 
         function shootEnemies() {
@@ -669,6 +693,7 @@
 
             renderMap();
             console.log(`Initialized ${mapType} map`);
+            initializeGrid();
         }
 
         function generatePath() {
