@@ -176,6 +176,121 @@
         const BOARD_WIDTH = 40;
         const BOARD_HEIGHT = 30;
 
+
+        let grid = [];
+
+        function initializeGrid() {
+            grid = [];
+            for (let y = 0; y < BOARD_HEIGHT; y++) {
+            let row = [];
+            for (let x = 0; x < BOARD_WIDTH; x++) {
+                row.push({
+                x: x,
+                y: y,
+                type: 'plain', // 初期タイプ
+                f: 0,
+                g: 0,
+                h: 0,
+                parent: null,
+                });
+            }
+            grid.push(row);
+            }
+        }
+
+        // A* アルゴリズムの実装
+        function findPath(startX, startY, endX, endY) {
+            initializeGridForPathfinding(); // コストなどの初期化
+
+            const startNode = grid[startY][startX];
+            const endNode = grid[endY][endX];
+            let openList = [];
+            let closedList = [];
+
+            openList.push(startNode);
+
+            while (openList.length > 0) {
+            // 最小コストのノードを選択
+            let currentNode = openList[0];
+            let currentIndex = 0;
+            for (let i = 1; i < openList.length; i++) {
+                if (openList[i].f < currentNode.f) {
+                currentNode = openList[i];
+                currentIndex = i;
+                }
+            }
+
+            // openListから削除し、closedListに追加
+            openList.splice(currentIndex, 1);
+            closedList.push(currentNode);
+
+            // ゴールに到達した場合
+            if (currentNode === endNode) {
+                return reconstructPath(currentNode); 
+            }
+
+            // 隣接ノードを調べる
+            let neighbors = getNeighbors(currentNode);
+            for (let neighbor of neighbors) {
+                // 壁は無視
+                if (neighbor.type === 'wall' || closedList.includes(neighbor)) {
+                continue;
+                }
+
+                // コストを計算
+                let tentativeGCost = currentNode.g + 1; // 仮のGコスト
+
+                if (!openList.includes(neighbor) || tentativeGCost < neighbor.g) {
+                neighbor.parent = currentNode;
+                neighbor.g = tentativeGCost;
+                neighbor.h = calculateHeuristic(neighbor, endNode); // ヒューリスティックコスト
+                neighbor.f = neighbor.g + neighbor.h; // 合計コスト
+
+                if (!openList.includes(neighbor)) {
+                    openList.push(neighbor);
+                }
+                }
+            }
+            }
+            return null; // ゴールへのパスが見つからない場合
+        }
+
+        function initializeGridForPathfinding() {
+            for (let y = 0; y < BOARD_HEIGHT; y++) {
+            for (let x = 0; x < BOARD_WIDTH; x++) {
+                grid[y][x].f = 0;
+                grid[y][x].g = 0;
+                grid[y][x].h = 0;
+                grid[y][x].parent = null;
+            }
+            }
+        }
+
+        function getNeighbors(node) {
+            let neighbors = [];
+            const { x, y } = node;
+            if (x > 0) neighbors.push(grid[y][x - 1]); // 左
+            if (x < BOARD_WIDTH - 1) neighbors.push(grid[y][x + 1]); // 右
+            if (y > 0) neighbors.push(grid[y - 1][x]); // 上
+            if (y < BOARD_HEIGHT - 1) neighbors.push(grid[y + 1][x]); // 下
+            return neighbors;
+        }
+
+        function calculateHeuristic(nodeA, nodeB) {
+            // マンハッタン距離をヒューリスティックとして使用
+            return Math.abs(nodeA.x - nodeB.x) + Math.abs(nodeA.y - nodeB.y);
+        }
+
+        function reconstructPath(node) {
+            let path = [];
+            let currentNode = node;
+            while (currentNode !== null) {
+            path.unshift({ x: currentNode.x, y: currentNode.y }); 
+            currentNode = currentNode.parent;
+            }
+                    return path; 
+                }
+
         function showError(message) {
             errorDisplay.textContent = message;
             errorDisplay.style.display = 'block';
@@ -258,6 +373,13 @@
                 fireRate: getTowerFireRate(selectedTower, 1)
             });
             gold -= cost;
+
+            // 敵の移動ルートを再計算
+            enemies.forEach(enemy => {
+                enemy.path = findPath(0, 5, BOARD_WIDTH - 1, 5); // スタートとゴールは適宜変更
+                enemy.pathIndex = 0; // ルート再計算後は、pathIndexをリセット
+            });
+            
             updateDisplays();
         }
 
@@ -292,14 +414,22 @@
             enemies.forEach((enemy, index) => {
                 enemy.pathIndex += enemy.speed;
                 
+                if (!enemy.path || enemy.path.length === 0) {
+                    enemy.path = findPath(0, 5, BOARD_WIDTH - 1, 5); // スタートとゴールを設定
+                }
+
                 if (enemy.pathIndex >= path.length - 1) {
                     gameBoard.removeChild(enemy.element);
                     enemies.splice(index, 1);
                     lives--;
                     updateDisplays();
                     return;
-                }
+                } else {
+                    let target = enemy.path[Math.ceil(enemy.pathIndex)]; // 次のターゲットセル
+                    moveToTarget(enemy, target); // スムーズな移動処理
+                } 
                 
+                /*
                 const currentPos = path[Math.floor(enemy.pathIndex)];
                 const nextPos = path[Math.min(Math.ceil(enemy.pathIndex), path.length - 1)];
                 const progress = enemy.pathIndex - Math.floor(enemy.pathIndex);
@@ -309,8 +439,27 @@
                 
                 enemy.element.style.left = `${x}px`;
                 enemy.element.style.top = `${y}px`;
+                */
             });
         }
+
+        function moveToTarget(enemy, target) {
+            const cellWidth = 600 / BOARD_WIDTH;
+            const cellHeight = 400 / BOARD_HEIGHT;
+            const targetX = target.x * cellWidth + cellWidth / 2;
+            const targetY = target.y * cellHeight + cellHeight / 2;
+            const dx = targetX - parseInt(enemy.element.style.left);
+            const dy = targetY - parseInt(enemy.element.style.top);
+
+            if (Math.abs(dx) > 1 || Math.abs(dy) > 1) { 
+                const angle = Math.atan2(dy, dx);
+                enemy.element.style.left = `${parseInt(enemy.element.style.left) + enemy.speed * Math.cos(angle)}px`;
+                enemy.element.style.top = `${parseInt(enemy.element.style.top) + enemy.speed * Math.sin(angle)}px`;
+                enemy.pathIndex += enemy.speed;
+            } else { 
+                enemy.pathIndex++; // ターゲットセルに到達したら、次のセルへ
+            }
+        }        
 
         function shootEnemies() {
             towers.forEach(tower => {
