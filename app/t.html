@@ -32,13 +32,15 @@
             background-color: #e0e0e0;
         }
         .cell {
-            width: 40px;
-            height: 40px;
             position: absolute;
-            background-color: #8fbc8f;
             box-sizing: border-box;
             border: 1px solid rgba(0,0,0,0.1);
         }
+        .plain { background-color: #8fbc8f; }
+        .forest { background-color: #228B22; }
+        .mountain { background-color: #A9A9A9; }
+        .water { background-color: #1E90FF; }
+        .wall { background-color: #8B4513; }
         .path {
             background-color: #d2b48c !important;
         }
@@ -119,6 +121,11 @@
 <body>
     <div id="error-display"></div>
     <div id="game-container">
+        <div id="map-select">
+            <button onclick="selectMap('plain')">平原マップ</button>
+            <button onclick="selectMap('river')">川マップ</button>
+            <button onclick="selectMap('mountain')">岩山マップ</button>
+        </div>
         <div id="game-board"></div>
         <div id="sidebar">
             <h2>Ice Spear Tower Defense</h2>
@@ -166,8 +173,8 @@
         let isWaveInProgress = false;
         let waveEnemyCount = 0;
 
-        const BOARD_WIDTH = 15;
-        const BOARD_HEIGHT = 10;
+        const BOARD_WIDTH = 40;
+        const BOARD_HEIGHT = 30;
 
         function showError(message) {
             errorDisplay.textContent = message;
@@ -225,20 +232,23 @@
                 return;
             }
             
-            if (path.some(p => p.x === x && p.y === y)) {
+            if (grid[y][x] === 'path') {
                 showError("Cannot place tower on the path!");
                 return;
             }
             
+            const cellWidth = 600 / BOARD_WIDTH;
+            const cellHeight = 400 / BOARD_HEIGHT;
+            
             const tower = document.createElement('div');
             tower.className = `tower ${selectedTower}-tower`;
-            tower.style.left = `${x * 40 + 20}px`;
-            tower.style.top = `${y * 40 + 20}px`;
+            tower.style.left = `${x * cellWidth + cellWidth / 2}px`;
+            tower.style.top = `${y * cellHeight + cellHeight / 2}px`;
             gameBoard.appendChild(tower);
             
             towers.push({ 
-                x: x * 40 + 20, 
-                y: y * 40 + 20, 
+                x: x * cellWidth + cellWidth / 2, 
+                y: y * cellHeight + cellHeight / 2, 
                 type: selectedTower, 
                 element: tower, 
                 lastShot: 0,
@@ -463,9 +473,143 @@
             requestAnimationFrame(gameLoop);
         }
         
-        createGameBoard();
+        initializeMap('plain');
         updateDisplays();
         gameLoop();
+
+        function selectMap(mapType) {
+            initializeMap(mapType);
+            resetGameState();
+        }
+
+        function handleCellClick(event) {
+            const x = parseInt(event.target.dataset.x);
+            const y = parseInt(event.target.dataset.y);
+            placeTower(x, y);
+        }
+
+        function initializeMap(mapType) {
+            grid = [];
+            for (let y = 0; y < BOARD_HEIGHT; y++) {
+                let row = [];
+                for (let x = 0; x < BOARD_WIDTH; x++) {
+                    if (x === 0 || x === BOARD_WIDTH - 1 || y === 0 || y === BOARD_HEIGHT - 1) {
+                        row.push('wall');
+                    } else {
+                        row.push('plain');
+                    }
+                }
+                grid.push(row);
+            }
+
+            switch (mapType) {
+                case 'plain':
+                    addRandomTerrain('forest', 0.1);
+                    break;
+                case 'river':
+                    generateRiver();
+                    addRandomTerrain('forest', 0.05);
+                    break;
+                case 'mountain':
+                    addRandomTerrain('mountain', 0.2);
+                    break;
+            }
+
+            // パスの生成
+            path = generatePath();
+
+            renderMap();
+            console.log(`Initialized ${mapType} map`);
+        }
+
+        function generatePath() {
+            let path = [];
+            let x = 0;
+            let y = Math.floor(BOARD_HEIGHT / 2);
+            while (x < BOARD_WIDTH) {
+                path.push({x, y});
+                grid[y][x] = 'path';
+                if (Math.random() < 0.3) {
+                    if (Math.random() < 0.5 && y > 1) {
+                        y--;
+                    } else if (y < BOARD_HEIGHT - 2) {
+                        y++;
+                    }
+                }
+                x++;
+            }
+            return path;
+        }
+
+        function addRandomTerrain(terrainType, probability) {
+            for (let y = 1; y < BOARD_HEIGHT - 1; y++) {
+                for (let x = 1; x < BOARD_WIDTH - 1; x++) {
+                    if (Math.random() < probability) {
+                        grid[y][x] = terrainType;
+                    }
+                }
+            }
+        }
+
+        function generateRiver() {
+            let x = 0;
+            let y = Math.floor(BOARD_HEIGHT / 2);
+            while (x < BOARD_WIDTH) {
+                grid[y][x] = 'water';
+                if (Math.random() < 0.3) {
+                    y += Math.random() < 0.5 ? 1 : -1;
+                    y = Math.max(1, Math.min(y, BOARD_HEIGHT - 2));
+                }
+                x++;
+            }
+            // 橋を追加
+            for (let i = 0; i < 3; i++) {
+                let bridgeX = Math.floor(Math.random() * (BOARD_WIDTH - 2)) + 1;
+                for (let bridgeY = 0; bridgeY < BOARD_HEIGHT; bridgeY++) {
+                    if (grid[bridgeY][bridgeX] === 'water') {
+                        grid[bridgeY][bridgeX] = 'plain';
+                    }
+                }
+            }
+        }
+
+        function renderMap() {
+            gameBoard.innerHTML = '';
+            const cellWidth = 600 / BOARD_WIDTH;
+            const cellHeight = 400 / BOARD_HEIGHT;
+            for (let y = 0; y < BOARD_HEIGHT; y++) {
+                for (let x = 0; x < BOARD_WIDTH; x++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell', grid[y][x]);
+                    cell.style.left = `${x * cellWidth}px`;
+                    cell.style.top = `${y * cellHeight}px`;
+                    cell.style.width = `${cellWidth}px`;
+                    cell.style.height = `${cellHeight}px`;
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+                    cell.addEventListener('click', handleCellClick);
+                    gameBoard.appendChild(cell);
+                }
+            }
+        }
+
+        function resetGameState() {
+            // ゲーム状態をリセット
+            enemies = [];
+            towers = [];
+            gold = 300;
+            mana = 50;
+            wave = 1;
+            lives = 20;
+            
+            // UI更新
+            document.getElementById('gold').textContent = gold;
+            document.getElementById('mana').textContent = mana;
+            document.getElementById('wave').textContent = wave;
+            document.getElementById('lives').textContent = lives;
+        }
+
+
     </script>
 </body>
 </html>
