@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -400,57 +400,93 @@
             return baseFireRate * (1 - 0.05 * (level - 1)) * (1 - upgrades.speed * 0.1);
         }
 
-        function createEnemy(type) {
-            const enemy = document.createElement('div');
-            const initialPosition = path[0];
-            const initialX = initialPosition.x * cellWidth + cellWidth / 2;
-            const initialY = initialPosition.y * cellHeight + cellHeight / 2;            
-            enemy.className = `enemy ${type}`;
-            gameBoard.appendChild(enemy);
-            
-            const health = { goblin: 40, orc: 115, skeleton: 30, slime: 120 }[type];
-            const speed = { goblin: 0.02, orc: 0.01, skeleton: 0.04, slime: 0.006 }[type];
-            
-            enemies.push({ type, health, maxHealth: health, speed, path: findPath(0, 5, BOARD_WIDTH - 1, 5), // 敵ごとにパスを計算
-                pathIndex: 0,
-                element: enemy,
-                x: initialX,
-                y: initialY });
-            totalEnemiesSpawned++;
-        }
+
 
         function moveEnemies() {
             enemies.forEach((enemy, index) => {
-                enemy.pathIndex += enemy.speed;
-                
-                if (!enemy.path || enemy.path.length === 0) {
-                    enemy.path = findPath(0, 5, BOARD_WIDTH - 1, 5); // スタートとゴールを設定
-                }
-
-                if (enemy.pathIndex >= path.length - 1) {
+                 if (enemy.pathIndex >= enemy.path.length) {
+                    // 敵がゴールに到達した場合
                     gameBoard.removeChild(enemy.element);
                     enemies.splice(index, 1);
                     lives--;
                     updateDisplays();
                     return;
+                }
+
+                let target = enemy.path[Math.floor(enemy.pathIndex)];
+                let targetX = target.x * cellWidth + cellWidth / 2;
+                let targetY = target.y * cellHeight + cellHeight / 2;
+
+                let dx = targetX - enemy.x;
+                let dy = targetY - enemy.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < enemy.speed) {
+                    // 次のパスポイントに到達
+                    enemy.pathIndex++;
+                    enemy.x = targetX;
+                    enemy.y = targetY;
                 } else {
-                    let target = enemy.path[Math.ceil(enemy.pathIndex)]; // 次のターゲットセル
-                    moveToTarget(enemy, target); // スムーズな移動処理
-                } 
-                
-                /*
-                const currentPos = path[Math.floor(enemy.pathIndex)];
-                const nextPos = path[Math.min(Math.ceil(enemy.pathIndex), path.length - 1)];
-                const progress = enemy.pathIndex - Math.floor(enemy.pathIndex);
-                
-                const x = currentPos.x * 40 + (nextPos.x - currentPos.x) * 40 * progress + 20;
-                const y = currentPos.y * 40 + (nextPos.y - currentPos.y) * 40 * progress + 20;
-                
-                enemy.element.style.left = `${x}px`;
-                enemy.element.style.top = `${y}px`;
-                */
+                    // パスポイントに向かって移動
+                    let ratio = enemy.speed / distance;
+                    enemy.x += dx * ratio;
+                    enemy.y += dy * ratio;
+                }
+
+                // 敵の位置を更新
+                enemy.element.style.left = `${enemy.x}px`;
+                enemy.element.style.top = `${enemy.y}px`;
             });
         }
+
+        // ゲームループの実装
+        function gameLoop() {
+            moveEnemies();
+            shootEnemies();
+            moveProjectiles();
+
+            if (lives <= 0) {
+                showError('Game Over!');
+                isWaveInProgress = false;
+                return;
+            }
+
+            if (isWaveInProgress && enemies.length === 0 && totalEnemiesSpawned >= waveEnemyCount) {
+                isWaveInProgress = false;
+                gold += 50;
+                wave++;
+                updateDisplays();
+                showError('Wave Cleared! +50 gold');
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function createEnemy(type) {
+            const enemy = document.createElement('div');
+            const startPos = path[0];
+            enemy.className = `enemy ${type}`;
+            enemy.style.left = `${startPos.x * cellWidth + cellWidth / 2}px`;
+            enemy.style.top = `${startPos.y * cellHeight + cellHeight / 2}px`;
+            gameBoard.appendChild(enemy);
+
+            const health = { goblin: 40, orc: 115, skeleton: 30, slime: 120 }[type];
+            const speed = { goblin: 1, orc: 0.5, skeleton: 2, slime: 0.3 }[type];
+
+            enemies.push({
+                type,
+                health,
+                maxHealth: health,
+                speed,
+                path: findPath(path[0].x, path[0].y, path[path.length - 1].x, path[path.length - 1].y),
+                pathIndex: 0,
+                element: enemy,
+                x: startPos.x * cellWidth + cellWidth / 2,
+                y: startPos.y * cellHeight + cellHeight / 2
+            });
+            totalEnemiesSpawned++;
+        }        
+
 
         function moveToTarget(enemy, target) {
             const cellWidth = 600 / BOARD_WIDTH;
@@ -624,28 +660,6 @@
             }, 2000 / wave);
         }
         
-        function gameLoop() {
-            moveEnemies();
-            shootEnemies();
-            moveProjectiles();
-            if (lives <= 0) {
-                showError('Game Over!');
-                isWaveInProgress = false;
-                return;
-            }
-            
-            if (isWaveInProgress && enemies.length === 0 && totalEnemiesSpawned >= waveEnemyCount) {
-                isWaveInProgress = false;
-                gold += 50;
-                wave++;
-                updateDisplays();
-                showError('Wave Cleared! +50 gold');
-                console.log(`Wave cleared. Total enemies spawned: ${totalEnemiesSpawned}, Wave enemy count: ${waveEnemyCount}`);
-            }
-            
-            requestAnimationFrame(gameLoop);
-        }
-        
         initializeMap('plain');
         updateDisplays();
         gameLoop();
@@ -694,6 +708,9 @@
             renderMap();
             console.log(`Initialized ${mapType} map`);
             initializeGrid();
+
+            // ゲームループを開始
+            requestAnimationFrame(gameLoop);
         }
 
         function generatePath() {
@@ -782,7 +799,10 @@
             document.getElementById('wave').textContent = wave;
             document.getElementById('lives').textContent = lives;
         }
-
+        
+        // ゲームの初期化
+        initializeMap('plain');
+        updateDisplays();
 
     </script>
 </body>
