@@ -393,29 +393,91 @@
             });
         }
 
+        /**
+        * プロジェクタイル（弾）を描画する関数
+        * @param {number} x - プロジェクタイルの開始X座標
+        * @param {number} y - プロジェクタイルの開始Y座標
+        * @param {number} targetX - 目標のX座標
+        * @param {number} targetY - 目標のY座標
+        * @param {string} towerType - タワーの種類（'fire', 'ice', 'stone', 'wind'）
+        * @returns {HTMLElement} 作成されたプロジェクタイル要素
+        */
+        function drawProjectile(x, y, targetX, targetY, towerType) {
+            // プロジェクタイル要素の作成
+            const projectile = document.createElement('div');
+            projectile.className = 'projectile';
+            projectile.style.left = `${x}px`;
+            projectile.style.top = `${y}px`;
+            
+            // タワーの種類に応じてプロジェクタイルのスタイルを変更
+            switch(towerType) {
+                case 'fire':
+                    projectile.style.backgroundColor = '#FF4500';
+                    break;
+                case 'ice':
+                    projectile.style.backgroundColor = '#ADD8E6';
+                    break;
+                case 'stone':
+                    projectile.style.backgroundColor = '#A9A9A9';
+                    break;
+                case 'wind':
+                    projectile.style.backgroundColor = '#98FB98';
+                    break;
+                default:
+                    projectile.style.backgroundColor = '#000';
+            }
+            
+            // プロジェクタイルをゲームボードに追加
+            gameBoard.appendChild(projectile);
+            
+            // プロジェクタイルの角度を計算し、回転を適用
+            const angle = Math.atan2(targetY - y, targetX - x);
+            projectile.style.transform = `rotate(${angle}rad)`;
+            
+            return projectile;
+        }
+
+        /**
+        * タワーから敵に向けてプロジェクタイルを発射する関数
+        * この関数は各フレームで呼び出され、全てのタワーの攻撃処理を行う
+        */
         function shootEnemies() {
+            // 全てのタワーをループで処理
             towers.forEach(tower => {
                 const now = Date.now();
+                // タワーの攻撃間隔をチェック
                 if (now - tower.lastShot > tower.fireRate * 1000) {
+                    // タワーの攻撃範囲内にいる最初の敵を探す
                     const target = enemies.find(enemy => {
                         const dx = parseInt(enemy.element.style.left) - tower.x;
                         const dy = parseInt(enemy.element.style.top) - tower.y;
+                        // ユークリッド距離で攻撃範囲内かどうかを判定
                         return Math.sqrt(dx * dx + dy * dy) < tower.range;
                     });
                     
+                    // 攻撃対象が見つかった場合
                     if (target) {
+                        // 最後の攻撃時間を更新
                         tower.lastShot = now;
                         
-                        const projectile = document.createElement('div');
-                        projectile.className = 'projectile';
-                        projectile.style.left = `${tower.x}px`;
-                        projectile.style.top = `${tower.y}px`;
-                        gameBoard.appendChild(projectile);
-                        
+                        // 攻撃対象の座標を取得
                         const targetX = parseInt(target.element.style.left);
                         const targetY = parseInt(target.element.style.top);
                         
-                        projectiles.push({ element: projectile, x: tower.x, y: tower.y, targetX, targetY, damage: tower.damage, target, towerType: tower.type });
+                        // プロジェクタイルを描画
+                        const projectileElement = drawProjectile(tower.x, tower.y, targetX, targetY, tower.type);
+                        
+                        // プロジェクタイル情報をリストに追加
+                        projectiles.push({ 
+                            element: projectileElement, 
+                            x: tower.x, 
+                            y: tower.y, 
+                            targetX, 
+                            targetY, 
+                            damage: tower.damage, 
+                            target, 
+                            towerType: tower.type 
+                        });
                     }
                 }
             });
