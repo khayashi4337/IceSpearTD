@@ -200,9 +200,18 @@
             }
         }
 
-        // A* アルゴリズムの実装
+        /**
+        * A*アルゴリズムを使用して最短経路を見つける関数
+        * @param {number} startX - 開始地点のX座標
+        * @param {number} startY - 開始地点のY座標
+        * @param {number} endX - 目標地点のX座標
+        * @param {number} endY - 目標地点のY座標
+        * @returns {Array} 最短経路の座標配列
+        */
         function findPath(startX, startY, endX, endY) {
+            // パス探索のためにグリッドを初期化
             initializeGridForPathfinding();
+
             const startNode = grid[startY][startX];
             const endNode = grid[endY][endX];
             let openList = [];
@@ -211,18 +220,15 @@
             openList.push(startNode);
 
             while (openList.length > 0) {
-                let currentNode = openList[0];
-                let currentIndex = 0;
-                for (let i = 1; i < openList.length; i++) {
-                    if (openList[i].f < currentNode.f) {
-                        currentNode = openList[i];
-                        currentIndex = i;
-                    }
-                }
+                // オープンリストから最小のfスコアを持つノードを見つける
+                let currentNode = openList.reduce((min, node) => node.f < min.f ? node : min, openList[0]);
+                let currentIndex = openList.indexOf(currentNode);
 
+                // 現在のノードをオープンリストから削除し、クローズドリストに追加
                 openList.splice(currentIndex, 1);
                 closedList.push(currentNode);
 
+                // 目標に到達した場合、パスを再構築して返す
                 if (currentNode === endNode) {
                     let path = [];
                     let current = currentNode;
@@ -233,35 +239,37 @@
                     return path.reverse();
                 }
 
+                // 隣接するノードをチェック
                 let neighbors = getNeighbors(currentNode);
                 for (let neighbor of neighbors) {
                     if (closedList.includes(neighbor)) {
-                        continue;
+                        continue;  // すでに評価済みのノードはスキップ
                     }
 
-                    let gScore = currentNode.g + 1;
-                    let gScoreIsBest = false;
+                    let tentativeGScore = currentNode.g + 1;  // 隣接ノードへの移動コストを1と仮定
 
                     if (!openList.includes(neighbor)) {
-                        gScoreIsBest = true;
-                        neighbor.h = calculateHeuristic(neighbor, endNode);
+                        // 新しいノードをオープンリストに追加
                         openList.push(neighbor);
-                    } else if (gScore < neighbor.g) {
-                        gScoreIsBest = true;
+                    } else if (tentativeGScore >= neighbor.g) {
+                        continue;  // このパスは良くない
                     }
 
-                    if (gScoreIsBest) {
-                        neighbor.parent = currentNode;
-                        neighbor.g = gScore;
-                        neighbor.f = neighbor.g + neighbor.h;
-                    }
+                    // このパスが最良なので記録する
+                    neighbor.parent = currentNode;
+                    neighbor.g = tentativeGScore;
+                    neighbor.h = calculateHeuristic(neighbor, endNode);
+                    neighbor.f = neighbor.g + neighbor.h;
                 }
             }
 
-            return [];
+            return [];  // パスが見つからない場合
         }
 
-        
+
+        /**
+        * パス探索のためにグリッドを初期化する関数
+        */
         function initializeGridForPathfinding() {
             for (let y = 0; y < BOARD_HEIGHT; y++) {
                 for (let x = 0; x < BOARD_WIDTH; x++) {
@@ -273,10 +281,16 @@
             }
         }
 
+
+        /**
+        * 指定されたノードの隣接ノードを取得する関数
+        * @param {Object} node - 現在のノード
+        * @returns {Array} 隣接ノードの配列
+        */
         function getNeighbors(node) {
             let neighbors = [];
-            const dirs = [[0, 1], [1, 0], [0, -1], [-1, 0]];
-            for (let [dx, dy] of dirs) {
+            const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];  // 上、右、下、左
+            for (let [dx, dy] of directions) {
                 let newX = node.x + dx;
                 let newY = node.y + dy;
                 if (newX >= 0 && newX < BOARD_WIDTH && newY >= 0 && newY < BOARD_HEIGHT) {
@@ -288,8 +302,13 @@
             return neighbors;
         }
 
+        /**
+        * 二点間のマンハッタン距離を計算するヒューリスティック関数
+        * @param {Object} nodeA - 開始ノード
+        * @param {Object} nodeB - 目標ノード
+        * @returns {number} 推定距離
+        */
         function calculateHeuristic(nodeA, nodeB) {
-            // マンハッタン距離をヒューリスティックとして使用
             return Math.abs(nodeA.x - nodeB.x) + Math.abs(nodeA.y - nodeB.y);
         }
 
@@ -350,12 +369,16 @@
             selectedTower = type;
         }
 
-        // タワーとエンティティのサイズ調整
+        /**
+        * タワーを配置する関数
+        * @param {number} x - 配置するX座標
+        * @param {number} y - 配置するY座標
+        */
         function placeTower(x, y) {
             if (!selectedTower) return;
             
-            const cost = { ice: 50, fire: 100, stone: 150, wind: 150 }[selectedTower];
-            if (gold < cost) {
+            const towerCost = { ice: 50, fire: 100, stone: 150, wind: 150 }[selectedTower];
+            if (gold < towerCost) {
                 showError("Not enough gold to place tower!");
                 return;
             }
@@ -365,27 +388,29 @@
                 return;
             }
             
-            const tower = document.createElement('div');
-            tower.className = `tower ${selectedTower}-tower`;
-            tower.style.left = `${x * cellWidth + cellWidth / 2}px`;
-            tower.style.top = `${y * cellHeight + cellHeight / 2}px`;
-            tower.style.width = `${cellWidth * 0.8}px`;
-            tower.style.height = `${cellHeight * 0.8}px`;
-            gameBoard.appendChild(tower);
+            // タワーの視覚要素を作成
+            const towerElement = document.createElement('div');
+            towerElement.className = `tower ${selectedTower}-tower`;
+            towerElement.style.left = `${x * cellWidth + cellWidth / 2}px`;
+            towerElement.style.top = `${y * cellHeight + cellHeight / 2}px`;
+            towerElement.style.width = `${cellWidth * 0.8}px`;
+            towerElement.style.height = `${cellHeight * 0.8}px`;
+            gameBoard.appendChild(towerElement);
             
+            // タワーオブジェクトを作成し、配列に追加
             towers.push({ 
                 x: x * cellWidth + cellWidth / 2, 
                 y: y * cellHeight + cellHeight / 2, 
                 type: selectedTower, 
-                element: tower, 
+                element: towerElement, 
                 lastShot: 0,
                 level: 1,
                 damage: getTowerDamage(selectedTower, 1),
                 range: getTowerRange(selectedTower, 1),
                 fireRate: getTowerFireRate(selectedTower, 1)
             });
-            gold -= cost;
-
+            
+            gold -= towerCost;
             updateDisplays();
         }
 
@@ -407,9 +432,12 @@
 
 
 
-// 敵の移動システムの改善
+        /**
+        * 敵キャラクターを移動させる関数
+        */
         function moveEnemies() {
             enemies.forEach((enemy, index) => {
+                // 敵がパスの終点に到達した場合
                 if (enemy.pathIndex >= enemy.path.length) {
                     gameBoard.removeChild(enemy.element);
                     enemies.splice(index, 1);
@@ -418,28 +446,34 @@
                     return;
                 }
 
-                let target = enemy.path[enemy.pathIndex];
-                let targetX = target.x * cellWidth + cellWidth / 2;
-                let targetY = target.y * cellHeight + cellHeight / 2;
+                // 次の目標位置を取得
+                let targetPosition = enemy.path[enemy.pathIndex];
+                let targetX = targetPosition.x * cellWidth + cellWidth / 2;
+                let targetY = targetPosition.y * cellHeight + cellHeight / 2;
 
-                let dx = targetX - enemy.x;
-                let dy = targetY - enemy.y;
-                let distance = Math.sqrt(dx * dx + dy * dy);
+                // 現在位置と目標位置の差分を計算
+                let deltaX = targetX - enemy.x;
+                let deltaY = targetY - enemy.y;
+                let distanceToTarget = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
-                if (distance < enemy.speed) {
+                // 目標位置に到達したら、次の位置へ
+                if (distanceToTarget < enemy.speed) {
                     enemy.pathIndex++;
                     enemy.x = targetX;
                     enemy.y = targetY;
                 } else {
-                    let ratio = enemy.speed / distance;
-                    enemy.x += dx * ratio;
-                    enemy.y += dy * ratio;
+                    // 目標位置に向かって移動
+                    let movementRatio = enemy.speed / distanceToTarget;
+                    enemy.x += deltaX * movementRatio;
+                    enemy.y += deltaY * movementRatio;
                 }
 
+                // 敵の位置を更新
                 enemy.element.style.left = `${enemy.x}px`;
                 enemy.element.style.top = `${enemy.y}px`;
             });
         }
+
 
         // ゲームループの実装
         function gameLoop() {
@@ -464,32 +498,37 @@
             requestAnimationFrame(gameLoop);
         }
         
-        function createEnemy(type) {
-            const startPos = path[0];
-            const enemy = document.createElement('div');
-            enemy.className = `enemy ${type}`;
-            enemy.style.left = `${startPos.x * cellWidth + cellWidth / 2}px`;
-            enemy.style.top = `${startPos.y * cellHeight + cellHeight / 2}px`;
-            enemy.style.width = `${cellWidth * 0.6}px`;
-            enemy.style.height = `${cellHeight * 0.6}px`;
-            gameBoard.appendChild(enemy);
 
-            const health = { goblin: 40, orc: 115, skeleton: 30, slime: 120 }[type];
-            const speed = { goblin: 1, orc: 0.5, skeleton: 2, slime: 0.3 }[type];
+        /**
+        * 新しい敵キャラクターを作成する関数
+        * @param {string} enemyType - 敵の種類
+        */
+        function createEnemy(enemyType) {
+            const startPosition = path[0];
+            const enemyElement = document.createElement('div');
+            enemyElement.className = `enemy ${enemyType}`;
+            enemyElement.style.left = `${startPosition.x * cellWidth + cellWidth / 2}px`;
+            enemyElement.style.top = `${startPosition.y * cellHeight + cellHeight / 2}px`;
+            enemyElement.style.width = `${cellWidth * 0.6}px`;
+            enemyElement.style.height = `${cellHeight * 0.6}px`;
+            gameBoard.appendChild(enemyElement);
+
+            const enemyHealth = { goblin: 40, orc: 115, skeleton: 30, slime: 120 }[enemyType];
+            const enemySpeed = { goblin: 1, orc: 0.5, skeleton: 2, slime: 0.3 }[enemyType];
 
             enemies.push({
-                type,
-                health,
-                maxHealth: health,
-                speed,
-                path: findPath(startPos.x, startPos.y, BOARD_WIDTH - 1, Math.floor(BOARD_HEIGHT / 2)),
+                type: enemyType,
+                health: enemyHealth,
+                maxHealth: enemyHealth,
+                speed: enemySpeed,
+                path: findPath(startPosition.x, startPosition.y, BOARD_WIDTH - 1, Math.floor(BOARD_HEIGHT / 2)),
                 pathIndex: 0,
-                element: enemy,
-                x: startPos.x * cellWidth + cellWidth / 2,
-                y: startPos.y * cellHeight + cellHeight / 2
+                element: enemyElement,
+                x: startPosition.x * cellWidth + cellWidth / 2,
+                y: startPosition.y * cellHeight + cellHeight / 2
             });
             totalEnemiesSpawned++;
-        }     
+        }  
 
 
         function moveToTarget(enemy, target) {
