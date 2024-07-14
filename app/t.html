@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ice Spear Tower Defense</title>
+    <title>Ice Spear Tower Defense - Multiple Paths</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -20,8 +20,8 @@
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
         #game-board {
-            width: 600px;
-            height: 400px;
+            width: 1000px;
+            height: 600px;
             background-color: #8fbc8f;
             position: relative;
             overflow: hidden;
@@ -32,8 +32,8 @@
             background-color: #e0e0e0;
         }
         .cell {
-            width: 40px;
-            height: 40px;
+            width: 20px;
+            height: 20px;
             position: absolute;
             background-color: #8fbc8f;
             box-sizing: border-box;
@@ -42,9 +42,21 @@
         .path {
             background-color: #d2b48c !important;
         }
+        .path-1 {
+            background-color: #e6c779 !important;
+        }
+        .path-2 {
+            background-color: #d4a76a !important;
+        }
+        .path-3 {
+            background-color: #c1885b !important;
+        }
+        .obstacle {
+            background-color: #4a4a4a !important;
+        }
         .tower {
-            width: 30px;
-            height: 30px;
+            width: 18px;
+            height: 18px;
             position: absolute;
             border-radius: 50%;
             transform: translate(-50%, -50%);
@@ -55,8 +67,8 @@
         .stone-tower { background-color: #A9A9A9; }
         .wind-tower { background-color: #98FB98; }
         .enemy {
-            width: 20px;
-            height: 20px;
+            width: 16px;
+            height: 16px;
             position: absolute;
             border-radius: 50%;
             transform: translate(-50%, -50%);
@@ -114,6 +126,15 @@
         button:hover {
             background-color: #45a049;
         }
+        #core {
+            width: 60px;
+            height: 60px;
+            position: absolute;
+            background-color: #FFD700;
+            border-radius: 50%;
+            z-index: 20;
+            box-shadow: 0 0 10px #FFA500;
+        }
     </style>
 </head>
 <body>
@@ -123,8 +144,8 @@
         <div id="sidebar">
             <h2>Ice Spear Tower Defense</h2>
             <div id="resources">
-                <p>Gold: <span id="gold">300</span></p>
-                <p>Mana: <span id="mana">50</span></p>
+                <p>Gold: <span id="gold">500</span></p>
+                <p>Mana: <span id="mana">100</span></p>
             </div>
             <div id="tower-buttons">
                 <button onclick="selectTower('ice')">Ice Tower (50g)</button>
@@ -138,7 +159,7 @@
                 <button onclick="upgrade('speed')">Upgrade Speed (100g)</button>
             </div>
             <p>Wave: <span id="wave">1</span></p>
-            <p>Lives: <span id="lives">20</span></p>
+            <p>Core Health: <span id="core-health">1000</span></p>
             <button onclick="startWave()">Start Wave</button>
         </div>
     </div>
@@ -148,17 +169,17 @@
         const goldDisplay = document.getElementById('gold');
         const manaDisplay = document.getElementById('mana');
         const waveDisplay = document.getElementById('wave');
-        const livesDisplay = document.getElementById('lives');
+        const coreHealthDisplay = document.getElementById('core-health');
         const errorDisplay = document.getElementById('error-display');
 
-        let gold = 300;
-        let mana = 50;
+        let gold = 500;
+        let mana = 100;
         let wave = 1;
-        let lives = 20;
+        let coreHealth = 1000;
         let towers = [];
         let enemies = [];
         let projectiles = [];
-        let path = [];
+        let paths = [];
         let selectedTower = null;
         let upgrades = { damage: 0, range: 0, speed: 0 };
         let totalEnemiesSpawned = 0;
@@ -166,8 +187,8 @@
         let isWaveInProgress = false;
         let waveEnemyCount = 0;
 
-        const BOARD_WIDTH = 15;
-        const BOARD_HEIGHT = 10;
+        const BOARD_WIDTH = 50;
+        const BOARD_HEIGHT = 30;
 
         function showError(message) {
             errorDisplay.textContent = message;
@@ -182,34 +203,90 @@
                 for (let x = 0; x < BOARD_WIDTH; x++) {
                     const cell = document.createElement('div');
                     cell.className = 'cell';
-                    cell.style.left = `${x * 40}px`;
-                    cell.style.top = `${y * 40}px`;
+                    cell.style.left = `${x * 20}px`;
+                    cell.style.top = `${y * 20}px`;
                     cell.addEventListener('click', () => placeTower(x, y));
                     gameBoard.appendChild(cell);
                 }
             }
             
-            path = [
-                {x: 0, y: 5}, {x: 1, y: 5}, {x: 2, y: 5}, {x: 3, y: 5},
-                {x: 3, y: 4}, {x: 3, y: 3}, {x: 3, y: 2},
-                {x: 4, y: 2}, {x: 5, y: 2}, {x: 6, y: 2}, {x: 7, y: 2},
-                {x: 7, y: 3}, {x: 7, y: 4}, {x: 7, y: 5}, {x: 7, y: 6},
-                {x: 8, y: 6}, {x: 9, y: 6}, {x: 10, y: 6}, {x: 11, y: 6},
-                {x: 11, y: 5}, {x: 11, y: 4}, {x: 11, y: 3},
-                {x: 12, y: 3}, {x: 13, y: 3}, {x: 14, y: 3}
+            // Define multiple paths
+            paths = [
+                // Path 1 (top)
+                [
+                    {x: 0, y: 5}, {x: 1, y: 5}, {x: 2, y: 5}, {x: 3, y: 5}, {x: 4, y: 5},
+                    {x: 5, y: 5}, {x: 6, y: 5}, {x: 7, y: 5}, {x: 8, y: 5}, {x: 9, y: 5},
+                    {x: 10, y: 5}, {x: 11, y: 5}, {x: 12, y: 5}, {x: 13, y: 5}, {x: 14, y: 5},
+                    {x: 15, y: 5}, {x: 16, y: 5}, {x: 17, y: 5}, {x: 18, y: 5}, {x: 19, y: 5},
+                    {x: 20, y: 5}, {x: 21, y: 5}, {x: 22, y: 5}, {x: 23, y: 5}, {x: 24, y: 5},
+                    {x: 25, y: 5}, {x: 26, y: 5}, {x: 27, y: 5}, {x: 28, y: 5}, {x: 29, y: 5},
+                    {x: 30, y: 5}, {x: 31, y: 5}, {x: 32, y: 5}, {x: 33, y: 5}, {x: 34, y: 5},
+                    {x: 35, y: 5}, {x: 36, y: 5}, {x: 37, y: 5}, {x: 38, y: 5}, {x: 39, y: 5},
+                    {x: 40, y: 5}, {x: 41, y: 5}, {x: 42, y: 6}, {x: 43, y: 7}, {x: 44, y: 8},
+                    {x: 45, y: 9}, {x: 46, y: 10}, {x: 47, y: 11}, {x: 48, y: 12}, {x: 48, y: 13},
+                    {x: 48, y: 14}
+                ],
+                // Path 2 (middle)
+                [
+                    {x: 0, y: 15}, {x: 1, y: 15}, {x: 2, y: 15}, {x: 3, y: 15}, {x: 4, y: 15},
+                    {x: 5, y: 15}, {x: 6, y: 15}, {x: 7, y: 15}, {x: 8, y: 15}, {x: 9, y: 15},
+                    {x: 10, y: 15}, {x: 11, y: 15}, {x: 12, y: 15}, {x: 13, y: 15}, {x: 14, y: 15},
+                    {x: 15, y: 15}, {x: 16, y: 15}, {x: 17, y: 15}, {x: 18, y: 15}, {x: 19, y: 15},
+                    {x: 20, y: 15}, {x: 21, y: 15}, {x: 22, y: 15}, {x: 23, y: 15}, {x: 24, y: 15},
+                    {x: 25, y: 15}, {x: 26, y: 15}, {x: 27, y: 15}, {x: 28, y: 15}, {x: 29, y: 15},
+                    {x: 30, y: 15}, {x: 31, y: 15}, {x: 32, y: 15}, {x: 33, y: 15}, {x: 34, y: 15},
+                    {x: 35, y: 15}, {x: 36, y: 15}, {x: 37, y: 15}, {x: 38, y: 15}, {x: 39, y: 15},
+                    {x: 40, y: 15}, {x: 41, y: 15}, {x: 42, y: 15}, {x: 43, y: 15}, {x: 44, y: 15},
+                    {x: 45, y: 15}, {x: 46, y: 15}, {x: 47, y: 15}, {x: 48, y: 15}
+                ],
+                // Path 3 (bottom)
+                [
+                    {x: 0, y: 25}, {x: 1, y: 25}, {x: 2, y: 25}, {x: 3, y: 25}, {x: 4, y: 25},
+                    {x: 5, y: 25}, {x: 6, y: 25}, {x: 7, y: 25}, {x: 8, y: 25}, {x: 9, y: 25},
+                    {x: 10, y: 25}, {x: 11, y: 25}, {x: 12, y: 25}, {x: 13, y: 25}, {x: 14, y: 25},
+                    {x: 15, y: 25}, {x: 16, y: 25}, {x: 17, y: 25}, {x: 18, y: 25}, {x: 19, y: 25},
+                    {x: 20, y: 25}, {x: 21, y: 25}, {x: 22, y: 25}, {x: 23, y: 25}, {x: 24, y: 25},
+                    {x: 25, y: 25}, {x: 26, y: 25}, {x: 27, y: 25}, {x: 28, y: 25}, {x: 29, y: 25},
+                    {x: 30, y: 25}, {x: 31, y: 25}, {x: 32, y: 25}, {x: 33, y: 25}, {x: 34, y: 25},
+                    {x: 35, y: 25}, {x: 36, y: 25}, {x: 37, y: 25}, {x: 38, y: 25}, {x: 39, y: 25},
+                    {x: 40, y: 25}, {x: 41, y: 25}, {x: 42, y: 24}, {x: 43, y: 23}, {x: 44, y: 22},
+                    {x: 45, y: 21}, {x: 46, y: 20}, {x: 47, y: 19}, {x: 48, y: 18}, {x: 48, y: 17},
+                    {x: 48, y: 16}
+                ]
             ];
             
-            path.forEach(p => {
-                const pathCell = gameBoard.children[p.y * BOARD_WIDTH + p.x];
-                pathCell.classList.add('path');
+            paths.forEach((path, index) => {
+                path.forEach(p => {
+                    const pathCell = gameBoard.children[p.y * BOARD_WIDTH + p.x];
+                    pathCell.classList.add('path');
+                    pathCell.classList.add(`path-${index + 1}`);
+                });
             });
+                
+            const obstacles = [
+                {x: 10, y: 10}, {x: 11, y: 10}, {x: 12, y: 10},
+                {x: 25, y: 20}, {x: 26, y: 20}, {x: 27, y: 20},
+                {x: 40, y: 10}, {x: 41, y: 10}, {x: 42, y: 10}
+            ];
+
+            obstacles.forEach(o => {
+                const obstacleCell = gameBoard.children[o.y * BOARD_WIDTH + o.x];
+                obstacleCell.classList.add('obstacle');
+            });
+
+            // Add the core
+            const core = document.createElement('div');
+            core.id = 'core';
+            core.style.left = `${47 * 20}px`;
+            core.style.top = `${14 * 20}px`;
+            gameBoard.appendChild(core);
         }
 
         function updateDisplays() {
             goldDisplay.textContent = gold;
             manaDisplay.textContent = mana;
             waveDisplay.textContent = wave;
-            livesDisplay.textContent = lives;
+            coreHealthDisplay.textContent = coreHealth;
         }
 
         function selectTower(type) {
@@ -225,20 +302,20 @@
                 return;
             }
             
-            if (path.some(p => p.x === x && p.y === y)) {
+            if (paths.some(path => path.some(p => p.x === x && p.y === y))) {
                 showError("Cannot place tower on the path!");
                 return;
             }
             
             const tower = document.createElement('div');
             tower.className = `tower ${selectedTower}-tower`;
-            tower.style.left = `${x * 40 + 20}px`;
-            tower.style.top = `${y * 40 + 20}px`;
+            tower.style.left = `${x * 20 + 10}px`;
+            tower.style.top = `${y * 20 + 10}px`;
             gameBoard.appendChild(tower);
             
             towers.push({ 
-                x: x * 40 + 20, 
-                y: y * 40 + 20, 
+                x: x * 20 + 10, 
+                y: y * 20 + 10, 
                 type: selectedTower, 
                 element: tower, 
                 lastShot: 0,
@@ -274,7 +351,16 @@
             const health = { goblin: 40, orc: 115, skeleton: 30, slime: 120 }[type];
             const speed = { goblin: 0.02, orc: 0.01, skeleton: 0.04, slime: 0.006 }[type];
             
-            enemies.push({ type, health, maxHealth: health, speed, pathIndex: 0, element: enemy });
+            const pathIndex = Math.floor(Math.random() * paths.length);
+            enemies.push({ 
+                type, 
+                health, 
+                maxHealth: health, 
+                speed, 
+                pathIndex: 0, 
+                element: enemy,
+                path: paths[pathIndex]
+            });
             totalEnemiesSpawned++;
         }
 
@@ -282,20 +368,25 @@
             enemies.forEach((enemy, index) => {
                 enemy.pathIndex += enemy.speed;
                 
-                if (enemy.pathIndex >= path.length - 1) {
+                if (enemy.pathIndex >= enemy.path.length - 1) {
                     gameBoard.removeChild(enemy.element);
                     enemies.splice(index, 1);
-                    lives--;
+                    coreHealth -= enemy.maxHealth;
                     updateDisplays();
+                    if (coreHealth <= 0) {
+                        showError('Game Over! The core has been destroyed.');
+                        isWaveInProgress = false;
+                        return;
+                    }
                     return;
                 }
                 
-                const currentPos = path[Math.floor(enemy.pathIndex)];
-                const nextPos = path[Math.min(Math.ceil(enemy.pathIndex), path.length - 1)];
+                const currentPos = enemy.path[Math.floor(enemy.pathIndex)];
+                const nextPos = enemy.path[Math.min(Math.ceil(enemy.pathIndex), enemy.path.length - 1)];
                 const progress = enemy.pathIndex - Math.floor(enemy.pathIndex);
                 
-                const x = currentPos.x * 40 + (nextPos.x - currentPos.x) * 40 * progress + 20;
-                const y = currentPos.y * 40 + (nextPos.y - currentPos.y) * 40 * progress + 20;
+                const x = currentPos.x * 20 + (nextPos.x - currentPos.x) * 20 * progress + 10;
+                const y = currentPos.y * 20 + (nextPos.y - currentPos.y) * 20 * progress + 10;
                 
                 enemy.element.style.left = `${x}px`;
                 enemy.element.style.top = `${y}px`;
@@ -427,7 +518,7 @@
                 return;
             }
             isWaveInProgress = true;
-            waveEnemyCount = wave * 5;
+            waveEnemyCount = wave * 15; // Increased enemy count for multiple paths
             totalEnemiesSpawned = 0;
             
             let enemiesSpawned = 0;
@@ -438,26 +529,25 @@
                 if (enemiesSpawned >= waveEnemyCount) {
                     clearInterval(spawnInterval);
                 }
-            }, 2000 / wave);
+            }, 800); // Faster spawn rate for multiple paths
         }
         
         function gameLoop() {
             moveEnemies();
             shootEnemies();
             moveProjectiles();
-            if (lives <= 0) {
-                showError('Game Over!');
+            if (coreHealth <= 0) {
+                showError('Game Over! The core has been destroyed.');
                 isWaveInProgress = false;
                 return;
             }
             
             if (isWaveInProgress && enemies.length === 0 && totalEnemiesSpawned >= waveEnemyCount) {
                 isWaveInProgress = false;
-                gold += 50;
+                gold += 150; // Increased gold reward for clearing multiple paths
                 wave++;
                 updateDisplays();
-                showError('Wave Cleared! +50 gold');
-                console.log(`Wave cleared. Total enemies spawned: ${totalEnemiesSpawned}, Wave enemy count: ${waveEnemyCount}`);
+                showError('Wave Cleared! +150 gold');
             }
             
             requestAnimationFrame(gameLoop);
