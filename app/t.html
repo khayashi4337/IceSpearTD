@@ -41,15 +41,27 @@
         }
         .path {
             background-color: #d2b48c !important;
+            background-image: url('img/tiles/FieldsTile_01.png');
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
         }
         .path-1 {
             background-color: #e6c779 !important;
+            background-image: url('img/tiles/FieldsTile_02.png');
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
         }
         .path-2 {
             background-color: #d4a76a !important;
+            background-image: url('img/tiles/FieldsTile_03.png');
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
         }
         .path-3 {
             background-color: #c1885b !important;
+            background-image: url('img/tiles/FieldsTile_04.png');
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
         }
         .obstacle {
             background-color: #4a4a4a !important;
@@ -256,10 +268,19 @@
                 ]
             ];
             
+            // 各パス（道路）に対してループを実行
             paths.forEach((path, index) => {
+                // 各パス内の全ての座標に対してループを実行
                 path.forEach(p => {
+                    // ゲームボード上の対応するセルを取得
+                    // p.y * BOARD_WIDTH + p.x は2次元座標を1次元インデックスに変換している
                     const pathCell = gameBoard.children[p.y * BOARD_WIDTH + p.x];
+                    
+                    // セルに'path'クラスを追加（全ての道路セルに共通のスタイルを適用）
                     pathCell.classList.add('path');
+                    
+                    // セルに'path-1', 'path-2', 'path-3'などのクラスを追加
+                    // これにより、各パスに個別のスタイルを適用できる
                     pathCell.classList.add(`path-${index + 1}`);
                 });
             });
