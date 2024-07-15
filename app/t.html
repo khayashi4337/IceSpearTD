@@ -163,8 +163,9 @@
             <button onclick="startWave()">Start Wave</button>
         </div>
     </div>
+    <script type="module">
+        import { Projectile } from './Projectile.js';
 
-    <script>
         const gameBoard = document.getElementById('game-board');
         const goldDisplay = document.getElementById('gold');
         const manaDisplay = document.getElementById('mana');
@@ -394,68 +395,18 @@
         }
 
         /**
-        * プロジェクタイル（弾）を描画する関数
-        * @param {number} x - プロジェクタイルの開始X座標
-        * @param {number} y - プロジェクタイルの開始Y座標
-        * @param {number} targetX - 目標のX座標
-        * @param {number} targetY - 目標のY座標
-        * @param {string} towerType - タワーの種類（'fire', 'ice', 'stone', 'wind'）
-        * @returns {HTMLElement} 作成されたプロジェクタイル要素
+        * 全てのタワーから敵に向けてプロジェクタイルを発射する関数
+        * @param {HTMLElement} gameBoard - ゲームボード要素
         */
-        function drawProjectile(x, y, targetX, targetY, towerType) {
-            // プロジェクタイル要素の作成
-            const projectile = document.createElement('div');
-            projectile.className = 'projectile';
-            projectile.style.left = `${x}px`;
-            projectile.style.top = `${y}px`;
-            
-            // タワーの種類に応じてプロジェクタイルのスタイルを変更
-            switch(towerType) {
-                case 'fire':
-                    projectile.style.backgroundColor = '#FF4500';
-                    break;
-                case 'ice':
-                    projectile.style.backgroundColor = '#ADD8E6';
-                    break;
-                case 'stone':
-                    projectile.style.backgroundColor = '#A9A9A9';
-                    break;
-                case 'wind':
-                    projectile.style.backgroundColor = '#98FB98';
-                    break;
-                default:
-                    projectile.style.backgroundColor = '#000';
-            }
-            
-            // プロジェクタイルをゲームボードに追加
-            gameBoard.appendChild(projectile);
-            
-            // プロジェクタイルの角度を計算し、回転を適用
-            const angle = Math.atan2(targetY - y, targetX - x);
-            projectile.style.transform = `rotate(${angle}rad)`;
-            
-            return projectile;
-        }
-
-        /**
-        * タワーから敵に向けてプロジェクタイルを発射する関数
-        * この関数は各フレームで呼び出され、全てのタワーの攻撃処理を行う
-        */
-        function shootEnemies() {
+        function shootEnemies(gameBoard) {
             // 全てのタワーをループで処理
             towers.forEach(tower => {
                 const now = Date.now();
                 // タワーの攻撃間隔をチェック
                 if (now - tower.lastShot > tower.fireRate * 1000) {
                     // タワーの攻撃範囲内にいる最初の敵を探す
-                    const target = enemies.find(enemy => {
-                        const dx = parseInt(enemy.element.style.left) - tower.x;
-                        const dy = parseInt(enemy.element.style.top) - tower.y;
-                        // ユークリッド距離で攻撃範囲内かどうかを判定
-                        return Math.sqrt(dx * dx + dy * dy) < tower.range;
-                    });
+                    const target = findTargetForTower(tower);
                     
-                    // 攻撃対象が見つかった場合
                     if (target) {
                         // 最後の攻撃時間を更新
                         tower.lastShot = now;
@@ -464,72 +415,76 @@
                         const targetX = parseInt(target.element.style.left);
                         const targetY = parseInt(target.element.style.top);
                         
-                        // プロジェクタイルを描画
-                        const projectileElement = drawProjectile(tower.x, tower.y, targetX, targetY, tower.type);
-                        
-                        // プロジェクタイル情報をリストに追加
-                        projectiles.push({ 
-                            element: projectileElement, 
-                            x: tower.x, 
-                            y: tower.y, 
-                            targetX, 
-                            targetY, 
-                            damage: tower.damage, 
-                            target, 
-                            towerType: tower.type 
-                        });
+                        // 新しいProjectileオブジェクトを作成
+                        const projectile = new Projectile(
+                            tower.x, tower.y, targetX, targetY, 
+                            tower.type, tower.damage, target
+                        );
+                        // プロジェクタイルのHTML要素を作成し、ゲームボードに追加
+                        projectile.createProjectileElement(gameBoard);
+                        // プロジェクタイルをリストに追加
+                        projectiles.push(projectile);
                     }
                 }
             });
         }
 
-        function moveProjectiles() {
-            projectiles.forEach((projectile, index) => {
-                const dx = projectile.targetX - projectile.x;
-                const dy = projectile.targetY - projectile.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
+        /**
+        * 全てのプロジェクタイルを移動させ、衝突判定を行う関数
+        * @param {HTMLElement} gameBoard - ゲームボード要素
+        */
+        function moveProjectiles(gameBoard) {
+            // プロジェクタイルの配列を更新（フィルタリング）
+            projectiles = projectiles.filter(projectile => {
+                // プロジェクタイルを移動させ、目標に到達したかチェック
+                const hitTarget = projectile.move(gameBoard);
                 
-                if (distance < 5) {
-                    gameBoard.removeChild(projectile.element);
-                    projectiles.splice(index, 1);
+                if (hitTarget) {
+                    // プロジェクタイルが目標に命中した場合の処理
+                    const enemyDestroyed = projectile.hit(gameBoard, (destroyedEnemy) => {
+                        // 敵が倒された時の処理
+                        removeEnemy(destroyedEnemy, gameBoard);
+                        gold += getEnemyGoldReward(destroyedEnemy.type);
+                        updateDisplays();
+                    });
                     
-                    if (projectile.target && projectile.target.health) {
-                        projectile.target.health -= projectile.damage;
-                        showDamage(projectile.targetX, projectile.targetY, projectile.damage);
-                        
-                        applyTowerEffect(projectile.target, projectile.towerType);
-                        
-                        if (projectile.target.health <= 0) {
-                            if (projectile.target.element && projectile.target.element.parentNode) {
-                                gameBoard.removeChild(projectile.target.element);
-                            }
-                            enemies = enemies.filter(e => e !== projectile.target);
-                            gold += getEnemyGoldReward(projectile.target.type);
-                            updateDisplays();
-                        }
-                    }
-                } else {
-                    const speed = 5;
-                    projectile.x += dx / distance * speed;
-                    projectile.y += dy / distance * speed;
-                    projectile.element.style.left = `${projectile.x}px`;
-                    projectile.element.style.top = `${projectile.y}px`;
+                    // プロジェクタイルのライフサイクル終了処理
+                    projectile.destroy(gameBoard);
+                    return false; // このプロジェクタイルをリストから削除
                 }
+                return true; // このプロジェクタイルをリストに残す
             });
         }
-        
-        function showDamage(x, y, damage) {
-            const damageText = document.createElement('div');
-            damageText.className = 'damage-text';
-            damageText.textContent = Math.round(damage);
-            damageText.style.left = `${x}px`;
-            damageText.style.top = `${y}px`;
-            gameBoard.appendChild(damageText);
-            
-            setTimeout(() => {
-                gameBoard.removeChild(damageText);
-            }, 500);
+
+        /**
+        * タワーの攻撃範囲内にいる最初の敵を見つける関数
+        * @param {Object} tower - タワーオブジェクト
+        * @returns {Object|null} 見つかった敵オブジェクト、または null
+        */
+        function findTargetForTower(tower) {
+            return enemies.find(enemy => {
+                // タワーと敵の距離を計算
+                const dx = parseInt(enemy.element.style.left) - tower.x;
+                const dy = parseInt(enemy.element.style.top) - tower.y;
+                // タワーの攻撃範囲内にいるかチェック
+                return Math.sqrt(dx * dx + dy * dy) < tower.range;
+            });
         }
+
+        /**
+        * 敵をゲームから削除する関数
+        * @param {Object} enemy - 削除する敵オブジェクト
+        * @param {HTMLElement} gameBoard - ゲームボード要素
+        */
+        function removeEnemy(enemy, gameBoard) {
+            // 敵のHTML要素をゲームボードから削除
+            if (enemy.element && enemy.element.parentNode === gameBoard) {
+                gameBoard.removeChild(enemy.element);
+            }
+            // 敵リストから該当の敵を削除
+            enemies = enemies.filter(e => e !== enemy);
+        }        
+
 
         function applyTowerEffect(enemy, towerType) {
             switch(towerType) {
@@ -596,8 +551,8 @@
         
         function gameLoop() {
             moveEnemies();
-            shootEnemies();
-            moveProjectiles();
+            shootEnemies(gameBoard);
+            moveProjectiles(gameBoard);
             if (coreHealth <= 0) {
                 showError('Game Over! The core has been destroyed.');
                 isWaveInProgress = false;
