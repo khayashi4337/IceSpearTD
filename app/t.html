@@ -40,7 +40,7 @@
             border: 1px solid rgba(0,0,0,0.1);
         }
         .path {
-            background-color: #d2b48c !important;
+            background-color: #d2b48c;
             background-image: url('img/tiles/FieldsTile_01.png');
             background-repeat: no-repeat;
             background-size: 100% 100%;
@@ -175,8 +175,14 @@
             <button onclick="startWave()">Start Wave</button>
         </div>
     </div>
+    <script>
+        if (window.location.protocol === 'file:') {
+            alert('ローカルサーバー( python -m http.server 8000)を使用して正しくゲームを起動します。自動的にリダイレクトします。');
+            window.location.href = 'http://localhost:8000/t.html';
+        }
+    </script>
     <script type="module">
-        import { Projectile } from './Projectile.js';
+        import { Projectile } = import('./Projectile.js');
 
         const gameBoard = document.getElementById('game-board');
         const goldDisplay = document.getElementById('gold');
