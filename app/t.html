@@ -320,6 +320,8 @@
         function selectTower(type) {
             selectedTower = type;
         }
+        // グローバルスコープに公開
+        window.selectTower = selectTower;    
 
         function placeTower(x, y) {
             if (!selectedTower) return;
@@ -355,6 +357,8 @@
             gold -= cost;
             updateDisplays();
         }
+        // グローバルスコープに公開
+        window.placeTower = placeTower;         
 
         function getTowerDamage(type, level) {
             const baseDamage = { ice: 20, fire: 40, stone: 100, wind: 16 }[type];
@@ -575,6 +579,8 @@
                 }
             }, 800); // Faster spawn rate for multiple paths
         }
+        // グローバルスコープに公開
+        window.startWave = startWave;        
         
         function gameLoop() {
             moveEnemies();
