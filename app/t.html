@@ -586,6 +586,7 @@
                 waveManager.isWaveInProgress = false;
                 gold += 150; // Increased gold reward for clearing multiple paths
                 waveManager.incrementWave(); // 波の数を増やす
+                updateDisplays();
                 console.log('Wave cleared, preparing for next wave'); // ログ追加
                 showError('Wave Cleared! +150 gold');
             }
