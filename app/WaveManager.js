@@ -6,12 +6,13 @@
  * これにより、保守性が向上し、将来の機能追加や変更が容易になります。
  */
 export class WaveManager {
-    constructor(createEnemyFunc) {
+    constructor(createEnemyFunc, showErrorFunc) {
         this.wave = 1;
         this.isWaveInProgress = false;
         this.waveEnemyCount = 0;
         this.totalEnemiesSpawned = 0;
         this.createEnemy = createEnemyFunc; 
+        this.showError = showErrorFunc;
         console.log('WaveManager initialized'); // ログ追加
     }
 
@@ -31,7 +32,7 @@ export class WaveManager {
      */
     startWave() {
         if (this.isWaveInProgress) {
-            showError("Wave already in progress!");
+            this.showError("Wave already in progress!");
             return;
         }
         this.isWaveInProgress = true;

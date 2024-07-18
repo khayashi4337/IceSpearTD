@@ -194,9 +194,8 @@
 
         // WaveManager インスタンスの作成
         // これにより、波に関連するすべての機能が一箇所で管理されます
-        const waveManager = new WaveManager(createEnemy);
+        const waveManager = new WaveManager(createEnemy, showError);
         window.waveManager = waveManager;
-        // window.startWave = waveManager.startWave;
 
         let gold = 500;
         let mana = 100;
