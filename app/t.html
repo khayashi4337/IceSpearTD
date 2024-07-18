@@ -193,7 +193,7 @@
         const errorDisplay = document.getElementById('error-display');
 
         // WaveManager インスタンスの作成
-        // これにより、波に関連するすべての機能が一箇所で管理されます
+        // これにより、Waveに関連するすべての機能が一箇所で管理されます
         const waveManager = new WaveManager(createEnemy, showError);
         window.waveManager = waveManager;
 
@@ -319,7 +319,7 @@
         function updateDisplays() {
             goldDisplay.textContent = gold;
             manaDisplay.textContent = mana;
-            waveDisplay.textContent = waveManager.wave; // WaveManager から波の数を取得
+            waveDisplay.textContent = waveManager.wave; // WaveManager からWaveの数を取得
             coreHealthDisplay.textContent = coreHealth;
         }
 
@@ -569,7 +569,7 @@
        
         /**
         * ゲームのメインループ
-        * 波の進行状況を確認し、必要に応じて次の波を準備します
+        * Waveの進行状況を確認し、必要に応じて次のWaveを準備します
         */
         function gameLoop() {
             moveEnemies();
@@ -581,11 +581,11 @@
                 return;
             }
             
-            // 波のクリア条件をチェック
+            // Waveのクリア条件をチェック
             if (waveManager.isWaveInProgress && enemies.length === 0 && waveManager.totalEnemiesSpawned >= waveManager.waveEnemyCount) {
                 waveManager.isWaveInProgress = false;
                 gold += 150; // Increased gold reward for clearing multiple paths
-                waveManager.incrementWave(); // 波の数を増やす
+                waveManager.incrementWave(); // Waveの数を増やす
                 updateDisplays();
                 console.log('Wave cleared, preparing for next wave');
                 showError('Wave Cleared! +150 gold');
