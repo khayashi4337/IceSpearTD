@@ -172,7 +172,7 @@
             </div>
             <p>Wave: <span id="wave">1</span></p>
             <p>Core Health: <span id="core-health">1000</span></p>
-            <button onclick="startWave()">Start Wave</button>
+            <button onclick="waveManager.startWave()">Start Wave</button>
         </div>
     </div>
     <script>
@@ -183,6 +183,7 @@
     </script>
     <script type="module">
         import { Projectile } from './Projectile.js';
+        import { WaveManager } from './WaveManager.js';
 
         const gameBoard = document.getElementById('game-board');
         const goldDisplay = document.getElementById('gold');
@@ -190,6 +191,12 @@
         const waveDisplay = document.getElementById('wave');
         const coreHealthDisplay = document.getElementById('core-health');
         const errorDisplay = document.getElementById('error-display');
+
+        // WaveManager インスタンスの作成
+        // これにより、波に関連するすべての機能が一箇所で管理されます
+        const waveManager = new WaveManager(createEnemy);
+        window.waveManager = waveManager;
+        // window.startWave = waveManager.startWave;
 
         let gold = 500;
         let mana = 100;
@@ -313,7 +320,7 @@
         function updateDisplays() {
             goldDisplay.textContent = gold;
             manaDisplay.textContent = mana;
-            waveDisplay.textContent = wave;
+            waveDisplay.textContent = waveManager.wave; // WaveManager から波の数を取得
             coreHealthDisplay.textContent = coreHealth;
         }
 
@@ -560,28 +567,11 @@
             }
         }
 
-        function startWave() {
-            if (isWaveInProgress) {
-                showError("Wave already in progress!");
-                return;
-            }
-            isWaveInProgress = true;
-            waveEnemyCount = wave * 15; // Increased enemy count for multiple paths
-            totalEnemiesSpawned = 0;
-            
-            let enemiesSpawned = 0;
-            const spawnInterval = setInterval(() => {
-                const types = ['goblin', 'orc', 'skeleton', 'slime'];
-                createEnemy(types[Math.floor(Math.random() * types.length)]);
-                enemiesSpawned++;
-                if (enemiesSpawned >= waveEnemyCount) {
-                    clearInterval(spawnInterval);
-                }
-            }, 800); // Faster spawn rate for multiple paths
-        }
-        // グローバルスコープに公開
-        window.startWave = startWave;        
-        
+       
+        /**
+        * ゲームのメインループ
+        * 波の進行状況を確認し、必要に応じて次の波を準備します
+        */
         function gameLoop() {
             moveEnemies();
             shootEnemies(gameBoard);
@@ -592,11 +582,12 @@
                 return;
             }
             
-            if (isWaveInProgress && enemies.length === 0 && totalEnemiesSpawned >= waveEnemyCount) {
-                isWaveInProgress = false;
+            // 波のクリア条件をチェック
+            if (waveManager.isWaveInProgress && enemies.length === 0 && waveManager.totalEnemiesSpawned >= waveManager.waveEnemyCount) {
+                waveManager.isWaveInProgress = false;
                 gold += 150; // Increased gold reward for clearing multiple paths
-                wave++;
-                updateDisplays();
+                waveManager.incrementWave(); // 波の数を増やす
+                console.log('Wave cleared, preparing for next wave'); // ログ追加
                 showError('Wave Cleared! +150 gold');
             }
             
