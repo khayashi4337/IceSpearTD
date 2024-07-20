@@ -53,7 +53,7 @@
 
     <script>
         if (window.location.protocol === 'file:') {
-            alert('ローカルサーバー(前提: python -m http.server 8000)を使用して正しくゲームを起動します。自動的にリダイレクトします。');
+            alert('ローカルサーバー(前提: python -m http.server 8000 開発でキャッシュしない場合は python ../utils/server.py 8000)を使用して正しくゲームを起動します。自動的にリダイレクトします。');
             window.location.href = 'http://localhost:8000/t.html';
         }
     </script>

@@ -2,6 +2,8 @@
 
 import { Projectile } from './Projectile.js';
 import { WaveManager } from './WaveManager.js';
+import { showSkillSelection, closeSkillSelection, initializeSkillSystem, getPlayerSkills, addSkillData } from './skill-system.js';
+
 
 // グローバル変数
 let gameBoard, goldDisplay, manaDisplay, waveDisplay, coreHealthDisplay, errorDisplay;
@@ -36,6 +38,28 @@ function initGame() {
     // WaveManagerのインスタンス化
     waveManager = new WaveManager(createEnemy, showError);
     window.waveManager = waveManager;
+
+    // スキルシステムの初期化
+    initializeSkillSystem();
+    console.log("スキルシステムが初期化されました");
+
+    // スキルデータの追加（例）
+    addSkillData('SK_BASIC_001', {
+        name: '氷の矢強化!',
+        description: '基本攻撃の威力を上げるyo',
+        imagePath: 'img/skills/ice_arrow.png',
+        effect: () => {
+            towers.forEach(tower => {
+                if (tower.type === 'ice') {
+                    tower.damage *= 1.1; // 10%ダメージ増加
+                }
+            });
+        }
+    });   
+
+    // イベントリスナーの設定
+    document.getElementById('show-skill-selection').addEventListener('click', showSkillSelection);
+    document.getElementById('close-skill-selection').addEventListener('click', closeSkillSelection);    
 
     // ゲームボードの作成
     createGameBoard();
@@ -433,10 +457,15 @@ function upgrade(type) {
             tower.range = getTowerRange(tower.type, tower.level);
             tower.fireRate = getTowerFireRate(tower.type, tower.level);
         });
+        
+        // スキル効果の適用
+        applySkillEffects();
     } else {
         showError("ゴールドが足りないか、最大アップグレード数に達しています！");
     }
 }
+
+
 
 /**
  * ゲームのメインループ
@@ -462,11 +491,42 @@ function gameLoop() {
         updateDisplays();
         console.log('ウェーブクリア、次のウェーブの準備中');
         showError('ウェーブクリア！ +150ゴールド獲得');
+
+        // ウェーブクリア時にスキル選択を表示
+        showSkillSelection();        
     }
     
     // 次のアニメーションフレームをリクエスト
     requestAnimationFrame(gameLoop);
 }
+
+/**
+ * スキル効果を適用する関数
+ */
+function applySkillEffects() {
+    const playerSkills = getPlayerSkills();
+    playerSkills.forEach(skillId => {
+        const skill = getSkillById(skillId);
+        if (skill && skill.effect) {
+            skill.effect();
+        }
+    });
+}
+
+
+/**
+ * スキルIDからスキルオブジェクトを取得する関数
+ * @param {string} skillId - スキルのID
+ * @returns {Object|null} スキルオブジェクト、または null
+ */
+function getSkillById(skillId) {
+    // この関数の実装は、スキルデータの管理方法に依存します
+    // 例えば、スキルデータをグローバル変数や別のモジュールで管理している場合は
+    // そこからスキルオブジェクトを取得する処理を書きます
+    return null; // 仮の実装
+}
+
+
 
 // グローバルスコープに公開する関数
 window.selectTower = selectTower;
@@ -475,3 +535,4 @@ window.upgrade = upgrade;
 
 // DOMの読み込みが完了したらゲームを初期化
 document.addEventListener('DOMContentLoaded', initGame);
+
