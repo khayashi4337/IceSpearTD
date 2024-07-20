@@ -1,0 +1,176 @@
+/* styles.css */
+
+/* 全体のレイアウト */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+}
+
+/* ゲームコンテナ */
+#game-container {
+    display: flex;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* ゲームボード */
+#game-board {
+    width: 1000px;
+    height: 600px;
+    background-color: #8fbc8f;
+    position: relative;
+    overflow: hidden;
+}
+
+/* サイドバー */
+#sidebar {
+    width: 200px;
+    padding: 20px;
+    background-color: #e0e0e0;
+}
+
+/* ゲームボードのセル */
+.cell {
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    background-color: #8fbc8f;
+    box-sizing: border-box;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+/* パス（道路）のスタイル */
+.path {
+    background-color: #d2b48c;
+    background-image: url('img/tiles/FieldsTile_01.png');
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+}
+
+/* 各パスの個別スタイル */
+.path-1 {
+    background-color: #e6c779 !important;
+    background-image: url('img/tiles/FieldsTile_02.png');
+}
+
+.path-2 {
+    background-color: #d4a76a !important;
+    background-image: url('img/tiles/FieldsTile_03.png');
+}
+
+.path-3 {
+    background-color: #c1885b !important;
+    background-image: url('img/tiles/FieldsTile_04.png');
+}
+
+/* 障害物 */
+.obstacle {
+    background-color: #4a4a4a !important;
+}
+
+/* タワー */
+.tower {
+    width: 18px;
+    height: 18px;
+    position: absolute;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+}
+
+/* タワーの種類別スタイル */
+.ice-tower { background-color: #ADD8E6; }
+.fire-tower { background-color: #FF4500; }
+.stone-tower { background-color: #A9A9A9; }
+.wind-tower { background-color: #98FB98; }
+
+/* 敵キャラクター */
+.enemy {
+    width: 16px;
+    height: 16px;
+    position: absolute;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 5;
+    transition: left 0.1s linear, top 0.1s linear;
+}
+
+/* 敵キャラクターの種類別スタイル */
+.goblin { background-color: #32cd32; }
+.orc { background-color: #8b0000; }
+.skeleton { background-color: #f0f0f0; }
+.slime { background-color: #00ff00; }
+
+/* プロジェクタイル（弾） */
+.projectile {
+    width: 6px;
+    height: 6px;
+    position: absolute;
+    border-radius: 50%;
+    background-color: #000;
+    z-index: 15;
+}
+
+/* ダメージテキスト */
+.damage-text {
+    position: absolute;
+    color: red;
+    font-weight: bold;
+    pointer-events: none;
+    animation: fadeOut 0.5s forwards;
+    z-index: 20;
+}
+
+/* ダメージテキストのフェードアウトアニメーション */
+@keyframes fadeOut {
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
+/* エラー表示 */
+#error-display {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #ff6b6b;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    display: none;
+    z-index: 100;
+}
+
+/* ボタン */
+button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+/* コア（中心部） */
+#core {
+    width: 60px;
+    height: 60px;
+    position: absolute;
+    background-color: #FFD700;
+    border-radius: 50%;
+    z-index: 20;
+    box-shadow: 0 0 10px #FFA500;
+}
