@@ -32,7 +32,23 @@
             <p>Wave: <span id="wave">1</span></p>
             <p>Core Health: <span id="core-health">1000</span></p>
             <button onclick="waveManager.startWave()">Start Wave</button>
+            <!-- スキル選択システム用のUI -->
+            <div id="skill-system">
+                <h3>Skills</h3>
+                <div id="skill-options"></div>
+                <button id="show-skill-selection">Select Skill</button>
+            </div>        
         </div>
+
+        <!-- スキル選択モーダル -->
+        <div id="skill-selection-modal" class="modal">
+            <div class="modal-content">
+                <h2>スキル選択</h2>
+                <div id="skill-selection-options"></div>
+                <button id="close-skill-selection">閉じる</button>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -43,5 +59,6 @@
     </script>
 
     <script type="module" src="game.js"></script>
+    
 </body>
 </html>
