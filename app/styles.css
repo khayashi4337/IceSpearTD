@@ -198,6 +198,16 @@ button:hover {
     border: 1px solid #ccc;
     border-radius: 5px;
     cursor: pointer;
+    overflow: hidden; /* はみ出た部分を隠す */
+    display: flex; /* Flexboxを使用 */
+    justify-content: center; /* 水平方向の中央揃え */
+    align-items: center; /* 垂直方向の中央揃え */
+}
+
+.skill-icon img {
+    max-width: 100%; /* 親要素の幅に合わせる */
+    max-height: 100%; /* 親要素の高さに合わせる */
+    object-fit: contain; /* アスペクト比を維持しつつ、コンテナに収める */
 }
 
 /* モーダルスタイル */
@@ -229,6 +239,7 @@ button:hover {
 }
 
 .skill-option {
+    width: 32%; /* 30% から微調整 */
     text-align: center;
     cursor: pointer;
 }
@@ -244,6 +255,7 @@ button:hover {
 
 /* スキル選択モーダル全体 */
 #skill-selection-modal {
+    padding: 20px 10px; /* 左右のパディングを減らす */
     background-color: rgba(0, 0, 0, 0.8);
     padding: 20px;
     border-radius: 10px;
@@ -328,6 +340,10 @@ button:hover {
 
 /* 閉じるボタン */
 #close-skill-selection {
+    display: block; /* inline-block から変更 */
+    width: 100%; /* 幅を100%に設定 */
+    max-width: 800px; /* スキルオプションコンテナと同じ最大幅 */
+    margin: 20px auto 0; /* 上部のマージンを調整し、中央揃え */    
     background-color: #e74c3c;
     color: white;
     border: none;

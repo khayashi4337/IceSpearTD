@@ -150,7 +150,12 @@ function updateSkillDisplay() {
     playerSkills.getActiveSkills().forEach(skill => {
         const skillIcon = document.createElement('div');
         skillIcon.className = 'skill-icon';
-        skillIcon.style.backgroundImage = `url(${skill.thumbImgPath})`;
+        
+        const img = document.createElement('img');
+        img.src = skill.thumbImgPath;
+        img.alt = skill.name;
+        
+        skillIcon.appendChild(img);
         skillIcon.title = `${skill.name}`;
         skillOptions.appendChild(skillIcon);
     });
