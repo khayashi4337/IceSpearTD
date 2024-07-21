@@ -239,3 +239,66 @@ button:hover {
     border: 2px solid #ccc;
     border-radius: 10px;
 }
+
+/* styles.css に追加 */
+
+#skill-selection-modal {
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#skill-selection-options {
+    display: flex;
+    justify-content: space-around;
+    width: 90%;
+    max-width: 1200px;
+}
+
+.skill-option {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 10px;
+    width: 30%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.skill-option:hover {
+    transform: scale(1.05);
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.skill-image-container {
+    width: 100%;
+    height: 150px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.skill-image-container img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.skill-info h3 {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+    color: #FFD700;
+}
+
+.skill-info p {
+    font-size: 0.9em;
+    color: #FFFFFF;
+}
+
+.skill-type {
+    font-style: italic;
+    color: #ADD8E6 !important;
+    margin-top: 10px;
+}

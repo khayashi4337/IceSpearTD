@@ -8,12 +8,16 @@ import {
     initializeSkillSystem, 
     getPlayerSkills, 
     addSkillData,
+    enableSkillSelection,
+    disableSkillSelection
+} from './skill-system.js';
+import { 
     Skill,
     BasicSkill,
     TopSkill,
     TypeASkill,
     TypeBSkill
-} from './skill-system.js';
+} from './skill-classes.js';
 import { loadJsonData } from './jsonLoader.js';
 import { CellManager } from './cellManager.js';
 import { Tower, TowerManager } from './Tower.js';
@@ -72,48 +76,14 @@ async function initGame() {
         initializeSkillSystem();
         console.log("スキルシステムが初期化されました");
 
-        // スキルデータの追加（例）
-        addSkillData(new BasicSkill(
-            'SK_BASIC_001',
-            '氷の矢強化',
-            '基本攻撃の威力を上げる',
-            'img/skills/ice_arrow.png',
-            'img/skills/ice_arrow_thumb.png',
-            (towers, level) => {
-                towers.forEach(tower => {
-                    if (tower.type === 'ice') {
-                        tower.damage *= (1 + 0.1 * level); // レベルに応じて10%ずつ上昇
-                    }
-                });
-            },
-            () => true, // 常に選択可能
-            5 // 最大レベル
-        )); 
+       disableSkillSelection(); // ゲーム開始時はスキル選択を無効に
 
         // イベントリスナーの設定
-        document.getElementById('show-skill-selection').addEventListener('click', showSkillSelection);
-        document.getElementById('close-skill-selection').addEventListener('click', closeSkillSelection);
-
-
-        // タワー選択ボタンのイベントリスナーを設定
-        document.querySelectorAll('#tower-buttons button').forEach(button => {
-            button.addEventListener('click', () => {
-                const towerType = button.getAttribute('onclick').match(/'(\w+)'/)[1];
-                selectTower(towerType);
-            });
-        });
-
-        // ゲームボードのクリックイベントリスナーを設定
-        gameBoard.addEventListener('click', (event) => {
-            const rect = gameBoard.getBoundingClientRect();
-            const x = Math.floor((event.clientX - rect.left) / 20);
-            const y = Math.floor((event.clientY - rect.top) / 20);
-            placeTower(x, y);
-        });
-        
+        setupEventListeners();
 
         // 表示の更新
         updateDisplays();
+        
         // ゲームループの開始
         gameLoop();
 
@@ -121,6 +91,30 @@ async function initGame() {
         console.error('ゲームの初期化に失敗しました:', error);
         showError('ゲームの初期化に失敗しました。ページを更新してください。エラー: ' + error.message);
     }
+}
+
+/**
+ * イベントリスナーを設定する関数
+ */
+function setupEventListeners() {
+    document.getElementById('show-skill-selection').addEventListener('click', showSkillSelection);
+    document.getElementById('close-skill-selection').addEventListener('click', closeSkillSelection);
+
+    // タワー選択ボタンのイベントリスナーを設定
+    document.querySelectorAll('#tower-buttons button').forEach(button => {
+        button.addEventListener('click', () => {
+            const towerType = button.getAttribute('onclick').match(/'(\w+)'/)[1];
+            selectTower(towerType);
+        });
+    });
+
+    // ゲームボードのクリックイベントリスナーを設定
+    gameBoard.addEventListener('click', (event) => {
+        const rect = gameBoard.getBoundingClientRect();
+        const x = Math.floor((event.clientX - rect.left) / 20);
+        const y = Math.floor((event.clientY - rect.top) / 20);
+        placeTower(x, y);
+    });
 }
 
 /**
@@ -459,20 +453,29 @@ function gameLoop() {
     
     // ウェーブクリア条件のチェック
     if (waveManager.isWaveInProgress && enemies.length === 0 && waveManager.totalEnemiesSpawned >= waveManager.waveEnemyCount) {
-        waveManager.isWaveInProgress = false;
-        gold += 150; // 複数のパスをクリアしたことによる追加ゴールド報酬
-        waveManager.incrementWave(); // ウェーブ数を増やす
-        updateDisplays();
-        console.log('ウェーブクリア、次のウェーブの準備中');
-        showError('ウェーブクリア！ +150ゴールド獲得');
-
-        // ウェーブクリア時にスキル選択を表示
-        showSkillSelection();        
+        handleWaveClear();
     }
     
     // 次のアニメーションフレームをリクエスト
     requestAnimationFrame(gameLoop);
 }
+
+/**
+ * ウェーブクリア時の処理を行う関数
+ */
+function handleWaveClear() {
+    waveManager.isWaveInProgress = false;
+    gold += 150; // 複数のパスをクリアしたことによる追加ゴールド報酬
+    waveManager.incrementWave(); // ウェーブ数を増やす
+    updateDisplays();
+    console.log('ウェーブクリア、次のウェーブの準備中');
+    showError('ウェーブクリア！ +150ゴールド獲得');
+
+    // ウェーブクリア時にスキル選択を有効にして表示
+    enableSkillSelection();
+    showSkillSelection();
+}
+
 
 
 /**
