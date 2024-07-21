@@ -2,14 +2,37 @@
 
 import { Projectile } from './Projectile.js';
 import { WaveManager } from './WaveManager.js';
-import { showSkillSelection, closeSkillSelection, initializeSkillSystem, getPlayerSkills, addSkillData } from './skill-system.js';
+import {
+    playerSkills,
+    showSkillSelection, 
+    closeSkillSelection, 
+    initializeSkillSystem, 
+    getPlayerSkills, 
+    addSkillData,
+    enableSkillSelection,
+    waveClearSkillBox,
+    disableSkillSelection
+} from './skill/skill-system.js';
+import { 
+    Skill,
+    BasicSkill,
+    TopSkill,
+    TypeASkill,
+    TypeBSkill
+} from './skill/skill-classes.js';
 import { loadJsonData } from './jsonLoader.js';
 import { CellManager } from './cellManager.js';
 import { Tower, TowerManager } from './Tower.js';
+import { SkillList } from './skill/skillList.js';
+import { WaveClearSkillBox } from './skill/wave-clear-skill-box-class.js';
+// import { SkillSetManager } from './skillSetManager.js';
+import { skillSetManager } from './skill/skillSetInitialization.js';
+
 
 
 // グローバル変数
 let gameBoard, goldDisplay, manaDisplay, waveDisplay, coreHealthDisplay, errorDisplay;
+//let waveManager, towerManager, skillSetManager;
 let waveManager, towerManager;
 let gold = 500;
 let mana = 100;
@@ -18,6 +41,8 @@ let enemies = [];
 let projectiles = [];
 let selectedTower = null;
 let upgrades = { damage: 0, range: 0, speed: 0 };
+
+
 
 // ゲームボードのサイズ定数
 const BOARD_WIDTH = 50;
@@ -41,6 +66,7 @@ async function initGame() {
         waveDisplay = document.getElementById('wave');
         coreHealthDisplay = document.getElementById('core-health');
         errorDisplay = document.getElementById('error-display');
+        
 
         // データの読み込み
         const paths = await loadJsonData('./data/paths.json', 'paths');
@@ -61,44 +87,14 @@ async function initGame() {
         initializeSkillSystem();
         console.log("スキルシステムが初期化されました");
 
-        // スキルデータの追加（例）
-        addSkillData('SK_BASIC_001', {
-            name: '氷の矢強化!',
-            description: '基本攻撃の威力を上げる',
-            imagePath: 'img/skills/ice_arrow.png',
-            effect: () => {
-                towers.forEach(tower => {
-                    if (tower.type === 'ice') {
-                        tower.damage *= 1.1; // 10%ダメージ増加
-                    }
-                });
-            }
-        });   
+        disableSkillSelection(); // ゲーム開始時はスキル選択を無効に
 
         // イベントリスナーの設定
-        document.getElementById('show-skill-selection').addEventListener('click', showSkillSelection);
-        document.getElementById('close-skill-selection').addEventListener('click', closeSkillSelection);
-
-
-        // タワー選択ボタンのイベントリスナーを設定
-        document.querySelectorAll('#tower-buttons button').forEach(button => {
-            button.addEventListener('click', () => {
-                const towerType = button.getAttribute('onclick').match(/'(\w+)'/)[1];
-                selectTower(towerType);
-            });
-        });
-
-        // ゲームボードのクリックイベントリスナーを設定
-        gameBoard.addEventListener('click', (event) => {
-            const rect = gameBoard.getBoundingClientRect();
-            const x = Math.floor((event.clientX - rect.left) / 20);
-            const y = Math.floor((event.clientY - rect.top) / 20);
-            placeTower(x, y);
-        });
-        
+        setupEventListeners();
 
         // 表示の更新
         updateDisplays();
+        
         // ゲームループの開始
         gameLoop();
 
@@ -106,6 +102,35 @@ async function initGame() {
         console.error('ゲームの初期化に失敗しました:', error);
         showError('ゲームの初期化に失敗しました。ページを更新してください。エラー: ' + error.message);
     }
+}
+
+/**
+ * イベントリスナーを設定する関数
+ */
+function setupEventListeners() {
+    // スキルダイアログ表示ボタン
+    document.getElementById('show-skill-selection').addEventListener('click', (event) => {
+        event.preventDefault();
+        showSkillSelection();
+    });
+
+    document.getElementById('close-skill-selection').addEventListener('click', closeSkillSelection);
+
+    // タワー選択ボタンのイベントリスナーを設定
+    document.querySelectorAll('#tower-buttons button').forEach(button => {
+        button.addEventListener('click', () => {
+            const towerType = button.getAttribute('onclick').match(/'(\w+)'/)[1];
+            selectTower(towerType);
+        });
+    });
+
+    // ゲームボードのクリックイベントリスナーを設定
+    gameBoard.addEventListener('click', (event) => {
+        const rect = gameBoard.getBoundingClientRect();
+        const x = Math.floor((event.clientX - rect.left) / 20);
+        const y = Math.floor((event.clientY - rect.top) / 20);
+        placeTower(x, y);
+    });
 }
 
 /**
@@ -444,27 +469,56 @@ function gameLoop() {
     
     // ウェーブクリア条件のチェック
     if (waveManager.isWaveInProgress && enemies.length === 0 && waveManager.totalEnemiesSpawned >= waveManager.waveEnemyCount) {
-        waveManager.isWaveInProgress = false;
-        gold += 150; // 複数のパスをクリアしたことによる追加ゴールド報酬
-        waveManager.incrementWave(); // ウェーブ数を増やす
-        updateDisplays();
-        console.log('ウェーブクリア、次のウェーブの準備中');
-        showError('ウェーブクリア！ +150ゴールド獲得');
-
-        // ウェーブクリア時にスキル選択を表示
-        showSkillSelection();        
+        handleWaveClear();
     }
     
     // 次のアニメーションフレームをリクエスト
     requestAnimationFrame(gameLoop);
 }
 
+/**
+ * ウェーブクリア時の処理を行う関数
+ */
+function handleWaveClear() {
+    waveManager.isWaveInProgress = false;
+    gold += 150; // 複数のパスをクリアしたことによる追加ゴールド報酬
+    waveManager.incrementWave(); // ウェーブ数を増やす
+    updateDisplays();
+    console.log('ウェーブクリア、次のウェーブの準備中');
+    showError('ウェーブクリア！ +150ゴールド獲得');
+
+    // プレイヤーの現在のスキルに基づいて、利用可能なスキルのリストを取得
+    waveClearSkillBox.generateSkillOptions(playerSkills);
+    
+    // 利用可能なスキルからランダムに3つ選択
+    const skillChoices = waveClearSkillBox.selectRandomSkills(3);
+
+    // スキル選択を有効にする
+    enableSkillSelection();
+
+    // スキル選択ダイアログを表示し、プレイヤーの選択を処理
+    showSkillSelection(skillChoices.toArray(), (selectedSkill) => {
+        // 選択されたスキルをプレイヤーのスキルリストに追加
+        playerSkills.add(selectedSkill);
+        console.log(`プレイヤーが新しいスキルを獲得しました: ${selectedSkill.name}`);
+        
+        // UI更新
+        updateSkillDisplay();
+        
+        // スキル選択を無効にする
+        disableSkillSelection();
+        
+        // 次のウェーブの準備を行う
+        prepareNextWave();
+    });
+}
+
+
 
 /**
  * スキル効果を適用する関数
  */
 function applySkillEffects() {
-    const playerSkills = getPlayerSkills();
     playerSkills.forEach(skillId => {
         const skill = getSkillById(skillId);
         if (skill && skill.effect) {
@@ -484,6 +538,32 @@ function getSkillById(skillId) {
     // 例えば、スキルデータをグローバル変数や別のモジュールで管理している場合は
     // そこからスキルオブジェクトを取得する処理を書きます
     return null; // 仮の実装
+}
+
+/**
+ * ダメージを視覚的に表示する関数
+ * @param {number} x - ダメージ表示のX座標
+ * @param {number} y - ダメージ表示のY座標
+ * @param {number} amount - ダメージ量
+ */
+function showDamage(x, y, amount) {
+    const damageElement = document.createElement('div');
+    damageElement.className = 'damage-text';
+    damageElement.textContent = Math.round(amount);
+    damageElement.style.left = `${x}px`;
+    damageElement.style.top = `${y}px`;
+    gameBoard.appendChild(damageElement);
+
+    // アニメーション効果
+    setTimeout(() => {
+        damageElement.style.transform = 'translateY(-20px)';
+        damageElement.style.opacity = '0';
+    }, 50);
+
+    // 要素を削除
+    setTimeout(() => {
+        gameBoard.removeChild(damageElement);
+    }, 1000);
 }
 
 
