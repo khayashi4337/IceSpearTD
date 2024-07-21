@@ -2,7 +2,18 @@
 
 import { Projectile } from './Projectile.js';
 import { WaveManager } from './WaveManager.js';
-import { showSkillSelection, closeSkillSelection, initializeSkillSystem, getPlayerSkills, addSkillData } from './skill-system.js';
+import { 
+    showSkillSelection, 
+    closeSkillSelection, 
+    initializeSkillSystem, 
+    getPlayerSkills, 
+    addSkillData,
+    Skill,
+    BasicSkill,
+    TopSkill,
+    TypeASkill,
+    TypeBSkill
+} from './skill-system.js';
 import { loadJsonData } from './jsonLoader.js';
 import { CellManager } from './cellManager.js';
 import { Tower, TowerManager } from './Tower.js';
@@ -62,18 +73,22 @@ async function initGame() {
         console.log("スキルシステムが初期化されました");
 
         // スキルデータの追加（例）
-        addSkillData('SK_BASIC_001', {
-            name: '氷の矢強化!',
-            description: '基本攻撃の威力を上げる',
-            imagePath: 'img/skills/ice_arrow.png',
-            effect: () => {
+        addSkillData(new BasicSkill(
+            'SK_BASIC_001',
+            '氷の矢強化',
+            '基本攻撃の威力を上げる',
+            'img/skills/ice_arrow.png',
+            'img/skills/ice_arrow_thumb.png',
+            (towers, level) => {
                 towers.forEach(tower => {
                     if (tower.type === 'ice') {
-                        tower.damage *= 1.1; // 10%ダメージ増加
+                        tower.damage *= (1 + 0.1 * level); // レベルに応じて10%ずつ上昇
                     }
                 });
-            }
-        });   
+            },
+            () => true, // 常に選択可能
+            5 // 最大レベル
+        )); 
 
         // イベントリスナーの設定
         document.getElementById('show-skill-selection').addEventListener('click', showSkillSelection);
@@ -484,6 +499,32 @@ function getSkillById(skillId) {
     // 例えば、スキルデータをグローバル変数や別のモジュールで管理している場合は
     // そこからスキルオブジェクトを取得する処理を書きます
     return null; // 仮の実装
+}
+
+/**
+ * ダメージを視覚的に表示する関数
+ * @param {number} x - ダメージ表示のX座標
+ * @param {number} y - ダメージ表示のY座標
+ * @param {number} amount - ダメージ量
+ */
+function showDamage(x, y, amount) {
+    const damageElement = document.createElement('div');
+    damageElement.className = 'damage-text';
+    damageElement.textContent = Math.round(amount);
+    damageElement.style.left = `${x}px`;
+    damageElement.style.top = `${y}px`;
+    gameBoard.appendChild(damageElement);
+
+    // アニメーション効果
+    setTimeout(() => {
+        damageElement.style.transform = 'translateY(-20px)';
+        damageElement.style.opacity = '0';
+    }, 50);
+
+    // 要素を削除
+    setTimeout(() => {
+        gameBoard.removeChild(damageElement);
+    }, 1000);
 }
 
 

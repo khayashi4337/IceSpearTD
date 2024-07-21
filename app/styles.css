@@ -121,9 +121,10 @@ body {
     position: absolute;
     color: red;
     font-weight: bold;
+    font-size: 14px;
     pointer-events: none;
-    animation: fadeOut 0.5s forwards;
-    z-index: 20;
+    transition: transform 0.5s, opacity 0.5s;
+    z-index: 1000;
 }
 
 /* ダメージテキストのフェードアウトアニメーション */
