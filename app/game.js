@@ -2,17 +2,20 @@
 
 import { Projectile } from './Projectile.js';
 import { WaveManager } from './WaveManager.js';
+import { showSkillSelection, closeSkillSelection, initializeSkillSystem, getPlayerSkills, addSkillData } from './skill-system.js';
+import { loadJsonData } from './jsonLoader.js';
+import { CellManager } from './cellManager.js';
+import { Tower, TowerManager } from './Tower.js';
+
 
 // グローバル変数
 let gameBoard, goldDisplay, manaDisplay, waveDisplay, coreHealthDisplay, errorDisplay;
-let waveManager;
+let waveManager, towerManager;
 let gold = 500;
 let mana = 100;
 let coreHealth = 1000;
-let towers = [];
 let enemies = [];
 let projectiles = [];
-let paths = [];
 let selectedTower = null;
 let upgrades = { damage: 0, range: 0, speed: 0 };
 
@@ -20,29 +23,89 @@ let upgrades = { damage: 0, range: 0, speed: 0 };
 const BOARD_WIDTH = 50;
 const BOARD_HEIGHT = 30;
 
+// セルマネージャーのインスタンス
+let cellManager;
+
+const CORE_POSITION = { x: 47, y: 14 };  // コアの位置を定義
+
 /**
  * ゲームの初期化関数
  * DOMの読み込みが完了した後に呼び出される
  */
-function initGame() {
-    // DOM要素の取得
-    gameBoard = document.getElementById('game-board');
-    goldDisplay = document.getElementById('gold');
-    manaDisplay = document.getElementById('mana');
-    waveDisplay = document.getElementById('wave');
-    coreHealthDisplay = document.getElementById('core-health');
-    errorDisplay = document.getElementById('error-display');
+async function initGame() {
+    try {
+        // DOM要素の取得
+        gameBoard = document.getElementById('game-board');
+        goldDisplay = document.getElementById('gold');
+        manaDisplay = document.getElementById('mana');
+        waveDisplay = document.getElementById('wave');
+        coreHealthDisplay = document.getElementById('core-health');
+        errorDisplay = document.getElementById('error-display');
 
-    // WaveManagerのインスタンス化
-    waveManager = new WaveManager(createEnemy, showError);
-    window.waveManager = waveManager;
+        // データの読み込み
+        const paths = await loadJsonData('./data/paths.json', 'paths');
+        const obstacles = await loadJsonData('./data/obstacles.json', 'obstacles');
+        
+        // セルマネージャーの初期化
+        cellManager = new CellManager(BOARD_WIDTH, BOARD_HEIGHT);
+        cellManager.initializeBoard(gameBoard, paths, obstacles, CORE_POSITION);     
 
-    // ゲームボードの作成
-    createGameBoard();
-    // 表示の更新
-    updateDisplays();
-    // ゲームループの開始
-    gameLoop();
+        // WaveManagerのインスタンス化
+        waveManager = new WaveManager(createEnemy, showError);
+        window.waveManager = waveManager;
+
+        // TowerManagerのインスタンス化
+        towerManager = new TowerManager();
+
+        // スキルシステムの初期化
+        initializeSkillSystem();
+        console.log("スキルシステムが初期化されました");
+
+        // スキルデータの追加（例）
+        addSkillData('SK_BASIC_001', {
+            name: '氷の矢強化!',
+            description: '基本攻撃の威力を上げる',
+            imagePath: 'img/skills/ice_arrow.png',
+            effect: () => {
+                towers.forEach(tower => {
+                    if (tower.type === 'ice') {
+                        tower.damage *= 1.1; // 10%ダメージ増加
+                    }
+                });
+            }
+        });   
+
+        // イベントリスナーの設定
+        document.getElementById('show-skill-selection').addEventListener('click', showSkillSelection);
+        document.getElementById('close-skill-selection').addEventListener('click', closeSkillSelection);
+
+
+        // タワー選択ボタンのイベントリスナーを設定
+        document.querySelectorAll('#tower-buttons button').forEach(button => {
+            button.addEventListener('click', () => {
+                const towerType = button.getAttribute('onclick').match(/'(\w+)'/)[1];
+                selectTower(towerType);
+            });
+        });
+
+        // ゲームボードのクリックイベントリスナーを設定
+        gameBoard.addEventListener('click', (event) => {
+            const rect = gameBoard.getBoundingClientRect();
+            const x = Math.floor((event.clientX - rect.left) / 20);
+            const y = Math.floor((event.clientY - rect.top) / 20);
+            placeTower(x, y);
+        });
+        
+
+        // 表示の更新
+        updateDisplays();
+        // ゲームループの開始
+        gameLoop();
+
+    } catch (error) {
+        console.error('ゲームの初期化に失敗しました:', error);
+        showError('ゲームの初期化に失敗しました。ページを更新してください。エラー: ' + error.message);
+    }
 }
 
 /**
@@ -58,96 +121,6 @@ function showError(message) {
     }, 3000);
 }
 
-/**
- * ゲームボードを作成する関数
- */
-function createGameBoard() {
-    // ゲームボードのセルを作成
-    for (let y = 0; y < BOARD_HEIGHT; y++) {
-        for (let x = 0; x < BOARD_WIDTH; x++) {
-            const cell = document.createElement('div');
-            cell.className = 'cell';
-            cell.style.left = `${x * 20}px`;
-            cell.style.top = `${y * 20}px`;
-            cell.addEventListener('click', () => placeTower(x, y));
-            gameBoard.appendChild(cell);
-        }
-    }
-    
-    // 複数のパスを定義
-    paths = [
-        // Path 1 (top)
-        [
-            {x: 0, y: 5}, {x: 1, y: 5}, {x: 2, y: 5}, {x: 3, y: 5}, {x: 4, y: 5},
-            {x: 5, y: 5}, {x: 6, y: 5}, {x: 7, y: 5}, {x: 8, y: 5}, {x: 9, y: 5},
-            {x: 10, y: 5}, {x: 11, y: 5}, {x: 12, y: 5}, {x: 13, y: 5}, {x: 14, y: 5},
-            {x: 15, y: 5}, {x: 16, y: 5}, {x: 17, y: 5}, {x: 18, y: 5}, {x: 19, y: 5},
-            {x: 20, y: 5}, {x: 21, y: 5}, {x: 22, y: 5}, {x: 23, y: 5}, {x: 24, y: 5},
-            {x: 25, y: 5}, {x: 26, y: 5}, {x: 27, y: 5}, {x: 28, y: 5}, {x: 29, y: 5},
-            {x: 30, y: 5}, {x: 31, y: 5}, {x: 32, y: 5}, {x: 33, y: 5}, {x: 34, y: 5},
-            {x: 35, y: 5}, {x: 36, y: 5}, {x: 37, y: 5}, {x: 38, y: 5}, {x: 39, y: 5},
-            {x: 40, y: 5}, {x: 41, y: 5}, {x: 42, y: 6}, {x: 43, y: 7}, {x: 44, y: 8},
-            {x: 45, y: 9}, {x: 46, y: 10}, {x: 47, y: 11}, {x: 48, y: 12}, {x: 48, y: 13},
-            {x: 48, y: 14}
-        ],
-        // Path 2 (middle)
-        [
-            {x: 0, y: 15}, {x: 1, y: 15}, {x: 2, y: 15}, {x: 3, y: 15}, {x: 4, y: 15},
-            {x: 5, y: 15}, {x: 6, y: 15}, {x: 7, y: 15}, {x: 8, y: 15}, {x: 9, y: 15},
-            {x: 10, y: 15}, {x: 11, y: 15}, {x: 12, y: 15}, {x: 13, y: 15}, {x: 14, y: 15},
-            {x: 15, y: 15}, {x: 16, y: 15}, {x: 17, y: 15}, {x: 18, y: 15}, {x: 19, y: 15},
-            {x: 20, y: 15}, {x: 21, y: 15}, {x: 22, y: 15}, {x: 23, y: 15}, {x: 24, y: 15},
-            {x: 25, y: 15}, {x: 26, y: 15}, {x: 27, y: 15}, {x: 28, y: 15}, {x: 29, y: 15},
-            {x: 30, y: 15}, {x: 31, y: 15}, {x: 32, y: 15}, {x: 33, y: 15}, {x: 34, y: 15},
-            {x: 35, y: 15}, {x: 36, y: 15}, {x: 37, y: 15}, {x: 38, y: 15}, {x: 39, y: 15},
-            {x: 40, y: 15}, {x: 41, y: 15}, {x: 42, y: 15}, {x: 43, y: 15}, {x: 44, y: 15},
-            {x: 45, y: 15}, {x: 46, y: 15}, {x: 47, y: 15}, {x: 48, y: 15}
-        ],
-        // Path 3 (bottom)
-        [
-            {x: 0, y: 25}, {x: 1, y: 25}, {x: 2, y: 25}, {x: 3, y: 25}, {x: 4, y: 25},
-            {x: 5, y: 25}, {x: 6, y: 25}, {x: 7, y: 25}, {x: 8, y: 25}, {x: 9, y: 25},
-            {x: 10, y: 25}, {x: 11, y: 25}, {x: 12, y: 25}, {x: 13, y: 25}, {x: 14, y: 25},
-            {x: 15, y: 25}, {x: 16, y: 25}, {x: 17, y: 25}, {x: 18, y: 25}, {x: 19, y: 25},
-            {x: 20, y: 25}, {x: 21, y: 25}, {x: 22, y: 25}, {x: 23, y: 25}, {x: 24, y: 25},
-            {x: 25, y: 25}, {x: 26, y: 25}, {x: 27, y: 25}, {x: 28, y: 25}, {x: 29, y: 25},
-            {x: 30, y: 25}, {x: 31, y: 25}, {x: 32, y: 25}, {x: 33, y: 25}, {x: 34, y: 25},
-            {x: 35, y: 25}, {x: 36, y: 25}, {x: 37, y: 25}, {x: 38, y: 25}, {x: 39, y: 25},
-            {x: 40, y: 25}, {x: 41, y: 25}, {x: 42, y: 24}, {x: 43, y: 23}, {x: 44, y: 22},
-            {x: 45, y: 21}, {x: 46, y: 20}, {x: 47, y: 19}, {x: 48, y: 18}, {x: 48, y: 17},
-            {x: 48, y: 16}
-        ]
-    ];
-            
-    
-    // 各パスにクラスを適用
-    paths.forEach((path, index) => {
-        path.forEach(p => {
-            const pathCell = gameBoard.children[p.y * BOARD_WIDTH + p.x];
-            pathCell.classList.add('path');
-            pathCell.classList.add(`path-${index + 1}`);
-        });
-    });
-        
-    // 障害物の配置
-    const obstacles = [
-        {x: 10, y: 10}, {x: 11, y: 10}, {x: 12, y: 10},
-        {x: 25, y: 20}, {x: 26, y: 20}, {x: 27, y: 20},
-        {x: 40, y: 10}, {x: 41, y: 10}, {x: 42, y: 10}
-    ];
-
-    obstacles.forEach(o => {
-        const obstacleCell = gameBoard.children[o.y * BOARD_WIDTH + o.x];
-        obstacleCell.classList.add('obstacle');
-    });
-
-    // コア（中心部）の追加
-    const core = document.createElement('div');
-    core.id = 'core';
-    core.style.left = `${47 * 20}px`;
-    core.style.top = `${14 * 20}px`;
-    gameBoard.appendChild(core);
-}
 
 /**
  * 表示を更新する関数
@@ -165,7 +138,9 @@ function updateDisplays() {
  */
 function selectTower(type) {
     selectedTower = type;
+    console.log(`タワータイプ '${type}' が選択されました`);
 }
+
 
 /**
  * タワーを配置する関数
@@ -173,41 +148,50 @@ function selectTower(type) {
  * @param {number} y - 配置するY座標
  */
 function placeTower(x, y) {
-    if (!selectedTower) return;
+    if (!selectedTower) {
+        console.log('タワーが選択されていません');
+        return;
+    }
     
-    const cost = { ice: 50, fire: 100, stone: 150, wind: 150 }[selectedTower];
+    const cost = Tower.getTowerCost(selectedTower);
     if (gold < cost) {
         showError("タワーを配置するのに十分なゴールドがありません！");
         return;
     }
     
-    // パス上にタワーを配置できないようにする
-    if (paths.some(path => path.some(p => p.x === x && p.y === y))) {
-        showError("パス上にタワーを配置することはできません！");
+    const cell = cellManager.getCell(x, y);
+    if (!cell || cell.type !== 'empty') {
+        showError("この場所にタワーを配置することはできません！");
         return;
     }
     
-    // タワー要素の作成と配置
-    const tower = document.createElement('div');
-    tower.className = `tower ${selectedTower}-tower`;
-    tower.style.left = `${x * 20 + 10}px`;
-    tower.style.top = `${y * 20 + 10}px`;
-    gameBoard.appendChild(tower);
+    console.log(`タワーを配置: タイプ ${selectedTower}, 座標 (${x}, ${y})`);
     
-    // タワーオブジェクトの作成と追加
-    towers.push({ 
-        x: x * 20 + 10, 
-        y: y * 20 + 10, 
-        type: selectedTower, 
-        element: tower, 
-        lastShot: 0,
-        level: 1,
-        damage: getTowerDamage(selectedTower, 1),
-        range: getTowerRange(selectedTower, 1),
-        fireRate: getTowerFireRate(selectedTower, 1)
-    });
+    const towerX = x * 20 + 10;
+    const towerY = y * 20 + 10;
+    const tower = towerManager.createTower(towerX, towerY, selectedTower, gameBoard);
+    
     gold -= cost;
+    cell.type = 'tower';
     updateDisplays();
+}
+
+/**
+ * タワーやグローバルアップグレードを行う関数
+ * @param {string} type - アップグレードの種類（'damage', 'range', 'speed'のいずれか）
+ */
+function upgrade(type) {
+    if (gold >= 100 && upgrades[type] < 5) {
+        gold -= 100;
+        upgrades[type]++;
+        updateDisplays();
+        towerManager.updateAllTowers(upgrades[type]);
+        
+        // スキル効果の適用
+        applySkillEffects();
+    } else {
+        showError("ゴールドが足りないか、最大アップグレード数に達しています！");
+    }
 }
 
 /**
@@ -255,7 +239,10 @@ function createEnemy(type) {
     const health = { goblin: 40, orc: 115, skeleton: 30, slime: 120 }[type];
     const speed = { goblin: 0.02, orc: 0.01, skeleton: 0.04, slime: 0.006 }[type];
     
+    // CellManagerからパスを取得
+    const paths = cellManager.getPaths();
     const pathIndex = Math.floor(Math.random() * paths.length);
+    
     enemies.push({ 
         type, 
         health, 
@@ -307,7 +294,7 @@ function moveEnemies() {
  * @param {HTMLElement} gameBoard - ゲームボード要素
  */
 function shootEnemies(gameBoard) {
-    towers.forEach(tower => {
+    towerManager.towers.forEach(tower => {
         const now = Date.now();
         if (now - tower.lastShot > tower.fireRate * 1000) {
             const target = findTargetForTower(tower);
@@ -324,6 +311,9 @@ function shootEnemies(gameBoard) {
                 );
                 projectile.createProjectileElement(gameBoard);
                 projectiles.push(projectile);
+
+                // タワーの効果を敵に適用
+                tower.applyEffect(target);
             }
         }
     });
@@ -343,6 +333,11 @@ function moveProjectiles(gameBoard) {
                 gold += getEnemyGoldReward(destroyedEnemy.type);
                 updateDisplays();
             });
+            
+            // タワーの効果を再度適用（持続的な効果のため）
+            if (!enemyDestroyed) {
+                applyTowerEffect(projectile.target, projectile.towerType);
+            }
             
             projectile.destroy(gameBoard);
             return false; // このプロジェクタイルをリストから削除
@@ -385,13 +380,23 @@ function applyTowerEffect(enemy, towerType) {
     switch(towerType) {
         case 'ice':
             // 氷のタワー効果：敵の速度を一時的に80%に低下
-            enemy.speed *= 0.8;
-            setTimeout(() => { enemy.speed /= 0.8; }, 3000);
+            if (!enemy.iceEffect) {
+                enemy.iceEffect = true;
+                enemy.originalSpeed = enemy.speed;
+                enemy.speed *= 0.8;
+                console.log(`Ice effect applied to enemy at (${enemy.element.style.left}, ${enemy.element.style.top})`);
+                setTimeout(() => {
+                    enemy.speed = enemy.originalSpeed;
+                    enemy.iceEffect = false;
+                    console.log(`Ice effect removed from enemy at (${enemy.element.style.left}, ${enemy.element.style.top})`);
+                }, 3000);
+            }
             break;
         case 'fire':
             // 火のタワー効果：1秒後に追加ダメージ
             setTimeout(() => {
                 enemy.health -= 5;
+                console.log(`Fire effect: Additional 5 damage applied to enemy at (${enemy.element.style.left}, ${enemy.element.style.top})`);
                 showDamage(parseInt(enemy.element.style.left), parseInt(enemy.element.style.top), 5);
             }, 1000);
             break;
@@ -399,12 +404,14 @@ function applyTowerEffect(enemy, towerType) {
             // 石のタワー効果：10%の確率で即死
             if (Math.random() < 0.1) {
                 enemy.health = 0;
+                console.log(`Stone effect: Instant kill applied to enemy at (${enemy.element.style.left}, ${enemy.element.style.top})`);
             }
             break;
         case 'wind':
             // 風のタワー効果：敵を少し後退させる
             const backIndex = Math.max(0, enemy.pathIndex - 1);
             enemy.pathIndex = backIndex;
+            console.log(`Wind effect: Enemy pushed back to path index ${backIndex} at (${enemy.element.style.left}, ${enemy.element.style.top})`);
             break;
     }
 }
@@ -418,25 +425,6 @@ function getEnemyGoldReward(enemyType) {
     return { goblin: 10, orc: 20, skeleton: 15, slime: 15 }[enemyType];
 }
 
-/**
- * タワーやグローバルアップグレードを行う関数
- * @param {string} type - アップグレードの種類（'damage', 'range', 'speed'のいずれか）
- */
-function upgrade(type) {
-    if (gold >= 100 && upgrades[type] < 5) {
-        gold -= 100;
-        upgrades[type]++;
-        updateDisplays();
-        // 全てのタワーのステータスを更新
-        towers.forEach(tower => {
-            tower.damage = getTowerDamage(tower.type, tower.level);
-            tower.range = getTowerRange(tower.type, tower.level);
-            tower.fireRate = getTowerFireRate(tower.type, tower.level);
-        });
-    } else {
-        showError("ゴールドが足りないか、最大アップグレード数に達しています！");
-    }
-}
 
 /**
  * ゲームのメインループ
@@ -462,11 +450,42 @@ function gameLoop() {
         updateDisplays();
         console.log('ウェーブクリア、次のウェーブの準備中');
         showError('ウェーブクリア！ +150ゴールド獲得');
+
+        // ウェーブクリア時にスキル選択を表示
+        showSkillSelection();        
     }
     
     // 次のアニメーションフレームをリクエスト
     requestAnimationFrame(gameLoop);
 }
+
+
+/**
+ * スキル効果を適用する関数
+ */
+function applySkillEffects() {
+    const playerSkills = getPlayerSkills();
+    playerSkills.forEach(skillId => {
+        const skill = getSkillById(skillId);
+        if (skill && skill.effect) {
+            skill.effect(towerManager.towers);
+        }
+    });
+}
+
+
+/**
+ * スキルIDからスキルオブジェクトを取得する関数
+ * @param {string} skillId - スキルのID
+ * @returns {Object|null} スキルオブジェクト、または null
+ */
+function getSkillById(skillId) {
+    // この関数の実装は、スキルデータの管理方法に依存します
+    // 例えば、スキルデータをグローバル変数や別のモジュールで管理している場合は
+    // そこからスキルオブジェクトを取得する処理を書きます
+    return null; // 仮の実装
+}
+
 
 // グローバルスコープに公開する関数
 window.selectTower = selectTower;
@@ -475,3 +494,4 @@ window.upgrade = upgrade;
 
 // DOMの読み込みが完了したらゲームを初期化
 document.addEventListener('DOMContentLoaded', initGame);
+
