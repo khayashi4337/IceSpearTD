@@ -5,15 +5,15 @@ import { WaveManager } from './WaveManager.js';
 import { showSkillSelection, closeSkillSelection, initializeSkillSystem, getPlayerSkills, addSkillData } from './skill-system.js';
 import { loadJsonData } from './jsonLoader.js';
 import { CellManager } from './cellManager.js';
+import { Tower, TowerManager } from './Tower.js';
 
 
 // グローバル変数
 let gameBoard, goldDisplay, manaDisplay, waveDisplay, coreHealthDisplay, errorDisplay;
-let waveManager;
+let waveManager, towerManager;
 let gold = 500;
 let mana = 100;
 let coreHealth = 1000;
-let towers = [];
 let enemies = [];
 let projectiles = [];
 let selectedTower = null;
@@ -53,6 +53,9 @@ async function initGame() {
         // WaveManagerのインスタンス化
         waveManager = new WaveManager(createEnemy, showError);
         window.waveManager = waveManager;
+
+        // TowerManagerのインスタンス化
+        towerManager = new TowerManager();
 
         // スキルシステムの初期化
         initializeSkillSystem();
@@ -138,6 +141,7 @@ function selectTower(type) {
     console.log(`タワータイプ '${type}' が選択されました`);
 }
 
+
 /**
  * タワーを配置する関数
  * @param {number} x - 配置するX座標
@@ -149,7 +153,7 @@ function placeTower(x, y) {
         return;
     }
     
-    const cost = { ice: 50, fire: 100, stone: 150, wind: 150 }[selectedTower];
+    const cost = Tower.getTowerCost(selectedTower);
     if (gold < cost) {
         showError("タワーを配置するのに十分なゴールドがありません！");
         return;
@@ -163,29 +167,31 @@ function placeTower(x, y) {
     
     console.log(`タワーを配置: タイプ ${selectedTower}, 座標 (${x}, ${y})`);
     
-    // タワー要素の作成と配置
-    const tower = document.createElement('div');
-    tower.className = `tower ${selectedTower}-tower`;
-    // セルの中心にタワーを配置するために10px（半セルサイズ）のオフセットを追加
-    tower.style.left = `${x * 20 + 10}px`;
-    tower.style.top = `${y * 20 + 10}px`;
-    gameBoard.appendChild(tower);
+    const towerX = x * 20 + 10;
+    const towerY = y * 20 + 10;
+    const tower = towerManager.createTower(towerX, towerY, selectedTower, gameBoard);
     
-    // タワーオブジェクトの作成と追加
-    towers.push({ 
-        x: x * 20 + 10, // 中心X座標
-        y: y * 20 + 10, // 中心Y座標
-        type: selectedTower, 
-        element: tower, 
-        lastShot: 0,
-        level: 1,
-        damage: getTowerDamage(selectedTower, 1),
-        range: getTowerRange(selectedTower, 1),
-        fireRate: getTowerFireRate(selectedTower, 1)
-    });
     gold -= cost;
     cell.type = 'tower';
     updateDisplays();
+}
+
+/**
+ * タワーやグローバルアップグレードを行う関数
+ * @param {string} type - アップグレードの種類（'damage', 'range', 'speed'のいずれか）
+ */
+function upgrade(type) {
+    if (gold >= 100 && upgrades[type] < 5) {
+        gold -= 100;
+        upgrades[type]++;
+        updateDisplays();
+        towerManager.updateAllTowers(upgrades[type]);
+        
+        // スキル効果の適用
+        applySkillEffects();
+    } else {
+        showError("ゴールドが足りないか、最大アップグレード数に達しています！");
+    }
 }
 
 /**
@@ -288,7 +294,7 @@ function moveEnemies() {
  * @param {HTMLElement} gameBoard - ゲームボード要素
  */
 function shootEnemies(gameBoard) {
-    towers.forEach(tower => {
+    towerManager.towers.forEach(tower => {
         const now = Date.now();
         if (now - tower.lastShot > tower.fireRate * 1000) {
             const target = findTargetForTower(tower);
@@ -307,7 +313,7 @@ function shootEnemies(gameBoard) {
                 projectiles.push(projectile);
 
                 // タワーの効果を敵に適用
-                applyTowerEffect(target, tower.type);
+                tower.applyEffect(target);
             }
         }
     });
@@ -419,30 +425,6 @@ function getEnemyGoldReward(enemyType) {
     return { goblin: 10, orc: 20, skeleton: 15, slime: 15 }[enemyType];
 }
 
-/**
- * タワーやグローバルアップグレードを行う関数
- * @param {string} type - アップグレードの種類（'damage', 'range', 'speed'のいずれか）
- */
-function upgrade(type) {
-    if (gold >= 100 && upgrades[type] < 5) {
-        gold -= 100;
-        upgrades[type]++;
-        updateDisplays();
-        // 全てのタワーのステータスを更新
-        towers.forEach(tower => {
-            tower.damage = getTowerDamage(tower.type, tower.level);
-            tower.range = getTowerRange(tower.type, tower.level);
-            tower.fireRate = getTowerFireRate(tower.type, tower.level);
-        });
-        
-        // スキル効果の適用
-        applySkillEffects();
-    } else {
-        showError("ゴールドが足りないか、最大アップグレード数に達しています！");
-    }
-}
-
-
 
 /**
  * ゲームのメインループ
@@ -477,6 +459,7 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
+
 /**
  * スキル効果を適用する関数
  */
@@ -485,7 +468,7 @@ function applySkillEffects() {
     playerSkills.forEach(skillId => {
         const skill = getSkillById(skillId);
         if (skill && skill.effect) {
-            skill.effect();
+            skill.effect(towerManager.towers);
         }
     });
 }
@@ -502,7 +485,6 @@ function getSkillById(skillId) {
     // そこからスキルオブジェクトを取得する処理を書きます
     return null; // 仮の実装
 }
-
 
 
 // グローバルスコープに公開する関数
