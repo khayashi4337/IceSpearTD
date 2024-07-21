@@ -12,21 +12,21 @@ import {
     enableSkillSelection,
     waveClearSkillBox,
     disableSkillSelection
-} from './skill-system.js';
+} from './skill/skill-system.js';
 import { 
     Skill,
     BasicSkill,
     TopSkill,
     TypeASkill,
     TypeBSkill
-} from './skill-classes.js';
+} from './skill/skill-classes.js';
 import { loadJsonData } from './jsonLoader.js';
 import { CellManager } from './cellManager.js';
 import { Tower, TowerManager } from './Tower.js';
-import { SkillList } from './skillList.js';
-import { WaveClearSkillBox } from './wave-clear-skill-box-class.js';
+import { SkillList } from './skill/skillList.js';
+import { WaveClearSkillBox } from './skill/wave-clear-skill-box-class.js';
 // import { SkillSetManager } from './skillSetManager.js';
-import { skillSetManager } from './skillSetInitialization.js';
+import { skillSetManager } from './skill/skillSetInitialization.js';
 
 
 
@@ -86,18 +86,7 @@ async function initGame() {
         // スキルシステムの初期化
         initializeSkillSystem();
         console.log("スキルシステムが初期化されました");
-        // SkillSetManagerの初期化
-        // skillSetManager = new SkillSetManager();
-        // await skillSetManager.initializeSkillSets();
-        // console.log("SkillSetManagerが初期化されました");        
 
-        // プレイヤーのスキルリストを初期化
-        //playerSkills = new SkillList();
-
-        // WaveClearSkillBoxの初期化
-        //console.log('skillSetManager before WaveClearSkillBox initialization:', skillSetManager);
-        //waveClearSkillBox = new WaveClearSkillBox(skillSetManager);
-        //console.log('WaveClearSkillBox initialized');
         disableSkillSelection(); // ゲーム開始時はスキル選択を無効に
 
         // イベントリスナーの設定

@@ -41,7 +41,7 @@ async function initializeSkillSystem() {
  * スキル選択モーダルを表示する関数
  */
 function showSkillSelection(event) {
-    console.log("showSkillSelection called with:", event);  // 追加
+    console.log("showSkillSelection called with:", event);
 
     // イベントオブジェクトが渡された場合は、デフォルトの動作を防止
     if (event && event.preventDefault) {
@@ -66,7 +66,7 @@ function showSkillSelection(event) {
     const skillOptions = document.getElementById('skill-selection-options');
     skillOptions.innerHTML = '';
     
-    selectedSkills.toArray().forEach(skill => {  // ここを変更
+    selectedSkills.toArray().forEach(skill => {
         const skillOption = document.createElement('div');
         skillOption.className = 'skill-option';
         skillOption.innerHTML = `

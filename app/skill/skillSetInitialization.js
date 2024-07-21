@@ -12,8 +12,8 @@ const ss01BasicSkill = new BasicSkill(
     'SK_BASIC_001',
     '氷の矢強化',
     '基本攻撃の威力を上げる',
-    'img/skills/ice_arrow.png',
-    'img/skills/ice_arrow_thumb.png',
+    'skill/skillSets/ss01/ice_arrow.png',
+    'skill/skillSets/ss01/ice_arrow_thumb.png',
     (towers, level) => {
         towers.forEach(tower => {
             if (tower.type === 'ice') {
@@ -29,8 +29,8 @@ const ss01TypeASkill = new TypeASkill(
     'SK_TYPEA_001',
     '貫通氷槍',
     '敵を貫通する氷の槍',
-    'img/skills/ice_spear.png',
-    'img/skills/ice_spear_thumb.png',
+    'skill/skillSets/ss01/ice_spear.png',
+    'skill/skillSets/ss01/ice_spear_thumb.png',
     (towers, level) => {
         towers.forEach(tower => {
             if (tower.type === 'ice') {
@@ -46,8 +46,8 @@ const ss01TypeBSkill = new TypeBSkill(
     'SK_TYPEB_001',
     '氷の結晶化',
     '敵を徐々に結晶化する',
-    'img/skills/ice_crystal.png',
-    'img/skills/ice_crystal_thumb.png',
+    'skill/skillSets/ss01/ice_crystal.png',
+    'skill/skillSets/ss01/ice_crystal_thumb.png',
     (towers, level) => {
         towers.forEach(tower => {
             if (tower.type === 'ice') {
@@ -63,8 +63,8 @@ const ss01TopSkill = new TopSkill(
     'SK_TOP_001',
     '絶対零度',
     '極低温の攻撃で敵を瞬間凍結',
-    'img/skills/absolute_zero.png',
-    'img/skills/absolute_zero_thumb.png',
+    'skill/skillSets/ss01/absolute_zero.png',
+    'skill/skillSets/ss01/absolute_zero_thumb.png',
     (towers, level) => {
         towers.forEach(tower => {
             if (tower.type === 'ice') {
@@ -89,8 +89,8 @@ const ss02BasicSkill = new BasicSkill(
     'SK_BASIC_002',
     '凍結持続',
     '凍結効果の持続時間を延長',
-    'img/skills/frost_duration.png',
-    'img/skills/frost_duration_thumb.png',
+    'skill/skillSets/ss02/frost_duration.png',
+    'skill/skillSets/ss02/frost_duration_thumb.png',
     (towers, level) => {
         towers.forEach(tower => {
             if (tower.type === 'ice') {
@@ -106,8 +106,8 @@ const ss02TypeASkill = new TypeASkill(
     'SK_TYPEA_002',
     '氷の分身',
     '氷の分身を作り出す',
-    'img/skills/ice_clone.png',
-    'img/skills/ice_clone_thumb.png',
+    'skill/skillSets/ss02/ice_clone.png',
+    'skill/skillSets/ss02/ice_clone_thumb.png',
     (towers, level) => {
         // 氷の分身の実装（例: 30秒間、分身が敵を攻撃）
     },
@@ -119,8 +119,8 @@ const ss02TypeBSkill = new TypeBSkill(
     'SK_TYPEB_002',
     '凍てつく霧',
     '周囲に冷気の霧を発生',
-    'img/skills/freezing_mist.png',
-    'img/skills/freezing_mist_thumb.png',
+    'skill/skillSets/ss02/freezing_mist.png',
+    'skill/skillSets/ss02/freezing_mist_thumb.png',
     (towers, level) => {
         // 凍てつく霧の実装（例: 範囲内の敵の攻撃速度を低下）
     },
@@ -132,8 +132,8 @@ const ss02TopSkill = new TopSkill(
     'SK_TOP_002',
     '氷河生成',
     'フィールドに氷河を生成',
-    'img/skills/glacier_creation.png',
-    'img/skills/glacier_creation_thumb.png',
+    'skill/skillSets/ss02/glacier_creation.png',
+    'skill/skillSets/ss02/glacier_creation_thumb.png',
     (towers, level) => {
         // 氷河生成の実装（例: 30秒間、敵の移動速度を50%低下）
     },
@@ -154,8 +154,8 @@ const ss03BasicSkill = new BasicSkill(
     'SK_BASIC_003',
     '氷の鎧',
     '防御力を上げる',
-    'img/skills/ice_armor.png',
-    'img/skills/ice_armor_thumb.png',
+    'skill/skillSets/ss03/ice_armor.png',
+    'skill/skillSets/ss03/ice_armor_thumb.png',
     (towers, level) => {
         towers.forEach(tower => {
             if (tower.type === 'ice') {
@@ -171,8 +171,8 @@ const ss03TypeASkill = new TypeASkill(
     'SK_TYPEA_003',
     '氷結の連鎖',
     '凍結効果が連鎖する',
-    'img/skills/frost_chain.png',
-    'img/skills/frost_chain_thumb.png',
+    'skill/skillSets/ss03/frost_chain.png',
+    'skill/skillSets/ss03/frost_chain_thumb.png',
     (towers, level) => {
         // 氷結の連鎖の実装（例: 凍結した敵の周囲の敵も凍結）
     },
@@ -184,8 +184,8 @@ const ss03TypeBSkill = new TypeBSkill(
     'SK_TYPEB_003',
     '氷の反射',
     '氷の鏡で攻撃を反射',
-    'img/skills/ice_reflection.png',
-    'img/skills/ice_reflection_thumb.png',
+    'skill/skillSets/ss03/ice_reflection.png',
+    'skill/skillSets/ss03/ice_reflection_thumb.png',
     (towers, level) => {
         // 氷の反射の実装（例: 20%の確率で敵の攻撃を反射）
     },
@@ -197,8 +197,8 @@ const ss03TopSkill = new TopSkill(
     'SK_TOP_003',
     '雪嵐召喚',
     '広範囲に雪嵐を発生させる',
-    'img/skills/blizzard_summon.png',
-    'img/skills/blizzard_summon_thumb.png',
+    'skill/skillSets/ss03/blizzard_summon.png',
+    'skill/skillSets/ss03/blizzard_summon_thumb.png',
     (towers, level) => {
         // 雪嵐召喚の実装（例: 60秒間、範囲内の敵に持続ダメージ）
     },
