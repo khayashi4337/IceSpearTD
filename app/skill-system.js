@@ -5,7 +5,7 @@
 let skillData = {
     SK_BASIC_001: {
         name: "氷の矢強化!",
-        description: "基本攻撃の威力を上げるyo",
+        description: "基本攻撃の威力を上げる",
         imagePath: "img/skills/ice_arrow.png"
     },
     SK_TYPEA_001: {

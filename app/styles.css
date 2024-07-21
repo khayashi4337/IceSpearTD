@@ -79,7 +79,7 @@ body {
     height: 18px;
     position: absolute;
     border-radius: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%); /* 中心を基準に配置 */
     z-index: 10;
 }
 

@@ -3,6 +3,9 @@
 import { Projectile } from './Projectile.js';
 import { WaveManager } from './WaveManager.js';
 import { showSkillSelection, closeSkillSelection, initializeSkillSystem, getPlayerSkills, addSkillData } from './skill-system.js';
+import { loadJsonData } from './jsonLoader.js';
+import { CellManager } from './cellManager.js';
+
 
 // グローバル変数
 let gameBoard, goldDisplay, manaDisplay, waveDisplay, coreHealthDisplay, errorDisplay;
@@ -13,8 +16,6 @@ let coreHealth = 1000;
 let towers = [];
 let enemies = [];
 let projectiles = [];
-let paths = []; // 敵が通る道
-let obstacles = []; // 障害物
 let selectedTower = null;
 let upgrades = { damage: 0, range: 0, speed: 0 };
 
@@ -22,6 +23,10 @@ let upgrades = { damage: 0, range: 0, speed: 0 };
 const BOARD_WIDTH = 50;
 const BOARD_HEIGHT = 30;
 
+// セルマネージャーのインスタンス
+let cellManager;
+
+const CORE_POSITION = { x: 47, y: 14 };  // コアの位置を定義
 
 /**
  * ゲームの初期化関数
@@ -37,17 +42,13 @@ async function initGame() {
         coreHealthDisplay = document.getElementById('core-health');
         errorDisplay = document.getElementById('error-display');
 
-        // パスデータの読み込み
-        paths = await loadPaths();
-        if (paths.length === 0) {
-            throw new Error('パスデータが空です');
-        }
-
-        // initGame関数内に追加（パスデータを読み込んだ後）
-        obstacles = await loadObstacles();
-        if (obstacles.length === 0) {
-            throw new Error('障害物データが空です');
-        }        
+        // データの読み込み
+        const paths = await loadJsonData('./data/paths.json', 'paths');
+        const obstacles = await loadJsonData('./data/obstacles.json', 'obstacles');
+        
+        // セルマネージャーの初期化
+        cellManager = new CellManager(BOARD_WIDTH, BOARD_HEIGHT);
+        cellManager.initializeBoard(gameBoard, paths, obstacles, CORE_POSITION);     
 
         // WaveManagerのインスタンス化
         waveManager = new WaveManager(createEnemy, showError);
@@ -60,7 +61,7 @@ async function initGame() {
         // スキルデータの追加（例）
         addSkillData('SK_BASIC_001', {
             name: '氷の矢強化!',
-            description: '基本攻撃の威力を上げるyo',
+            description: '基本攻撃の威力を上げる',
             imagePath: 'img/skills/ice_arrow.png',
             effect: () => {
                 towers.forEach(tower => {
@@ -75,8 +76,24 @@ async function initGame() {
         document.getElementById('show-skill-selection').addEventListener('click', showSkillSelection);
         document.getElementById('close-skill-selection').addEventListener('click', closeSkillSelection);
 
-        // ゲームボードの作成
-        createGameBoard();
+
+        // タワー選択ボタンのイベントリスナーを設定
+        document.querySelectorAll('#tower-buttons button').forEach(button => {
+            button.addEventListener('click', () => {
+                const towerType = button.getAttribute('onclick').match(/'(\w+)'/)[1];
+                selectTower(towerType);
+            });
+        });
+
+        // ゲームボードのクリックイベントリスナーを設定
+        gameBoard.addEventListener('click', (event) => {
+            const rect = gameBoard.getBoundingClientRect();
+            const x = Math.floor((event.clientX - rect.left) / 20);
+            const y = Math.floor((event.clientY - rect.top) / 20);
+            placeTower(x, y);
+        });
+        
+
         // 表示の更新
         updateDisplays();
         // ゲームループの開始
@@ -87,48 +104,6 @@ async function initGame() {
         showError('ゲームの初期化に失敗しました。ページを更新してください。エラー: ' + error.message);
     }
 }
-
-/**
- * パスデータを読み込む関数
- * @returns {Promise} 読み込まれたパスデータを含むPromise
- */
-async function loadPaths() {
-    try {
-        const response = await fetch('./data/paths.json');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        console.log('パスデータを読み込みました:', data);
-        return data.paths;
-    } catch (error) {
-        console.error('パスデータの読み込みに失敗しました:', error);
-        showError('パスデータの読み込みに失敗しました。ページを更新してください。');
-        return [];
-    }
-}
-
-/**
- * 障害物データを読み込む関数
- * @returns {Promise} 読み込まれた障害物データを含むPromise
- */
-async function loadObstacles() {
-    try {
-        const response = await fetch('./data/obstacles.json');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        console.log('障害物データを読み込みました:', data);
-        return data.obstacles;
-    } catch (error) {
-        console.error('障害物データの読み込みに失敗しました:', error);
-        showError('障害物データの読み込みに失敗しました。ページを更新してください。');
-        return [];
-    }
-}
-
-
 
 /**
  * エラーメッセージを表示する関数
@@ -143,44 +118,6 @@ function showError(message) {
     }, 3000);
 }
 
-/**
- * ゲームボードを作成する関数
- */
-function createGameBoard() {
-    // ゲームボードのセルを作成
-    for (let y = 0; y < BOARD_HEIGHT; y++) {
-        for (let x = 0; x < BOARD_WIDTH; x++) {
-            const cell = document.createElement('div');
-            cell.className = 'cell';
-            cell.style.left = `${x * 20}px`;
-            cell.style.top = `${y * 20}px`;
-            cell.addEventListener('click', () => placeTower(x, y));
-            gameBoard.appendChild(cell);
-        }
-    }
-    
-    // 各パスにクラスを適用
-    paths.forEach((path, index) => {
-        path.forEach(p => {
-            const pathCell = gameBoard.children[p.y * BOARD_WIDTH + p.x];
-            pathCell.classList.add('path');
-            pathCell.classList.add(`path-${index + 1}`);
-        });
-    });
-        
-     // 障害物の配置
-    obstacles.forEach(o => {
-        const obstacleCell = gameBoard.children[o.y * BOARD_WIDTH + o.x];
-        obstacleCell.classList.add('obstacle');
-    });
-
-    // コア（中心部）の追加
-    const core = document.createElement('div');
-    core.id = 'core';
-    core.style.left = `${47 * 20}px`;
-    core.style.top = `${14 * 20}px`;
-    gameBoard.appendChild(core);
-}
 
 /**
  * 表示を更新する関数
@@ -198,6 +135,7 @@ function updateDisplays() {
  */
 function selectTower(type) {
     selectedTower = type;
+    console.log(`タワータイプ '${type}' が選択されました`);
 }
 
 /**
@@ -206,7 +144,10 @@ function selectTower(type) {
  * @param {number} y - 配置するY座標
  */
 function placeTower(x, y) {
-    if (!selectedTower) return;
+    if (!selectedTower) {
+        console.log('タワーが選択されていません');
+        return;
+    }
     
     const cost = { ice: 50, fire: 100, stone: 150, wind: 150 }[selectedTower];
     if (gold < cost) {
@@ -214,23 +155,25 @@ function placeTower(x, y) {
         return;
     }
     
-    // パス上にタワーを配置できないようにする
-    if (paths.some(path => path.some(p => p.x === x && p.y === y))) {
-        showError("パス上にタワーを配置することはできません！");
+    const cell = cellManager.getCell(x, y);
+    if (!cell || cell.type !== 'empty') {
+        showError("この場所にタワーを配置することはできません！");
         return;
     }
+    
+    console.log(`タワーを配置: タイプ ${selectedTower}, 座標 (${x}, ${y})`);
     
     // タワー要素の作成と配置
     const tower = document.createElement('div');
     tower.className = `tower ${selectedTower}-tower`;
-    tower.style.left = `${x * 20 + 10}px`;
-    tower.style.top = `${y * 20 + 10}px`;
+    tower.style.left = `${x * 20}px`;
+    tower.style.top = `${y * 20}px`;
     gameBoard.appendChild(tower);
     
     // タワーオブジェクトの作成と追加
     towers.push({ 
-        x: x * 20 + 10, 
-        y: y * 20 + 10, 
+        x: x * 20, 
+        y: y * 20, 
         type: selectedTower, 
         element: tower, 
         lastShot: 0,
@@ -240,6 +183,7 @@ function placeTower(x, y) {
         fireRate: getTowerFireRate(selectedTower, 1)
     });
     gold -= cost;
+    cell.type = 'tower';
     updateDisplays();
 }
 
@@ -288,7 +232,10 @@ function createEnemy(type) {
     const health = { goblin: 40, orc: 115, skeleton: 30, slime: 120 }[type];
     const speed = { goblin: 0.02, orc: 0.01, skeleton: 0.04, slime: 0.006 }[type];
     
+    // CellManagerからパスを取得
+    const paths = cellManager.getPaths();
     const pathIndex = Math.floor(Math.random() * paths.length);
+    
     enemies.push({ 
         type, 
         health, 
@@ -357,6 +304,9 @@ function shootEnemies(gameBoard) {
                 );
                 projectile.createProjectileElement(gameBoard);
                 projectiles.push(projectile);
+
+                // タワーの効果を敵に適用
+                applyTowerEffect(target, tower.type);
             }
         }
     });
@@ -376,6 +326,11 @@ function moveProjectiles(gameBoard) {
                 gold += getEnemyGoldReward(destroyedEnemy.type);
                 updateDisplays();
             });
+            
+            // タワーの効果を再度適用（持続的な効果のため）
+            if (!enemyDestroyed) {
+                applyTowerEffect(projectile.target, projectile.towerType);
+            }
             
             projectile.destroy(gameBoard);
             return false; // このプロジェクタイルをリストから削除
@@ -418,13 +373,23 @@ function applyTowerEffect(enemy, towerType) {
     switch(towerType) {
         case 'ice':
             // 氷のタワー効果：敵の速度を一時的に80%に低下
-            enemy.speed *= 0.8;
-            setTimeout(() => { enemy.speed /= 0.8; }, 3000);
+            if (!enemy.iceEffect) {
+                enemy.iceEffect = true;
+                enemy.originalSpeed = enemy.speed;
+                enemy.speed *= 0.8;
+                console.log(`Ice effect applied to enemy at (${enemy.element.style.left}, ${enemy.element.style.top})`);
+                setTimeout(() => {
+                    enemy.speed = enemy.originalSpeed;
+                    enemy.iceEffect = false;
+                    console.log(`Ice effect removed from enemy at (${enemy.element.style.left}, ${enemy.element.style.top})`);
+                }, 3000);
+            }
             break;
         case 'fire':
             // 火のタワー効果：1秒後に追加ダメージ
             setTimeout(() => {
                 enemy.health -= 5;
+                console.log(`Fire effect: Additional 5 damage applied to enemy at (${enemy.element.style.left}, ${enemy.element.style.top})`);
                 showDamage(parseInt(enemy.element.style.left), parseInt(enemy.element.style.top), 5);
             }, 1000);
             break;
@@ -432,12 +397,14 @@ function applyTowerEffect(enemy, towerType) {
             // 石のタワー効果：10%の確率で即死
             if (Math.random() < 0.1) {
                 enemy.health = 0;
+                console.log(`Stone effect: Instant kill applied to enemy at (${enemy.element.style.left}, ${enemy.element.style.top})`);
             }
             break;
         case 'wind':
             // 風のタワー効果：敵を少し後退させる
             const backIndex = Math.max(0, enemy.pathIndex - 1);
             enemy.pathIndex = backIndex;
+            console.log(`Wind effect: Enemy pushed back to path index ${backIndex} at (${enemy.element.style.left}, ${enemy.element.style.top})`);
             break;
     }
 }
