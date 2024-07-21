@@ -166,14 +166,15 @@ function placeTower(x, y) {
     // タワー要素の作成と配置
     const tower = document.createElement('div');
     tower.className = `tower ${selectedTower}-tower`;
-    tower.style.left = `${x * 20}px`;
-    tower.style.top = `${y * 20}px`;
+    // セルの中心にタワーを配置するために10px（半セルサイズ）のオフセットを追加
+    tower.style.left = `${x * 20 + 10}px`;
+    tower.style.top = `${y * 20 + 10}px`;
     gameBoard.appendChild(tower);
     
     // タワーオブジェクトの作成と追加
     towers.push({ 
-        x: x * 20, 
-        y: y * 20, 
+        x: x * 20 + 10, // 中心X座標
+        y: y * 20 + 10, // 中心Y座標
         type: selectedTower, 
         element: tower, 
         lastShot: 0,
