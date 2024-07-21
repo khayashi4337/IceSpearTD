@@ -4,7 +4,6 @@ import { Projectile } from './Projectile.js';
 import { WaveManager } from './WaveManager.js';
 import { showSkillSelection, closeSkillSelection, initializeSkillSystem, getPlayerSkills, addSkillData } from './skill-system.js';
 
-
 // グローバル変数
 let gameBoard, goldDisplay, manaDisplay, waveDisplay, coreHealthDisplay, errorDisplay;
 let waveManager;
@@ -14,7 +13,8 @@ let coreHealth = 1000;
 let towers = [];
 let enemies = [];
 let projectiles = [];
-let paths = [];
+let paths = []; // 敵が通る道
+let obstacles = []; // 障害物
 let selectedTower = null;
 let upgrades = { damage: 0, range: 0, speed: 0 };
 
@@ -22,52 +22,113 @@ let upgrades = { damage: 0, range: 0, speed: 0 };
 const BOARD_WIDTH = 50;
 const BOARD_HEIGHT = 30;
 
+
 /**
  * ゲームの初期化関数
  * DOMの読み込みが完了した後に呼び出される
  */
-function initGame() {
-    // DOM要素の取得
-    gameBoard = document.getElementById('game-board');
-    goldDisplay = document.getElementById('gold');
-    manaDisplay = document.getElementById('mana');
-    waveDisplay = document.getElementById('wave');
-    coreHealthDisplay = document.getElementById('core-health');
-    errorDisplay = document.getElementById('error-display');
+async function initGame() {
+    try {
+        // DOM要素の取得
+        gameBoard = document.getElementById('game-board');
+        goldDisplay = document.getElementById('gold');
+        manaDisplay = document.getElementById('mana');
+        waveDisplay = document.getElementById('wave');
+        coreHealthDisplay = document.getElementById('core-health');
+        errorDisplay = document.getElementById('error-display');
 
-    // WaveManagerのインスタンス化
-    waveManager = new WaveManager(createEnemy, showError);
-    window.waveManager = waveManager;
-
-    // スキルシステムの初期化
-    initializeSkillSystem();
-    console.log("スキルシステムが初期化されました");
-
-    // スキルデータの追加（例）
-    addSkillData('SK_BASIC_001', {
-        name: '氷の矢強化!',
-        description: '基本攻撃の威力を上げるyo',
-        imagePath: 'img/skills/ice_arrow.png',
-        effect: () => {
-            towers.forEach(tower => {
-                if (tower.type === 'ice') {
-                    tower.damage *= 1.1; // 10%ダメージ増加
-                }
-            });
+        // パスデータの読み込み
+        paths = await loadPaths();
+        if (paths.length === 0) {
+            throw new Error('パスデータが空です');
         }
-    });   
 
-    // イベントリスナーの設定
-    document.getElementById('show-skill-selection').addEventListener('click', showSkillSelection);
-    document.getElementById('close-skill-selection').addEventListener('click', closeSkillSelection);    
+        // initGame関数内に追加（パスデータを読み込んだ後）
+        obstacles = await loadObstacles();
+        if (obstacles.length === 0) {
+            throw new Error('障害物データが空です');
+        }        
 
-    // ゲームボードの作成
-    createGameBoard();
-    // 表示の更新
-    updateDisplays();
-    // ゲームループの開始
-    gameLoop();
+        // WaveManagerのインスタンス化
+        waveManager = new WaveManager(createEnemy, showError);
+        window.waveManager = waveManager;
+
+        // スキルシステムの初期化
+        initializeSkillSystem();
+        console.log("スキルシステムが初期化されました");
+
+        // スキルデータの追加（例）
+        addSkillData('SK_BASIC_001', {
+            name: '氷の矢強化!',
+            description: '基本攻撃の威力を上げるyo',
+            imagePath: 'img/skills/ice_arrow.png',
+            effect: () => {
+                towers.forEach(tower => {
+                    if (tower.type === 'ice') {
+                        tower.damage *= 1.1; // 10%ダメージ増加
+                    }
+                });
+            }
+        });   
+
+        // イベントリスナーの設定
+        document.getElementById('show-skill-selection').addEventListener('click', showSkillSelection);
+        document.getElementById('close-skill-selection').addEventListener('click', closeSkillSelection);
+
+        // ゲームボードの作成
+        createGameBoard();
+        // 表示の更新
+        updateDisplays();
+        // ゲームループの開始
+        gameLoop();
+
+    } catch (error) {
+        console.error('ゲームの初期化に失敗しました:', error);
+        showError('ゲームの初期化に失敗しました。ページを更新してください。エラー: ' + error.message);
+    }
 }
+
+/**
+ * パスデータを読み込む関数
+ * @returns {Promise} 読み込まれたパスデータを含むPromise
+ */
+async function loadPaths() {
+    try {
+        const response = await fetch('./data/paths.json');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log('パスデータを読み込みました:', data);
+        return data.paths;
+    } catch (error) {
+        console.error('パスデータの読み込みに失敗しました:', error);
+        showError('パスデータの読み込みに失敗しました。ページを更新してください。');
+        return [];
+    }
+}
+
+/**
+ * 障害物データを読み込む関数
+ * @returns {Promise} 読み込まれた障害物データを含むPromise
+ */
+async function loadObstacles() {
+    try {
+        const response = await fetch('./data/obstacles.json');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log('障害物データを読み込みました:', data);
+        return data.obstacles;
+    } catch (error) {
+        console.error('障害物データの読み込みに失敗しました:', error);
+        showError('障害物データの読み込みに失敗しました。ページを更新してください。');
+        return [];
+    }
+}
+
+
 
 /**
  * エラーメッセージを表示する関数
@@ -98,52 +159,6 @@ function createGameBoard() {
         }
     }
     
-    // 複数のパスを定義
-    paths = [
-        // Path 1 (top)
-        [
-            {x: 0, y: 5}, {x: 1, y: 5}, {x: 2, y: 5}, {x: 3, y: 5}, {x: 4, y: 5},
-            {x: 5, y: 5}, {x: 6, y: 5}, {x: 7, y: 5}, {x: 8, y: 5}, {x: 9, y: 5},
-            {x: 10, y: 5}, {x: 11, y: 5}, {x: 12, y: 5}, {x: 13, y: 5}, {x: 14, y: 5},
-            {x: 15, y: 5}, {x: 16, y: 5}, {x: 17, y: 5}, {x: 18, y: 5}, {x: 19, y: 5},
-            {x: 20, y: 5}, {x: 21, y: 5}, {x: 22, y: 5}, {x: 23, y: 5}, {x: 24, y: 5},
-            {x: 25, y: 5}, {x: 26, y: 5}, {x: 27, y: 5}, {x: 28, y: 5}, {x: 29, y: 5},
-            {x: 30, y: 5}, {x: 31, y: 5}, {x: 32, y: 5}, {x: 33, y: 5}, {x: 34, y: 5},
-            {x: 35, y: 5}, {x: 36, y: 5}, {x: 37, y: 5}, {x: 38, y: 5}, {x: 39, y: 5},
-            {x: 40, y: 5}, {x: 41, y: 5}, {x: 42, y: 6}, {x: 43, y: 7}, {x: 44, y: 8},
-            {x: 45, y: 9}, {x: 46, y: 10}, {x: 47, y: 11}, {x: 48, y: 12}, {x: 48, y: 13},
-            {x: 48, y: 14}
-        ],
-        // Path 2 (middle)
-        [
-            {x: 0, y: 15}, {x: 1, y: 15}, {x: 2, y: 15}, {x: 3, y: 15}, {x: 4, y: 15},
-            {x: 5, y: 15}, {x: 6, y: 15}, {x: 7, y: 15}, {x: 8, y: 15}, {x: 9, y: 15},
-            {x: 10, y: 15}, {x: 11, y: 15}, {x: 12, y: 15}, {x: 13, y: 15}, {x: 14, y: 15},
-            {x: 15, y: 15}, {x: 16, y: 15}, {x: 17, y: 15}, {x: 18, y: 15}, {x: 19, y: 15},
-            {x: 20, y: 15}, {x: 21, y: 15}, {x: 22, y: 15}, {x: 23, y: 15}, {x: 24, y: 15},
-            {x: 25, y: 15}, {x: 26, y: 15}, {x: 27, y: 15}, {x: 28, y: 15}, {x: 29, y: 15},
-            {x: 30, y: 15}, {x: 31, y: 15}, {x: 32, y: 15}, {x: 33, y: 15}, {x: 34, y: 15},
-            {x: 35, y: 15}, {x: 36, y: 15}, {x: 37, y: 15}, {x: 38, y: 15}, {x: 39, y: 15},
-            {x: 40, y: 15}, {x: 41, y: 15}, {x: 42, y: 15}, {x: 43, y: 15}, {x: 44, y: 15},
-            {x: 45, y: 15}, {x: 46, y: 15}, {x: 47, y: 15}, {x: 48, y: 15}
-        ],
-        // Path 3 (bottom)
-        [
-            {x: 0, y: 25}, {x: 1, y: 25}, {x: 2, y: 25}, {x: 3, y: 25}, {x: 4, y: 25},
-            {x: 5, y: 25}, {x: 6, y: 25}, {x: 7, y: 25}, {x: 8, y: 25}, {x: 9, y: 25},
-            {x: 10, y: 25}, {x: 11, y: 25}, {x: 12, y: 25}, {x: 13, y: 25}, {x: 14, y: 25},
-            {x: 15, y: 25}, {x: 16, y: 25}, {x: 17, y: 25}, {x: 18, y: 25}, {x: 19, y: 25},
-            {x: 20, y: 25}, {x: 21, y: 25}, {x: 22, y: 25}, {x: 23, y: 25}, {x: 24, y: 25},
-            {x: 25, y: 25}, {x: 26, y: 25}, {x: 27, y: 25}, {x: 28, y: 25}, {x: 29, y: 25},
-            {x: 30, y: 25}, {x: 31, y: 25}, {x: 32, y: 25}, {x: 33, y: 25}, {x: 34, y: 25},
-            {x: 35, y: 25}, {x: 36, y: 25}, {x: 37, y: 25}, {x: 38, y: 25}, {x: 39, y: 25},
-            {x: 40, y: 25}, {x: 41, y: 25}, {x: 42, y: 24}, {x: 43, y: 23}, {x: 44, y: 22},
-            {x: 45, y: 21}, {x: 46, y: 20}, {x: 47, y: 19}, {x: 48, y: 18}, {x: 48, y: 17},
-            {x: 48, y: 16}
-        ]
-    ];
-            
-    
     // 各パスにクラスを適用
     paths.forEach((path, index) => {
         path.forEach(p => {
@@ -153,13 +168,7 @@ function createGameBoard() {
         });
     });
         
-    // 障害物の配置
-    const obstacles = [
-        {x: 10, y: 10}, {x: 11, y: 10}, {x: 12, y: 10},
-        {x: 25, y: 20}, {x: 26, y: 20}, {x: 27, y: 20},
-        {x: 40, y: 10}, {x: 41, y: 10}, {x: 42, y: 10}
-    ];
-
+     // 障害物の配置
     obstacles.forEach(o => {
         const obstacleCell = gameBoard.children[o.y * BOARD_WIDTH + o.x];
         obstacleCell.classList.add('obstacle');
