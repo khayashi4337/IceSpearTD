@@ -242,35 +242,51 @@ button:hover {
 
 /* styles.css に追加 */
 
+/* スキル選択モーダル全体 */
 #skill-selection-modal {
     background-color: rgba(0, 0, 0, 0.8);
+    padding: 20px;
+    border-radius: 10px;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
+    justify-content: center;
 }
 
+/* スキル選択のタイトル */
+#skill-selection-modal h2 {
+    color: #ffffff;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+/* スキルオプションのコンテナ */
 #skill-selection-options {
     display: flex;
     justify-content: space-around;
     width: 90%;
     max-width: 1200px;
+    margin-top: 20px;
 }
 
+/* 個々のスキルカード */
 .skill-option {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(44, 62, 80, 0.8);
     border-radius: 10px;
     padding: 20px;
     margin: 10px;
     width: 30%;
-    cursor: pointer;
+    text-align: center;
     transition: all 0.3s ease;
+    cursor: pointer;
 }
 
 .skill-option:hover {
     transform: scale(1.05);
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(44, 62, 80, 1);
 }
 
+/* スキル画像コンテナ */
 .skill-image-container {
     width: 100%;
     height: 150px;
@@ -280,25 +296,48 @@ button:hover {
     margin-bottom: 10px;
 }
 
+/* スキル画像 */
 .skill-image-container img {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
+    border-radius: 10px;
 }
 
+/* スキル名 */
 .skill-info h3 {
+    color: #ecf0f1;
     font-size: 1.2em;
     margin-bottom: 10px;
-    color: #FFD700;
 }
 
+/* スキル説明 */
 .skill-info p {
+    color: #bdc3c7;
     font-size: 0.9em;
-    color: #FFFFFF;
+    margin-bottom: 5px;
 }
 
+/* スキルタイプ */
 .skill-type {
+    color: #3498db;
+    font-size: 0.9em;
     font-style: italic;
-    color: #ADD8E6 !important;
     margin-top: 10px;
+}
+
+/* 閉じるボタン */
+#close-skill-selection {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 20px;
+}
+
+#close-skill-selection:hover {
+    background-color: #c0392b;
 }
