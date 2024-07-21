@@ -2,6 +2,7 @@
 
 import { SkillSet } from './skillSet.js';
 import { Skill } from './skill-classes.js';
+import { SkillList } from './skillList.js';
 
 export class SkillSetManager {
     constructor() {
@@ -83,4 +84,19 @@ export class SkillSetManager {
             console.error('Error initializing SkillSets:', error);
         }
     }
+
+    /**
+     * プレイヤーの現在のスキルに基づいて、利用可能なスキルのリストを取得します
+     * @param {SkillList} playerSkills - プレイヤーが現在所持しているスキルのリスト
+     * @returns {SkillList} 利用可能なスキルのリスト
+     */
+    getAvailableSkills(playerSkills) {
+        const availableSkills = new SkillList();
+        this.skillSets.forEach(skillSet => {
+            const availableSkillsFromSet = skillSet.getAvailableSkillList(playerSkills);
+            availableSkillsFromSet.toArray().forEach(skill => availableSkills.add(skill));
+        });
+        return availableSkills;
+    }
+    
 }

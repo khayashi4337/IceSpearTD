@@ -21,10 +21,14 @@ import {
 import { loadJsonData } from './jsonLoader.js';
 import { CellManager } from './cellManager.js';
 import { Tower, TowerManager } from './Tower.js';
+import { SkillList } from './skillList.js';
+// import { SkillSetManager } from './skillSetManager.js';
+import { skillSetManager } from './skillSetInitialization.js';
 
 
 // グローバル変数
 let gameBoard, goldDisplay, manaDisplay, waveDisplay, coreHealthDisplay, errorDisplay;
+//let waveManager, towerManager, skillSetManager;
 let waveManager, towerManager;
 let gold = 500;
 let mana = 100;
@@ -33,6 +37,7 @@ let enemies = [];
 let projectiles = [];
 let selectedTower = null;
 let upgrades = { damage: 0, range: 0, speed: 0 };
+let playerSkills;
 
 // ゲームボードのサイズ定数
 const BOARD_WIDTH = 50;
@@ -56,6 +61,7 @@ async function initGame() {
         waveDisplay = document.getElementById('wave');
         coreHealthDisplay = document.getElementById('core-health');
         errorDisplay = document.getElementById('error-display');
+        
 
         // データの読み込み
         const paths = await loadJsonData('./data/paths.json', 'paths');
@@ -75,8 +81,15 @@ async function initGame() {
         // スキルシステムの初期化
         initializeSkillSystem();
         console.log("スキルシステムが初期化されました");
+        // SkillSetManagerの初期化
+        // skillSetManager = new SkillSetManager();
+        // await skillSetManager.initializeSkillSets();
+        // console.log("SkillSetManagerが初期化されました");        
 
-       disableSkillSelection(); // ゲーム開始時はスキル選択を無効に
+        // プレイヤーのスキルリストを初期化
+        playerSkills = new SkillList();
+
+        disableSkillSelection(); // ゲーム開始時はスキル選択を無効に
 
         // イベントリスナーの設定
         setupEventListeners();
@@ -471,9 +484,30 @@ function handleWaveClear() {
     console.log('ウェーブクリア、次のウェーブの準備中');
     showError('ウェーブクリア！ +150ゴールド獲得');
 
-    // ウェーブクリア時にスキル選択を有効にして表示
+    // プレイヤーの現在のスキルに基づいて、利用可能なスキルのリストを取得
+    const availableSkills = skillSetManager.getAvailableSkills(playerSkills);
+    
+    // 利用可能なスキルからランダムに3つ選択
+    const skillChoices = availableSkills.randomChoice(3);
+
+    // スキル選択を有効にする
     enableSkillSelection();
-    showSkillSelection();
+
+    // スキル選択ダイアログを表示し、プレイヤーの選択を処理
+    showSkillSelection(skillChoices.toArray(), (selectedSkill) => {
+        // 選択されたスキルをプレイヤーのスキルリストに追加
+        playerSkills.add(selectedSkill);
+        console.log(`プレイヤーが新しいスキルを獲得しました: ${selectedSkill.name}`);
+        
+        // UI更新
+        updateSkillDisplay();
+        
+        // スキル選択を無効にする
+        disableSkillSelection();
+        
+        // 次のウェーブの準備を行う
+        prepareNextWave();
+    });
 }
 
 
