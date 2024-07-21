@@ -1,4 +1,4 @@
-import { Skill, TypeASkill, TypeBSkill } from './skill-classes.js';
+import { Skill, TypeASkill, TypeBSkill, TopSkill } from './skill-classes.js';
 
 /**
  * プレイヤースキルクラス
@@ -84,5 +84,14 @@ export class PlayerSkill {
         } else {
             console.log(`Skill ${skill.id} not found in active skills`);
         }
+    }
+
+    includes(skill) {
+        return this.acquiredSkills.some(s => s.id === skill.id);
+    }
+
+    // 既存のスキルを取得するメソッド
+    getAcquiredSkills() {
+        return this.acquiredSkills;
     }
 }

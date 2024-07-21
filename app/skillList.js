@@ -55,6 +55,6 @@ export class SkillList {
      * @returns {Skill[]} スキルオブジェクトの配列
      */
     toArray() {
-        return this.skills;
+        return [...this.skills];
     }
 }

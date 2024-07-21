@@ -9,7 +9,7 @@ import {
     TypeBSkill
 } from './skill-classes.js';
 
-let playerSkill;
+let playerSkills;
 let waveClearSkillBox;
 let skillSetManager;
 let isSkillSelectionEnabled = false;
@@ -19,32 +19,54 @@ let isSkillSelectionEnabled = false;
  */
 async function initializeSkillSystem() {
     console.log("スキルシステムを初期化しています...");
-    playerSkill = new PlayerSkill();
-    waveClearSkillBox = new WaveClearSkillBox();
+
     skillSetManager = new SkillSetManager();
     await skillSetManager.initializeSkillSets();
+
+    // skillSetManager が正しく初期化されていることを確認
+    if (!skillSetManager) {
+        throw new Error('skillSetManager is not initialized');
+    }
+    console.log("skillSetManager:", skillSetManager);
+
+    playerSkills = new PlayerSkill();
+
+    // WaveClearSkillBox のインスタンス化時に skillSetManager を渡す
+    waveClearSkillBox = new WaveClearSkillBox(skillSetManager);
+
     console.log("スキルシステムの初期化が完了しました");
 }
 
 /**
  * スキル選択モーダルを表示する関数
  */
-function showSkillSelection() {
-    if (!isSkillSelectionEnabled) {
-        console.log("スキル選択は現在無効です");
-        return;
+function showSkillSelection(event) {
+    console.log("showSkillSelection called with:", event);  // 追加
+
+    // イベントオブジェクトが渡された場合は、デフォルトの動作を防止
+    if (event && event.preventDefault) {
+        event.preventDefault();
     }
+
+    // すぐスキル選択のデバッグするためコメントアウト
+    // if (!isSkillSelectionEnabled) {
+    //     console.log("スキル選択は現在無効です");
+    //     return;
+    // }
 
     console.log("スキル選択モーダルを表示します");
     document.getElementById('skill-selection-modal').style.display = 'block';
+
+    console.log("playerSkills:", playerSkills);
+    console.log("skillSetManager:", skillSetManager);
     
-    waveClearSkillBox.generateSkillOptions(playerSkill, skillSetManager);
+    waveClearSkillBox.generateSkillOptions(playerSkills, skillSetManager);
     const selectedSkills = waveClearSkillBox.selectRandomSkills(3); // 3つのスキルを選択
     
     const skillOptions = document.getElementById('skill-selection-options');
     skillOptions.innerHTML = '';
     
-    selectedSkills.forEach(skill => {
+    selectedSkills.toArray().forEach(skill => {  // ここを変更
         const skillOption = document.createElement('div');
         skillOption.className = 'skill-option';
         skillOption.innerHTML = `
@@ -80,15 +102,15 @@ function closeSkillSelection() {
 function selectSkill(skill) {
     console.log(`スキルが選択されました: ${skill.id}`);
     
-    if (playerSkill.acquiredSkills.length < 5 && skill.unlockCondition()) {
-        playerSkill.addSkill(skill);
-        playerSkill.setActiveSkill(skill);
+    if (playerSkills.acquiredSkills.length < 5 && skill.unlockCondition()) {
+        playerSkills.addSkill(skill);
+        playerSkills.setActiveSkill(skill);
         updateSkillDisplay();
         closeSkillSelection();
-        console.log("プレイヤーの現在のスキル:", playerSkill.getActiveSkills().map(s => s.id));
+        console.log("プレイヤーの現在のスキル:", playerSkills.getActiveSkills().map(s => s.id));
     } else {
         console.log("スキルの選択に失敗しました");
-        if (playerSkill.acquiredSkills.length >= 5) {
+        if (playerSkills.acquiredSkills.length >= 5) {
             console.log("理由: スキルの最大数に達しています");
         }
         if (!skill.unlockCondition()) {
@@ -112,7 +134,7 @@ export function getSkillData(skillId) {
  */
 export function applySkillEffects(towers) {
     console.log("スキル効果を適用します");
-    playerSkill.getActiveSkills().forEach(skill => {
+    playerSkills.getActiveSkills().forEach(skill => {
         console.log(`スキル ${skill.id} の効果を適用します`);
         skill.execute(towers);
     });
@@ -125,7 +147,7 @@ function updateSkillDisplay() {
     const skillOptions = document.getElementById('skill-options');
     skillOptions.innerHTML = ''; // 既存の表示をクリア
     
-    playerSkill.getActiveSkills().forEach(skill => {
+    playerSkills.getActiveSkills().forEach(skill => {
         const skillIcon = document.createElement('div');
         skillIcon.className = 'skill-icon';
         skillIcon.style.backgroundImage = `url(${skill.thumbImgPath})`;
@@ -139,7 +161,7 @@ function updateSkillDisplay() {
  * @returns {Array<Skill>} プレイヤーの現在のスキル配列
  */
 export function getPlayerSkills() {
-    const activeSkills = playerSkill.getActiveSkills();
+    const activeSkills = playerSkills.getActiveSkills();
     console.log("プレイヤーのスキルを取得します:", activeSkills.map(s => s.id));
     return activeSkills;
 }
@@ -163,7 +185,7 @@ function enableSkillSelection() {
 }
 
 export {
-    playerSkill,
+    playerSkills,
     waveClearSkillBox,
     skillSetManager,
     initializeSkillSystem,

@@ -2,13 +2,15 @@
 
 import { Projectile } from './Projectile.js';
 import { WaveManager } from './WaveManager.js';
-import { 
+import {
+    playerSkills,
     showSkillSelection, 
     closeSkillSelection, 
     initializeSkillSystem, 
     getPlayerSkills, 
     addSkillData,
     enableSkillSelection,
+    waveClearSkillBox,
     disableSkillSelection
 } from './skill-system.js';
 import { 
@@ -22,8 +24,10 @@ import { loadJsonData } from './jsonLoader.js';
 import { CellManager } from './cellManager.js';
 import { Tower, TowerManager } from './Tower.js';
 import { SkillList } from './skillList.js';
+import { WaveClearSkillBox } from './wave-clear-skill-box-class.js';
 // import { SkillSetManager } from './skillSetManager.js';
 import { skillSetManager } from './skillSetInitialization.js';
+
 
 
 // グローバル変数
@@ -37,7 +41,8 @@ let enemies = [];
 let projectiles = [];
 let selectedTower = null;
 let upgrades = { damage: 0, range: 0, speed: 0 };
-let playerSkills;
+
+
 
 // ゲームボードのサイズ定数
 const BOARD_WIDTH = 50;
@@ -87,8 +92,12 @@ async function initGame() {
         // console.log("SkillSetManagerが初期化されました");        
 
         // プレイヤーのスキルリストを初期化
-        playerSkills = new SkillList();
+        //playerSkills = new SkillList();
 
+        // WaveClearSkillBoxの初期化
+        //console.log('skillSetManager before WaveClearSkillBox initialization:', skillSetManager);
+        //waveClearSkillBox = new WaveClearSkillBox(skillSetManager);
+        //console.log('WaveClearSkillBox initialized');
         disableSkillSelection(); // ゲーム開始時はスキル選択を無効に
 
         // イベントリスナーの設定
@@ -110,7 +119,12 @@ async function initGame() {
  * イベントリスナーを設定する関数
  */
 function setupEventListeners() {
-    document.getElementById('show-skill-selection').addEventListener('click', showSkillSelection);
+    // スキルダイアログ表示ボタン
+    document.getElementById('show-skill-selection').addEventListener('click', (event) => {
+        event.preventDefault();
+        showSkillSelection();
+    });
+
     document.getElementById('close-skill-selection').addEventListener('click', closeSkillSelection);
 
     // タワー選択ボタンのイベントリスナーを設定
@@ -485,10 +499,10 @@ function handleWaveClear() {
     showError('ウェーブクリア！ +150ゴールド獲得');
 
     // プレイヤーの現在のスキルに基づいて、利用可能なスキルのリストを取得
-    const availableSkills = skillSetManager.getAvailableSkills(playerSkills);
+    waveClearSkillBox.generateSkillOptions(playerSkills);
     
     // 利用可能なスキルからランダムに3つ選択
-    const skillChoices = availableSkills.randomChoice(3);
+    const skillChoices = waveClearSkillBox.selectRandomSkills(3);
 
     // スキル選択を有効にする
     enableSkillSelection();
@@ -516,7 +530,6 @@ function handleWaveClear() {
  * スキル効果を適用する関数
  */
 function applySkillEffects() {
-    const playerSkills = getPlayerSkills();
     playerSkills.forEach(skillId => {
         const skill = getSkillById(skillId);
         if (skill && skill.effect) {

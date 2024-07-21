@@ -1,7 +1,7 @@
 // skillSet.js
 import { Skill, BasicSkill, TypeASkill, TypeBSkill, TopSkill } from './skill-classes.js';
 import { SkillList } from './skillList.js';
-
+import { PlayerSkill } from './player-skill-class.js';
 
 export class SkillSet {
     /**
@@ -52,8 +52,15 @@ export class SkillSet {
      * @returns {SkillList} プレイヤーが取得可能なスキルのリスト
      */
     getAvailableSkillList(playerSkills) {
+        console.log("getAvailableSkillList called with:", playerSkills);
         const availableSkills = new SkillList();
-        
+
+        // playerSkills が PlayerSkill インスタンスであることを確認
+        if (!(playerSkills instanceof PlayerSkill)) {
+            console.error("Invalid playerSkills object:", playerSkills);
+            return availableSkills;
+        }
+            
         // 基本スキルがまだ獲得されていない場合、それを選択可能にする
         if (this.basicSkill && !playerSkills.includes(this.basicSkill)) {
             availableSkills.add(this.basicSkill);

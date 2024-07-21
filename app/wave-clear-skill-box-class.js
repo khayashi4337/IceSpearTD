@@ -1,23 +1,38 @@
 import { Skill } from './skill-classes.js';
+import { SkillList } from './skillList.js';
 import { PlayerSkill } from './player-skill-class.js';
+import { skillSetManager } from './skillSetInitialization.js';
 
 /**
  * Wave終了時のスキル選択を管理するクラス
  */
 export class WaveClearSkillBox {
-    constructor() {
-        this.availableSkills = [];
+    constructor(skillSetManager) {
+        console.log('WaveClearSkillBox constructor called with skillSetManager:', skillSetManager);
+        if (!skillSetManager) {
+            throw new Error('skillSetManager is required');
+        }
+        this.skillSetManager = skillSetManager;
+        this.availableSkills = new SkillList();
         this.userSelectSkill = null;
-        console.log('WaveClearSkillBox instance created');
     }
 
     /**
-     * プレイヤーのスキルに基づいてスキルオプションを生成
-     * @param {PlayerSkill} playerSkill - プレイヤーのスキル情報
+     * プレイヤーのスキルに基づいて、利用可能なスキルオプションを生成
+     * @param {SkillList} playerSkills - プレイヤーの現在のスキル
      */
-    generateSkillOptions(playerSkill) {
-        this.availableSkills = playerSkill.acquiredSkills.filter(skill => !playerSkill.activeSkills.includes(skill));
-        console.log('Generated skill options:', this.availableSkills.map(s => s.id));
+    generateSkillOptions(playerSkills) {
+        console.log("generateSkillOptions called with:", playerSkills, skillSetManager);
+
+        this.availableSkills = new SkillList();
+
+        skillSetManager.getAllSkillSets().forEach(skillSet => {
+            console.log("Processing skillSet:", skillSet);
+            const availableSkillsFromSet = skillSet.getAvailableSkillList(playerSkills);
+            availableSkillsFromSet.toArray().forEach(skill => this.availableSkills.add(skill));
+        });
+
+        console.log('Generated skill options:', this.availableSkills.toArray().map(s => s.id));
     }
 
     /**
@@ -26,17 +41,9 @@ export class WaveClearSkillBox {
      * @returns {Skill[]} 選択されたスキルのリスト
      */
     selectRandomSkills(count) {
-        const selectedSkills = [];
-        const availableSkillsCopy = [...this.availableSkills];
-
-        for (let i = 0; i < count && availableSkillsCopy.length > 0; i++) {
-            const randomIndex = Math.floor(Math.random() * availableSkillsCopy.length);
-            const selectedSkill = availableSkillsCopy.splice(randomIndex, 1)[0];
-            selectedSkills.push(selectedSkill);
-        }
-
-        console.log('Randomly selected skills:', selectedSkills.map(s => s.id));
-        return selectedSkills;
+        const selectedSkills = this.availableSkills.randomChoice(count);
+        console.log('Randomly selected skills:', selectedSkills.toArray().map(s => s.id));
+        return selectedSkills;  // SkillList オブジェクトを返す
     }
 
     /**

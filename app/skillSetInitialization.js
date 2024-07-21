@@ -219,4 +219,6 @@ skillSetManager.addSkillSet(skillSetSS01);
 skillSetManager.addSkillSet(skillSetSS02);
 skillSetManager.addSkillSet(skillSetSS03);
 
+console.log('skillSetManager created:', skillSetManager);
+
 export { skillSetManager };
