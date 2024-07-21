@@ -83,7 +83,7 @@ function showSkillSelection(event) {
         skillOptions.appendChild(skillOption);
     });
     
-    console.log("表示されたスキル:", selectedSkills.map(s => s.id));
+    console.log("表示されたスキル:", selectedSkills.toArray().map(s => s.id));
 }
 
 
