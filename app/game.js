@@ -2,6 +2,7 @@
 
 import { Projectile } from './Projectile.js';
 import { WaveManager } from './WaveManager.js';
+import { Position } from './Position.js';
 import {
     playerSkills,
     showSkillSelection, 
@@ -41,7 +42,9 @@ let enemies = [];
 let projectiles = [];
 let selectedTower = null;
 let upgrades = { damage: 0, range: 0, speed: 0 };
-
+let enemyPosition = new
+    Position(10,20);
+    console.log(enemyPosition.x,enemyPosition.y); // 10 20　と表示されるのが正しいはず。
 
 
 // ゲームボードのサイズ定数
