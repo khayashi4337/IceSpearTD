@@ -70,9 +70,9 @@ export class SkillSetManager {
      */
     async initializeSkillSets() {
         try {
-            const ss01 = await import('./skillSets/ss01.js');
-            const ss02 = await import('./skillSets/ss02.js');
-            const ss03 = await import('./skillSets/ss03.js');
+            const ss01 = await import('./skillSets/ss01/ss01.js');
+            const ss02 = await import('./skillSets/ss02/ss02.js');
+            const ss03 = await import('./skillSets/ss03/ss03.js');
             
             this.addSkillSet(ss01.default);
             this.addSkillSet(ss02.default);

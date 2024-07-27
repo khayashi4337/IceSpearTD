@@ -1,6 +1,6 @@
 // skillSets/ss01.js
-import { SkillSet } from '../skillSet.js';
-import { BasicSkill, TypeASkill, TypeBSkill, TopSkill } from '../skill-classes.js';
+import { SkillSet } from '../../skillSet.js';
+import { BasicSkill, TypeASkill, TypeBSkill, TopSkill } from '../../skill-classes.js';
 
 const SS_01 = new SkillSet(
     'SS_01',

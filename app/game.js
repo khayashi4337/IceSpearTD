@@ -27,6 +27,7 @@ import { SkillList } from './skill/skillList.js';
 import { WaveClearSkillBox } from './skill/wave-clear-skill-box-class.js';
 // import { SkillSetManager } from './skillSetManager.js';
 import { skillSetManager } from './skill/skillSetInitialization.js';
+import { PathNetwork } from './map/pathNetwork.js';
 
 
 
@@ -71,6 +72,8 @@ async function initGame() {
         // データの読み込み
         const paths = await loadJsonData('./data/paths.json', 'paths');
         const obstacles = await loadJsonData('./data/obstacles.json', 'obstacles');
+
+        initializeAndValidatePathNetwork();
         
         // セルマネージャーの初期化
         cellManager = new CellManager(BOARD_WIDTH, BOARD_HEIGHT);
@@ -565,6 +568,35 @@ function showDamage(x, y, amount) {
         gameBoard.removeChild(damageElement);
     }, 1000);
 }
+
+async function initializeAndValidatePathNetwork() {
+    try {
+        // 元のJSONデータを読み込む
+        const originalData = await loadJsonData('./data/paths.json', 'paths');
+
+        // PathNetwork用のJSONデータを読み込む
+        const pathNetworkData = await loadJsonData('./data/pathNetwork.json', 'pathNetwork');
+
+        // PathNetworkオブジェクトを作成し、データを設定する
+        const pathNetwork = PathNetwork.fromJson(pathNetworkData);
+
+        // パスの補完が正しく行われたかをチェック
+        const isValid = pathNetwork.validatePaths(originalData);
+
+        if (isValid) {
+            console.log("全てのパスが正しく補完されました。");
+        } else {
+            console.log("一部のパスの補完に問題がありました。");
+        }
+
+        // 必要に応じて、補完されたパスデータを使用して処理を続行
+        // ...
+
+    } catch (error) {
+        console.error("PathNetworkの初期化と検証に失敗しました:", error);
+    }
+}
+
 
 
 // グローバルスコープに公開する関数
