@@ -46,8 +46,7 @@ const BOARD_HEIGHT = 30;
 // セルマネージャーのインスタンス
 let cellManager;
 
-// コアの位置を定義
-const CORE_POSITION = { x: 47, y: 14 };
+const CORE_POSITION = { x: 47, y: 14 };  // コアの位置を定義 座標
 
 /**
  * ゲームの初期化関数
@@ -299,7 +298,7 @@ function moveEnemies() {
             return;
         }
         
-        // 敵の位置を更新
+        // 敵の位置を更新　座標
         const currentPos = enemy.path[Math.floor(enemy.pathIndex)];
         const nextPos = enemy.path[Math.min(Math.ceil(enemy.pathIndex), enemy.path.length - 1)];
         const progress = enemy.pathIndex - Math.floor(enemy.pathIndex);
@@ -313,7 +312,7 @@ function moveEnemies() {
 }
 
 /**
- * タワーから敵に向けてプロジェクタイルを発射する関数
+ * タワーから敵に向けてプロジェクタイルを発射する関数　座標
  * @param {HTMLElement} gameBoard - ゲームボード要素
  */
 function shootEnemies(gameBoard) {
@@ -372,7 +371,7 @@ function moveProjectiles(gameBoard) {
 /**
  * タワーの攻撃範囲内にいる最初の敵を見つける関数
  * @param {Object} tower - タワーオブジェクト
- * @returns {Object|null} 見つかった敵オブジェクト、または null
+ * @returns {Object|null} 見つかった敵オブジェクト、または null　座標
  */
 function findTargetForTower(tower) {
     return enemies.find(enemy => {
