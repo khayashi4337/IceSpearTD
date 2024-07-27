@@ -1,17 +1,18 @@
 // map/cell.js
 
+import { MapPosition } from './MapPosition.js';
+
 /**
  * ゲームボード上の個々のセルを表すクラス
  */
 export class Cell {
     /**
-     * @param {number} x - セルのX座標
-     * @param {number} y - セルのY座標
+     * Cellのコンストラクタ
+     * @param {MapPosition} position - セルの位置
      * @param {string} type - セルのタイプ（デフォルトは'empty'）
      */
-    constructor(x, y, type = 'empty') {
-        this.x = x;
-        this.y = y;
+    constructor(position, type = 'empty') {
+        this.position = position;
         this.type = type;
         this.element = null;
         console.log(`新しいセルを作成しました: ${this.toString()}, タイプ: ${this.type}`);
@@ -57,7 +58,7 @@ export class Cell {
      * @returns {string} セルの座標を表す文字列
      */
     toString() {
-        return `(${this.x}, ${this.y})`;
+        return this.position.toString();
     }
 
     /**
@@ -65,80 +66,10 @@ export class Cell {
      * @returns {Object} セルの情報を含むJSONオブジェクト
      */
     toJson() {
-        return { "x": this.x, "y": this.y };
-    }
-
-    /**
-     * 別のセルとの距離を計算する
-     * @param {Cell} otherCell - 距離を計算する対象のセル
-     * @returns {number} 2つのセル間のユークリッド距離
-     */
-    distance(otherCell) {
-        const dx = this.x - otherCell.x;
-        const dy = this.y - otherCell.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        console.log(`セル ${this.toString()} からセル ${otherCell.toString()} までの距離: ${distance}`);
-        return distance;
-    }
-
-    /**
-     * この地点から終点までの直線パスを計算する
-     * @param {Cell} endCell - 終点のセル
-     * @returns {Cell[]} パス上のセルの配列
-     */
-    calculateStraightPath(endCell) {
-        const path = [];
-        const dx = endCell.x - this.x;
-        const dy = endCell.y - this.y;
-        const distance = Math.max(Math.abs(dx), Math.abs(dy));
-
-        for (let i = 0; i <= distance; i++) {
-            const t = distance > 0 ? i / distance : 0;
-            const x = Math.round(this.x + dx * t);
-            const y = Math.round(this.y + dy * t);
-            path.push(new Cell(x, y, 'path'));
-        }
-
-        console.log(`直線パスを計算しました: ${this.toString()} から ${endCell.toString()}, セル数: ${path.length}`);
-        return path;
-    }
-
-    /**
-     * この地点から終点までの曲線パスを計算する
-     * @param {Cell} endCell - 終点のセル
-     * @returns {Cell[]} パス上のセルの配列
-     */
-    calculateCurvedPath(endCell) {
-        const path = [];
-        const controlX = (this.x + endCell.x) / 2;
-        const controlY = this.y;
-        const steps = 20; // 曲線の滑らかさを調整
-
-        for (let i = 0; i <= steps; i++) {
-            const t = i / steps;
-            const x = Math.round(
-                (1 - t) * (1 - t) * this.x +
-                2 * (1 - t) * t * controlX +
-                t * t * endCell.x
-            );
-            const y = Math.round(
-                (1 - t) * (1 - t) * this.y +
-                2 * (1 - t) * t * controlY +
-                t * t * endCell.y
-            );
-            path.push(new Cell(x, y, 'path'));
-        }
-
-        console.log(`曲線パスを計算しました: ${this.toString()} から ${endCell.toString()}, セル数: ${path.length}`);
-        return path;
-    }
-
-    /**
-     * セルの情報をJSON形式で返す
-     * @returns {Object} セルの情報を含むJSONオブジェクト
-     */
-    toJson() {
-        return { "x": this.x, "y": this.y, "type": this.type };
+        return {
+            position: this.position.toJson(),
+            type: this.type
+        };
     }
 
     /**
@@ -147,7 +78,7 @@ export class Cell {
      * @returns {Cell} 生成されたセルオブジェクト
      */
     static fromJson(json) {
-        return new Cell(json.x, json.y, json.type);
+        console.log(`JSONからCellを生成しました: ${JSON.stringify(json)}`);
+        return new Cell(MapPosition.fromJson(json.position), json.type);
     }
-    
 }

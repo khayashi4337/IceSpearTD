@@ -1,73 +1,71 @@
 // map/cellList.js
 
+import { MapPosition } from './MapPosition.js';
+
 /**
  * セルのリストを管理するクラス
  */
 export class CellList {
+    /**
+     * CellListのコンストラクタ
+     */
     constructor() {
-        this.cells = [];
+        this.positions = [];
+        console.log('新しいCellListを作成しました');
     }
 
     /**
-     * セルをリストに追加する
-     * @param {Cell} cell - 追加するセル
+     * 位置をリストに追加する
+     * @param {MapPosition} position - 追加する位置
      */
-    addCell(cell) {
-        this.cells.push(cell);
-        console.log(`セル ${cell.toString()} をリストに追加しました。現在のセル数: ${this.cells.length}`);
+    addPosition(position) {
+        this.positions.push(position);
+        console.log(`位置 ${position.toString()} をリストに追加しました。現在の位置数: ${this.positions.length}`);
     }
 
     /**
-     * 複数のセルをリストに追加する
-     * @param {Cell[]} cells - 追加するセルの配列
+     * 複数の位置をリストに追加する
+     * @param {MapPosition[]} positions - 追加する位置の配列
      */
-    addCells(cells) {
-        this.cells.push(...cells);
-        console.log(`${cells.length} 個のセルをリストに追加しました。現在のセル数: ${this.cells.length}`);
+    addPositions(positions) {
+        this.positions.push(...positions);
+        console.log(`${positions.length} 個の位置をリストに追加しました。現在の位置数: ${this.positions.length}`);
     }
 
     /**
-     * リスト内の全てのセルの種類を変更する
-     * @param {string} newType - 新しいセルの種類
+     * リスト内の全ての位置の種類を変更する
+     * @param {string} newType - 新しい位置の種類
      */
-    changeCellType(newType) {
-        this.cells.forEach(cell => {
-            cell.type = newType;
+    changePositionType(newType) {
+        this.positions.forEach(position => {
+            position.type = newType;
         });
-        console.log(`全てのセル (${this.cells.length} 個) の種類を ${newType} に変更しました`);
+        console.log(`全ての位置 (${this.positions.length} 個) の種類を ${newType} に変更しました`);
     }
 
     /**
-     * リスト内のセルの数を返す
-     * @returns {number} セルの数
+     * リスト内の位置の数を返す
+     * @returns {number} 位置の数
      */
     getLength() {
-        return this.cells.length;
+        return this.positions.length;
     }
 
     /**
-     * リスト内の全てのセルを文字列として返す
-     * @returns {string} セルのリストを表す文字列
+     * リスト内の全ての位置を文字列として返す
+     * @returns {string} 位置のリストを表す文字列
      */
     toString() {
-        return this.cells.map(cell => cell.toString()).join(', ');
+        return this.positions.map(position => position.toString()).join(', ');
     }
 
     /**
-     * リスト内の全てのセルをJSON形式で返す
-     * @returns {Object[]} セルの情報を含むJSONオブジェクトの配列
-     */
-    toJson() {
-        return this.cells.map(cell => cell.toJson());
-    }
-
-    /**
-     * リスト内の全てのセルをJSON形式で返す
-     * @returns {Object[]} セルの情報を含むJSONオブジェクトの配列
+     * リスト内の全ての位置をJSON形式で返す
+     * @returns {Object} 位置の情報を含むJSONオブジェクト
      */
     toJson() {
         return {
-            cells: this.cells.map(cell => cell.toJson())
+            positions: this.positions.map(position => position.toJson())
         };
     }
 
@@ -78,9 +76,18 @@ export class CellList {
      */
     static fromJson(json) {
         const cellList = new CellList();
-        json.cells.forEach(cellData => {
-            cellList.addCell(Cell.fromJson(cellData));
+        json.positions.forEach(positionData => {
+            cellList.addPosition(MapPosition.fromJson(positionData));
         });
+        console.log(`JSONからCellListを生成しました。位置の数: ${cellList.getLength()}`);
         return cellList;
-    }    
+    }
+
+  /**
+   * CellListの位置データを配列として返す
+   * @returns {MapPosition[]} 位置データの配列
+   */
+  toArray() {
+    return [...this.positions];
+  }    
 }

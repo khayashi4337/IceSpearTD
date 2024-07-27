@@ -1,6 +1,7 @@
 // map/pathNetwork.js
+
+import { MapPosition } from './MapPosition.js';
 import { CellList } from './cellList.js';
-import { Cell } from './cell.js';
 
 /**
  * パスネットワークを管理するクラス
@@ -36,19 +37,16 @@ export class PathNetwork {
             }
             pathData.nodes.forEach((node, nodeIndex) => {
                 console.log(`ノード ${nodeIndex + 1} を処理しています:`, node);
+                const position = new MapPosition(node.x, node.y);
                 if (nodeIndex > 0) {
                     const prevNode = pathData.nodes[nodeIndex - 1];
-                    const interpolatedCells = PathNetwork.interpolatePath(
-                        prevNode,
-                        node,
-                        pathData.common.type
-                    );
-                    console.log(`補間されたセル数: ${interpolatedCells.length}`);
-                    cellList.addCells(interpolatedCells);
+                    const prevPosition = new MapPosition(prevNode.x, prevNode.y);
+                    const interpolatedPositions = prevPosition.calculateStraightPath(position);
+                    console.log(`補間されたセル数: ${interpolatedPositions.length}`);
+                    cellList.addPositions(interpolatedPositions);
                 } else {
-                    const cell = new Cell(node.x, node.y, pathData.common.type);
-                    console.log(`最初のセルを追加:`, cell.toString());
-                    cellList.addCell(cell);
+                    console.log(`最初の位置を追加:`, position.toString());
+                    cellList.addPosition(position);
                 }
             });
             pathNetwork.addPath(cellList);
@@ -58,43 +56,17 @@ export class PathNetwork {
     }
 
     /**
-     * 2つのノード間のパスを補完する
-     * @param {Object} start - 開始ノード {x, y}
-     * @param {Object} end - 終了ノード {x, y}
-     * @param {string} type - セルのタイプ
-     * @returns {Cell[]} 補完されたセルの配列
-     */
-    static interpolatePath(start, end, type) {
-        console.log(`interpolatePath: start=${JSON.stringify(start)}, end=${JSON.stringify(end)}, type=${type}`);
-        const cells = [];
-        const dx = end.x - start.x;
-        const dy = end.y - start.y;
-        const steps = Math.max(Math.abs(dx), Math.abs(dy));
-
-        for (let i = 0; i <= steps; i++) {
-            const t = (steps === 0) ? 0 : i / steps;
-            const x = Math.round(start.x + dx * t);
-            const y = Math.round(start.y + dy * t);
-            const cell = new Cell(x, y, type);
-            cells.push(cell);
-        }
-
-        console.log(`interpolatePath: 生成されたセル数 ${cells.length}`);
-        return cells;
-    }
-
-    /**
      * パス（CellList）を追加する
      * @param {CellList} path - 追加するパス
      */
     addPath(path) {
         this.paths.push(path);
-        console.log(`パスを追加しました。現在のパス数: ${this.paths.length}, セル数: ${path.cells.length}`);
+        console.log(`パスを追加しました。現在のパス数: ${this.paths.length}, セル数: ${path.getLength()}`);
     }
 
     /**
      * 元のデータと比較して、パスが正しく補完されているかチェックする
-     * @param {Object} originalJson - 元のJSONデータ
+     * @param {Object} originalPaths - 元のパスデータ
      * @returns {boolean} すべてのパスが正しく補完されている場合はtrue
      */
     validatePaths(originalPaths) {
@@ -105,7 +77,7 @@ export class PathNetwork {
             return false;
         }
         this.paths.forEach((path, index) => {
-            console.log(`パス ${index + 1} の検証を開始します。セル数: ${path.cells.length}`);
+            console.log(`パス ${index + 1} の検証を開始します。位置数: ${path.getLength()}`);
             if (!originalPaths[index]) {
                 console.error(`元のパスデータにパス ${index + 1} が存在しません`);
                 isValid = false;
@@ -117,11 +89,11 @@ export class PathNetwork {
                 isValid = false;
                 return;
             }
-            const reconstructedNodes = path.cells.filter((cell, cellIndex, cells) => {
-                if (cellIndex === 0) return true;
-                const prevCell = cells[cellIndex - 1];
-                return cell.x !== prevCell.x || cell.y !== prevCell.y;
-            }).map(cell => ({ x: cell.x, y: cell.y }));
+            const reconstructedNodes = path.positions.filter((position, posIndex, positions) => {
+                if (posIndex === 0) return true;
+                const prevPosition = positions[posIndex - 1];
+                return !position.equals(prevPosition);
+            }).map(position => position.toJson());
 
             console.log(`パス ${index + 1} - 元のノード数: ${originalNodes.length}, 再構築されたノード数: ${reconstructedNodes.length}`);
             console.log('元のノード:', JSON.stringify(originalNodes));
@@ -146,12 +118,28 @@ export class PathNetwork {
         const json = {
             pathNetwork: {
                 paths: this.paths.map(path => ({
-                    common: { type: path.cells[0].type },
-                    nodes: path.cells.map(cell => ({ x: cell.x, y: cell.y }))
+                    nodes: path.positions.map(position => position.toJson())
                 }))
             }
         };
         console.log('PathNetwork を JSON に変換しました。パス数:', json.pathNetwork.paths.length);
         return json;
+    }
+
+    /**
+     * 元のデータ形式（x, yの配列の配列）に変換する
+     * @returns {Array<Array<{x: number, y: number}>>} 元のデータ形式のパスデータ
+     */
+    toOriginalData() {
+        const originalPaths = this.paths.map(path => {
+            const originalNodes = path.positions.filter((position, posIndex, positions) => {
+                if (posIndex === 0) return true;
+                const prevPosition = positions[posIndex - 1];
+                return !position.equals(prevPosition);
+            }).map(position => ({x: position.x, y: position.y}));
+            return originalNodes;
+        });
+        console.log('PathNetwork を元のデータ形式に変換しました。パス数:', originalPaths.length);
+        return originalPaths;
     }
 }
