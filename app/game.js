@@ -45,8 +45,7 @@ const BOARD_HEIGHT = 30;
 // セルマネージャーのインスタンス
 let cellManager;
 
-// コアの位置を定義
-const CORE_POSITION = { x: 47, y: 14 };
+const CORE_POSITION = { x: 47, y: 14 };  // コアの位置を定義 座標
 
 /**
  * ゲームの初期化関数
