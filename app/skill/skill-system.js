@@ -197,6 +197,7 @@ export {
     showSkillSelection,
     closeSkillSelection,
     enableSkillSelection,
+    updateSkillDisplay,
     disableSkillSelection
 };
 

@@ -21,18 +21,15 @@ import {
     TypeBSkill
 } from './skill/skill-classes.js';
 import { loadJsonData } from './jsonLoader.js';
-import { CellManager } from './cellManager.js';
+import { CellManager } from './map/cellManager.js';
 import { Tower, TowerManager } from './Tower.js';
 import { SkillList } from './skill/skillList.js';
 import { WaveClearSkillBox } from './skill/wave-clear-skill-box-class.js';
-// import { SkillSetManager } from './skillSetManager.js';
 import { skillSetManager } from './skill/skillSetInitialization.js';
+import { PathNetwork } from './map/pathNetwork.js';
 
-
-
-// グローバル変数
+// グローバル変数の定義
 let gameBoard, goldDisplay, manaDisplay, waveDisplay, coreHealthDisplay, errorDisplay;
-//let waveManager, towerManager, skillSetManager;
 let waveManager, towerManager;
 let gold = 500;
 let mana = 100;
@@ -41,8 +38,6 @@ let enemies = [];
 let projectiles = [];
 let selectedTower = null;
 let upgrades = { damage: 0, range: 0, speed: 0 };
-
-
 
 // ゲームボードのサイズ定数
 const BOARD_WIDTH = 50;
@@ -67,14 +62,17 @@ async function initGame() {
         coreHealthDisplay = document.getElementById('core-health');
         errorDisplay = document.getElementById('error-display');
         
-
         // データの読み込み
-        const paths = await loadJsonData('./data/paths.json', 'paths');
         const obstacles = await loadJsonData('./data/obstacles.json', 'obstacles');
+
+        // PathNetwork用のJSONデータを読み込む
+        const pathNetworkData = await loadJsonData('./data/pathNetwork.json', 'pathNetwork');
+        const pathNetwork = PathNetwork.fromJson(pathNetworkData);
+        const paths = pathNetwork.toOriginalData();
         
         // セルマネージャーの初期化
         cellManager = new CellManager(BOARD_WIDTH, BOARD_HEIGHT);
-        cellManager.initializeBoard(gameBoard, paths, obstacles, CORE_POSITION);     
+        cellManager.initializeBoard(gameBoard, paths, obstacles, CORE_POSITION);    
 
         // WaveManagerのインスタンス化
         waveManager = new WaveManager(createEnemy, showError);
@@ -117,9 +115,10 @@ function setupEventListeners() {
     document.getElementById('close-skill-selection').addEventListener('click', closeSkillSelection);
 
     // タワー選択ボタンのイベントリスナーを設定
+    // onclick 属性を使用せず、JavaScript でイベントリスナーを追加
     document.querySelectorAll('#tower-buttons button').forEach(button => {
         button.addEventListener('click', () => {
-            const towerType = button.getAttribute('onclick').match(/'(\w+)'/)[1];
+            const towerType = button.dataset.towerType; // data-tower-type 属性を使用
             selectTower(towerType);
         });
     });
@@ -129,9 +128,10 @@ function setupEventListeners() {
         const rect = gameBoard.getBoundingClientRect();
         const x = Math.floor((event.clientX - rect.left) / 20);
         const y = Math.floor((event.clientY - rect.top) / 20);
-        placeTower(x, y);
+        placeTower({ x, y }); // 単純なオブジェクトを使用
     });
 }
+
 
 /**
  * エラーメッセージを表示する関数
@@ -145,7 +145,6 @@ function showError(message) {
         errorDisplay.style.display = 'none';
     }, 3000);
 }
-
 
 /**
  * 表示を更新する関数
@@ -166,13 +165,11 @@ function selectTower(type) {
     console.log(`タワータイプ '${type}' が選択されました`);
 }
 
-
 /**
  * タワーを配置する関数
- * @param {number} x - 配置するX座標
- * @param {number} y - 配置するY座標
+ * @param {{x: number, y: number}} position - 配置する位置
  */
-function placeTower(x, y) {
+function placeTower(position) {
     if (!selectedTower) {
         console.log('タワーが選択されていません');
         return;
@@ -184,16 +181,16 @@ function placeTower(x, y) {
         return;
     }
     
-    const cell = cellManager.getCell(x, y);
+    const cell = cellManager.getCell(position);
     if (!cell || cell.type !== 'empty') {
         showError("この場所にタワーを配置することはできません！");
         return;
     }
     
-    console.log(`タワーを配置: タイプ ${selectedTower}, 座標 (${x}, ${y})`);
+    console.log(`タワーを配置: タイプ ${selectedTower}, 座標 (${position.x}, ${position.y})`);
     
-    const towerX = x * 20 + 10;
-    const towerY = y * 20 + 10;
+    const towerX = position.x * 20 + 10;
+    const towerY = position.y * 20 + 10;
     const tower = towerManager.createTower(towerX, towerY, selectedTower, gameBoard);
     
     gold -= cost;
@@ -450,7 +447,6 @@ function getEnemyGoldReward(enemyType) {
     return { goblin: 10, orc: 20, skeleton: 15, slime: 15 }[enemyType];
 }
 
-
 /**
  * ゲームのメインループ
  * 各フレームごとに呼び出され、ゲームの状態を更新する
@@ -513,8 +509,6 @@ function handleWaveClear() {
     });
 }
 
-
-
 /**
  * スキル効果を適用する関数
  */
@@ -526,7 +520,6 @@ function applySkillEffects() {
         }
     });
 }
-
 
 /**
  * スキルIDからスキルオブジェクトを取得する関数
@@ -566,7 +559,6 @@ function showDamage(x, y, amount) {
     }, 1000);
 }
 
-
 // グローバルスコープに公開する関数
 window.selectTower = selectTower;
 window.placeTower = placeTower;
@@ -574,4 +566,3 @@ window.upgrade = upgrade;
 
 // DOMの読み込みが完了したらゲームを初期化
 document.addEventListener('DOMContentLoaded', initGame);
-
