@@ -22,21 +22,20 @@ import {
 } from './skill/skill-classes.js';
 import { loadJsonData } from './jsonLoader.js';
 import { CellManager } from './map/cellManager.js';
-import { Tower, TowerManager } from './Tower.js';
 import { SkillList } from './skill/skillList.js';
 import { WaveClearSkillBox } from './skill/wave-clear-skill-box-class.js';
 import { skillSetManager } from './skill/skillSetInitialization.js';
 import { PathNetwork } from './map/pathNetwork.js';
+import { EnemyService } from './services/enemyService.js';
+import { TowerService } from './services/TowerService.js';
 
 // グローバル変数の定義
 let gameBoard, goldDisplay, manaDisplay, waveDisplay, coreHealthDisplay, errorDisplay;
-let waveManager, towerManager;
+let waveManager, towerService, enemyService;
 let gold = 500;
 let mana = 100;
 let coreHealth = 1000;
-let enemies = [];
 let projectiles = [];
-let selectedTower = null;
 let upgrades = { damage: 0, range: 0, speed: 0 };
 
 // ゲームボードのサイズ定数
@@ -72,14 +71,17 @@ async function initGame() {
         
         // セルマネージャーの初期化
         cellManager = new CellManager(BOARD_WIDTH, BOARD_HEIGHT);
-        cellManager.initializeBoard(gameBoard, paths, obstacles, CORE_POSITION);    
+        cellManager.initializeBoard(gameBoard, paths, obstacles, CORE_POSITION);     
+
+        // EnemyServiceの初期化
+        enemyService = new EnemyService(gameBoard, cellManager);
+
+        // TowerServiceの初期化
+        towerService = new TowerService(gameBoard, cellManager);
 
         // WaveManagerのインスタンス化
         waveManager = new WaveManager(createEnemy, showError);
         window.waveManager = waveManager;
-
-        // TowerManagerのインスタンス化
-        towerManager = new TowerManager();
 
         // スキルシステムの初期化
         initializeSkillSystem();
@@ -115,11 +117,10 @@ function setupEventListeners() {
     document.getElementById('close-skill-selection').addEventListener('click', closeSkillSelection);
 
     // タワー選択ボタンのイベントリスナーを設定
-    // onclick 属性を使用せず、JavaScript でイベントリスナーを追加
     document.querySelectorAll('#tower-buttons button').forEach(button => {
         button.addEventListener('click', () => {
-            const towerType = button.dataset.towerType; // data-tower-type 属性を使用
-            selectTower(towerType);
+            const towerType = button.dataset.towerType;
+            towerService.selectTower(towerType);
         });
     });
 
@@ -128,10 +129,9 @@ function setupEventListeners() {
         const rect = gameBoard.getBoundingClientRect();
         const x = Math.floor((event.clientX - rect.left) / 20);
         const y = Math.floor((event.clientY - rect.top) / 20);
-        placeTower({ x, y }); // 単純なオブジェクトを使用
+        placeTower({ x, y });
     });
 }
-
 
 /**
  * エラーメッセージを表示する関数
@@ -157,45 +157,17 @@ function updateDisplays() {
 }
 
 /**
- * タワーを選択する関数
- * @param {string} type - 選択するタワーの種類
- */
-function selectTower(type) {
-    selectedTower = type;
-    console.log(`タワータイプ '${type}' が選択されました`);
-}
-
-/**
  * タワーを配置する関数
  * @param {{x: number, y: number}} position - 配置する位置
  */
 function placeTower(position) {
-    if (!selectedTower) {
-        console.log('タワーが選択されていません');
-        return;
+    const result = towerService.placeTower(position, gold);
+    if (result.success) {
+        gold -= result.cost;
+        updateDisplays();
+    } else {
+        showError(result.message);
     }
-    
-    const cost = Tower.getTowerCost(selectedTower);
-    if (gold < cost) {
-        showError("タワーを配置するのに十分なゴールドがありません！");
-        return;
-    }
-    
-    const cell = cellManager.getCell(position);
-    if (!cell || cell.type !== 'empty') {
-        showError("この場所にタワーを配置することはできません！");
-        return;
-    }
-    
-    console.log(`タワーを配置: タイプ ${selectedTower}, 座標 (${position.x}, ${position.y})`);
-    
-    const towerX = position.x * 20 + 10;
-    const towerY = position.y * 20 + 10;
-    const tower = towerManager.createTower(towerX, towerY, selectedTower, gameBoard);
-    
-    gold -= cost;
-    cell.type = 'tower';
-    updateDisplays();
 }
 
 /**
@@ -207,7 +179,7 @@ function upgrade(type) {
         gold -= 100;
         upgrades[type]++;
         updateDisplays();
-        towerManager.updateAllTowers(upgrades[type]);
+        towerService.updateAllTowers(upgrades[type]);
         
         // スキル効果の適用
         applySkillEffects();
@@ -217,128 +189,11 @@ function upgrade(type) {
 }
 
 /**
- * タワーの攻撃力を取得する関数
- * @param {string} type - タワーの種類
- * @param {number} level - タワーのレベル
- * @returns {number} タワーの攻撃力
- */
-function getTowerDamage(type, level) {
-    const baseDamage = { ice: 20, fire: 40, stone: 100, wind: 16 }[type];
-    return baseDamage * (1 + 0.1 * (level - 1)) * (1 + upgrades.damage * 0.1);
-}
-
-/**
- * タワーの攻撃範囲を取得する関数
- * @param {string} type - タワーの種類
- * @param {number} level - タワーのレベル
- * @returns {number} タワーの攻撃範囲
- */
-function getTowerRange(type, level) {
-    const baseRange = { ice: 80, fire: 80, stone: 50, wind: 160 }[type];
-    return baseRange * (1 + 0.05 * (level - 1)) * (1 + upgrades.range * 0.1);
-}
-
-/**
- * タワーの攻撃速度を取得する関数
- * @param {string} type - タワーの種類
- * @param {number} level - タワーのレベル
- * @returns {number} タワーの攻撃速度（秒単位）
- */
-function getTowerFireRate(type, level) {
-    const baseFireRate = { ice: 1, fire: 0.8, stone: 6, wind: 0.4 }[type];
-    return baseFireRate * (1 - 0.05 * (level - 1)) * (1 - upgrades.speed * 0.1);
-}
-
-/**
  * 敵キャラクターを作成する関数
  * @param {string} type - 敵の種類
  */
 function createEnemy(type) {
-    const enemy = document.createElement('div');
-    enemy.className = `enemy ${type}`;
-    gameBoard.appendChild(enemy);
-    
-    const health = { goblin: 40, orc: 115, skeleton: 30, slime: 120 }[type];
-    const speed = { goblin: 0.02, orc: 0.01, skeleton: 0.04, slime: 0.006 }[type];
-    
-    // CellManagerからパスを取得
-    const paths = cellManager.getPaths();
-    const pathIndex = Math.floor(Math.random() * paths.length);
-    
-    enemies.push({ 
-        type, 
-        health, 
-        maxHealth: health, 
-        speed, 
-        pathIndex: 0, 
-        element: enemy,
-        path: paths[pathIndex]
-    });
-    waveManager.totalEnemiesSpawned++;
-}
-
-/**
- * 敵キャラクターを移動させる関数
- */
-function moveEnemies() {
-    enemies.forEach((enemy, index) => {
-        enemy.pathIndex += enemy.speed;
-        
-        // 敵がパスの終点に到達した場合
-        if (enemy.pathIndex >= enemy.path.length - 1) {
-            gameBoard.removeChild(enemy.element);
-            enemies.splice(index, 1);
-            coreHealth -= enemy.maxHealth;
-            updateDisplays();
-            if (coreHealth <= 0) {
-                showError('ゲームオーバー！コアが破壊されました。');
-                waveManager.isWaveInProgress = false;
-                return;
-            }
-            return;
-        }
-        
-        // 敵の位置を更新　座標
-        const currentPos = enemy.path[Math.floor(enemy.pathIndex)];
-        const nextPos = enemy.path[Math.min(Math.ceil(enemy.pathIndex), enemy.path.length - 1)];
-        const progress = enemy.pathIndex - Math.floor(enemy.pathIndex);
-        
-        const x = currentPos.x * 20 + (nextPos.x - currentPos.x) * 20 * progress + 10;
-        const y = currentPos.y * 20 + (nextPos.y - currentPos.y) * 20 * progress + 10;
-        
-        enemy.element.style.left = `${x}px`;
-        enemy.element.style.top = `${y}px`;
-    });
-}
-
-/**
- * タワーから敵に向けてプロジェクタイルを発射する関数　座標
- * @param {HTMLElement} gameBoard - ゲームボード要素
- */
-function shootEnemies(gameBoard) {
-    towerManager.towers.forEach(tower => {
-        const now = Date.now();
-        if (now - tower.lastShot > tower.fireRate * 1000) {
-            const target = findTargetForTower(tower);
-            
-            if (target) {
-                tower.lastShot = now;
-                
-                const targetX = parseInt(target.element.style.left);
-                const targetY = parseInt(target.element.style.top);
-                
-                const projectile = new Projectile(
-                    tower.x, tower.y, targetX, targetY, 
-                    tower.type, tower.damage, target
-                );
-                projectile.createProjectileElement(gameBoard);
-                projectiles.push(projectile);
-
-                // タワーの効果を敵に適用
-                tower.applyEffect(target);
-            }
-        }
-    });
+    enemyService.createEnemy(type);
 }
 
 /**
@@ -351,15 +206,10 @@ function moveProjectiles(gameBoard) {
         
         if (hitTarget) {
             const enemyDestroyed = projectile.hit(gameBoard, (destroyedEnemy) => {
-                removeEnemy(destroyedEnemy, gameBoard);
-                gold += getEnemyGoldReward(destroyedEnemy.type);
+                enemyService.removeEnemy(destroyedEnemy);
+                gold += enemyService.getEnemyGoldReward(destroyedEnemy.type);
                 updateDisplays();
             });
-            
-            // タワーの効果を再度適用（持続的な効果のため）
-            if (!enemyDestroyed) {
-                applyTowerEffect(projectile.target, projectile.towerType);
-            }
             
             projectile.destroy(gameBoard);
             return false; // このプロジェクタイルをリストから削除
@@ -369,91 +219,13 @@ function moveProjectiles(gameBoard) {
 }
 
 /**
- * タワーの攻撃範囲内にいる最初の敵を見つける関数
- * @param {Object} tower - タワーオブジェクト
- * @returns {Object|null} 見つかった敵オブジェクト、または null　座標
- */
-function findTargetForTower(tower) {
-    return enemies.find(enemy => {
-        const dx = parseInt(enemy.element.style.left) - tower.x;
-        const dy = parseInt(enemy.element.style.top) - tower.y;
-        return Math.sqrt(dx * dx + dy * dy) < tower.range;
-    });
-}
-
-/**
- * 敵をゲームから削除する関数
- * @param {Object} enemy - 削除する敵オブジェクト
- * @param {HTMLElement} gameBoard - ゲームボード要素
- */
-function removeEnemy(enemy, gameBoard) {
-    if (enemy.element && enemy.element.parentNode === gameBoard) {
-        gameBoard.removeChild(enemy.element);
-    }
-    enemies = enemies.filter(e => e !== enemy);
-}        
-
-/**
- * タワーの効果を敵に適用する関数
- * @param {Object} enemy - 効果を適用する敵オブジェクト
- * @param {string} towerType - タワーの種類
- */
-function applyTowerEffect(enemy, towerType) {
-    switch(towerType) {
-        case 'ice':
-            // 氷のタワー効果：敵の速度を一時的に80%に低下
-            if (!enemy.iceEffect) {
-                enemy.iceEffect = true;
-                enemy.originalSpeed = enemy.speed;
-                enemy.speed *= 0.8;
-                console.log(`Ice effect applied to enemy at (${enemy.element.style.left}, ${enemy.element.style.top})`);
-                setTimeout(() => {
-                    enemy.speed = enemy.originalSpeed;
-                    enemy.iceEffect = false;
-                    console.log(`Ice effect removed from enemy at (${enemy.element.style.left}, ${enemy.element.style.top})`);
-                }, 3000);
-            }
-            break;
-        case 'fire':
-            // 火のタワー効果：1秒後に追加ダメージ
-            setTimeout(() => {
-                enemy.health -= 5;
-                console.log(`Fire effect: Additional 5 damage applied to enemy at (${enemy.element.style.left}, ${enemy.element.style.top})`);
-                showDamage(parseInt(enemy.element.style.left), parseInt(enemy.element.style.top), 5);
-            }, 1000);
-            break;
-        case 'stone':
-            // 石のタワー効果：10%の確率で即死
-            if (Math.random() < 0.1) {
-                enemy.health = 0;
-                console.log(`Stone effect: Instant kill applied to enemy at (${enemy.element.style.left}, ${enemy.element.style.top})`);
-            }
-            break;
-        case 'wind':
-            // 風のタワー効果：敵を少し後退させる
-            const backIndex = Math.max(0, enemy.pathIndex - 1);
-            enemy.pathIndex = backIndex;
-            console.log(`Wind effect: Enemy pushed back to path index ${backIndex} at (${enemy.element.style.left}, ${enemy.element.style.top})`);
-            break;
-    }
-}
-
-/**
- * 敵を倒した時の報酬（ゴールド）を取得する関数
- * @param {string} enemyType - 敵の種類
- * @returns {number} 獲得するゴールドの量
- */
-function getEnemyGoldReward(enemyType) {
-    return { goblin: 10, orc: 20, skeleton: 15, slime: 15 }[enemyType];
-}
-
-/**
  * ゲームのメインループ
  * 各フレームごとに呼び出され、ゲームの状態を更新する
  */
 function gameLoop() {
-    moveEnemies();
-    shootEnemies(gameBoard);
+    enemyService.moveEnemies();
+    const newProjectiles = towerService.shootEnemies(enemyService.getEnemies());
+    projectiles = projectiles.concat(newProjectiles);
     moveProjectiles(gameBoard);
 
     // ゲームオーバーチェック
@@ -464,7 +236,7 @@ function gameLoop() {
     }
     
     // ウェーブクリア条件のチェック
-    if (waveManager.isWaveInProgress && enemies.length === 0 && waveManager.totalEnemiesSpawned >= waveManager.waveEnemyCount) {
+    if (waveManager.isWaveInProgress && enemyService.getEnemies().length === 0 && enemyService.getTotalEnemiesSpawned() >= waveManager.waveEnemyCount) {
         handleWaveClear();
     }
     
@@ -516,7 +288,7 @@ function applySkillEffects() {
     playerSkills.forEach(skillId => {
         const skill = getSkillById(skillId);
         if (skill && skill.effect) {
-            skill.effect(towerManager.towers);
+            skill.effect(towerService.towers);
         }
     });
 }
@@ -534,34 +306,24 @@ function getSkillById(skillId) {
 }
 
 /**
- * ダメージを視覚的に表示する関数
- * @param {number} x - ダメージ表示のX座標
- * @param {number} y - ダメージ表示のY座標
- * @param {number} amount - ダメージ量
+ * 次のウェーブの準備を行う関数
  */
-function showDamage(x, y, amount) {
-    const damageElement = document.createElement('div');
-    damageElement.className = 'damage-text';
-    damageElement.textContent = Math.round(amount);
-    damageElement.style.left = `${x}px`;
-    damageElement.style.top = `${y}px`;
-    gameBoard.appendChild(damageElement);
+function prepareNextWave() {
+    // ここに次のウェーブの準備に必要な処理を記述します
+    console.log("次のウェーブの準備中...");
+    // 例: 敵の強さを増加させる、新しい敵タイプを追加する、など
+}
 
-    // アニメーション効果
-    setTimeout(() => {
-        damageElement.style.transform = 'translateY(-20px)';
-        damageElement.style.opacity = '0';
-    }, 50);
-
-    // 要素を削除
-    setTimeout(() => {
-        gameBoard.removeChild(damageElement);
-    }, 1000);
+/**
+ * スキル表示を更新する関数
+ */
+function updateSkillDisplay() {
+    // ここにスキル表示を更新する処理を記述します
+    console.log("スキル表示を更新しています...");
+    // 例: 現在のスキルリストをUIに反映させる
 }
 
 // グローバルスコープに公開する関数
-window.selectTower = selectTower;
-window.placeTower = placeTower;
 window.upgrade = upgrade;
 
 // DOMの読み込みが完了したらゲームを初期化
