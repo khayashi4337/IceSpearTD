@@ -70,14 +70,19 @@ async function initGame() {
         
 
         // データの読み込み
-        const paths = await loadJsonData('./data/paths.json', 'paths');
         const obstacles = await loadJsonData('./data/obstacles.json', 'obstacles');
 
-        initializeAndValidatePathNetwork();
+        // PathNetwork用のJSONデータを読み込む
+        const pathNetworkData = await loadJsonData('./data/pathNetwork.json', 'pathNetwork');
+
+        // PathNetworkオブジェクトを作成し、データを設定する
+        const pathNetwork = PathNetwork.fromJson(pathNetworkData);
+
+        // initializeAndValidatePathNetwork();
         
         // セルマネージャーの初期化
         cellManager = new CellManager(BOARD_WIDTH, BOARD_HEIGHT);
-        cellManager.initializeBoard(gameBoard, paths, obstacles, CORE_POSITION);     
+        cellManager.initializeBoard(gameBoard, pathNetwork , obstacles, CORE_POSITION);     
 
         // WaveManagerのインスタンス化
         waveManager = new WaveManager(createEnemy, showError);

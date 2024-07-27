@@ -1,55 +1,6 @@
-//cellManager.js
-
-/**
- * ゲームボード上の個々のセルを表すクラス
- */
-export class Cell {
-    /**
-     * @param {number} x - セルのX座標
-     * @param {number} y - セルのY座標
-     * @param {string} type - セルのタイプ（デフォルトは'empty'）
-     */
-    constructor(x, y, type = 'empty') {
-        this.x = x;
-        this.y = y;
-        this.type = type;
-        this.element = null;
-    }
-
-    /**
-     * セルにDOM要素を設定する
-     * @param {HTMLElement} element - セルに対応するDOM要素
-     */
-    setElement(element) {
-        this.element = element;
-    }
-
-    /**
-     * セルのDOM要素にCSSクラスを追加する
-     * @param {string} className - 追加するCSSクラス名
-     */
-    addClass(className) {
-        if (this.element) {
-            this.element.classList.add(className);
-            console.log(`セル(${this.x},${this.y})にクラス'${className}'を追加しました`);
-        } else {
-            console.warn(`セル(${this.x},${this.y})にDOM要素が設定されていません`);
-        }
-    }
-
-    /**
-     * セルのDOM要素からCSSクラスを削除する
-     * @param {string} className - 削除するCSSクラス名
-     */
-    removeClass(className) {
-        if (this.element) {
-            this.element.classList.remove(className);
-            console.log(`セル(${this.x},${this.y})からクラス'${className}'を削除しました`);
-        } else {
-            console.warn(`セル(${this.x},${this.y})にDOM要素が設定されていません`);
-        }
-    }
-}
+// map/cellManager.js
+import { Cell } from './map/cell.js';
+import { PathNetwork } from './map/pathNetwork.js';
 
 /**
  * ゲームボード全体のセルを管理するクラス
@@ -85,7 +36,7 @@ export class CellManager {
         return cells;
     }
 
-/**
+    /**
      * 指定された座標のセルを取得する
      * @param {number} x - X座標
      * @param {number} y - Y座標
@@ -156,12 +107,12 @@ export class CellManager {
 
     /**
      * パスと障害物をゲームボードに適用する
-     * @param {Object[]} paths - パスの座標データの配列
+     * @param {PathNetwork} pathNetwork - PathNetworkオブジェクト
      * @param {Object[]} obstacles - 障害物の座標データの配列
      */
-    applyPathsAndObstacles(paths, obstacles) {
-        paths.forEach((path, index) => {
-            path.forEach(p => {
+    applyPathsAndObstacles(pathNetwork, obstacles) {
+        pathNetwork.paths.forEach((path, index) => {
+            path.cells.forEach(p => {
                 const cell = this.getCell(p.x, p.y);
                 if (cell) {
                     cell.type = 'path';
@@ -206,14 +157,14 @@ export class CellManager {
     /**
      * ゲームボードの初期化（パス、障害物、コアの配置を含む）
      * @param {HTMLElement} gameBoard - ゲームボードのコンテナ要素
-     * @param {Object[]} paths - パスの座標データの配列
+     * @param {PathNetwork} pathNetwork - PathNetworkオブジェクト
      * @param {Object[]} obstacles - 障害物の座標データの配列
      * @param {Object} corePosition - コアの座標 {x: number, y: number}
      */
-    initializeBoard(gameBoard, paths, obstacles, corePosition) {
+    initializeBoard(gameBoard, pathNetwork, obstacles, corePosition) {
         this.createGameBoard(gameBoard);
-        this.setPaths(paths);
-        this.applyPathsAndObstacles(paths, obstacles);
+        this.setPaths(pathNetwork.paths);
+        this.applyPathsAndObstacles(pathNetwork, obstacles);
         this.placeCore(corePosition.x, corePosition.y, gameBoard);
         console.log('ゲームボードの初期化が完了しました');
     }
@@ -234,5 +185,4 @@ export class CellManager {
     getPaths() {
         return this.paths;
     }
-
 }
