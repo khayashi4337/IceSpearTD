@@ -37,7 +37,8 @@ const SS_01 = new SkillSet(
                     }
                 });
             },
-            (playerLevel) => playerLevel >= 3,
+            //(playerLevel) => playerLevel >= 3,
+            () => true,
             3
         ),
         new TypeBSkill(
@@ -53,7 +54,8 @@ const SS_01 = new SkillSet(
                     }
                 });
             },
-            (playerLevel) => playerLevel >= 3,
+            //(playerLevel) => playerLevel >= 3,
+            () => true,
             3
         ),
         new TopSkill(
@@ -69,7 +71,8 @@ const SS_01 = new SkillSet(
                     }
                 });
             },
-            (playerLevel) => playerLevel >= 5,
+            //(playerLevel) => playerLevel >= 5,
+            () => true,
             5
         )
     ]

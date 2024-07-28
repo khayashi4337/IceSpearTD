@@ -33,7 +33,8 @@ const SS_03 = new SkillSet(
             (towers, level) => {
                 // 実装は省略
             },
-            (playerLevel) => playerLevel >= 3,
+            //(playerLevel) => playerLevel >= 3,
+            () => true,
             3
         ),
         new TypeBSkill(
@@ -45,7 +46,8 @@ const SS_03 = new SkillSet(
             (towers, level) => {
                 // 実装は省略
             },
-            (playerLevel) => playerLevel >= 3,
+            //(playerLevel) => playerLevel >= 3,
+            () => true,
             3
         ),
         new TopSkill(
@@ -57,7 +59,8 @@ const SS_03 = new SkillSet(
             (towers, level) => {
                 // 実装は省略
             },
-            (playerLevel) => playerLevel >= 5,
+            //(playerLevel) => playerLevel >= 5,
+            () => true,
             5
         )
     ]
