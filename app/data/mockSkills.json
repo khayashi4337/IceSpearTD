@@ -1,0 +1,32 @@
+{
+  "skills": [
+    {
+      "id": "SK_BASIC_001",
+      "name": "氷の矢強化",
+      "description": "基本攻撃の威力を上げる",
+      "type": "basic",
+      "imagePath": "img/skills/ice_arrow.png"
+    },
+    {
+      "id": "SK_TYPEA_001",
+      "name": "貫通氷槍",
+      "description": "敵を貫通する氷の槍",
+      "type": "typeA",
+      "imagePath": "img/skills/ice_spear.png"
+    },
+    {
+      "id": "SK_TYPEB_001",
+      "name": "氷の結晶化",
+      "description": "敵を徐々に結晶化する",
+      "type": "typeB",
+      "imagePath": "img/skills/ice_crystal.png"
+    },
+    {
+      "id": "SK_TOP_001",
+      "name": "絶対零度",
+      "description": "極低温の攻撃で敵を瞬間凍結",
+      "type": "top",
+      "imagePath": "assets/images/skills/absolute_zero.png"
+    }
+  ]
+}

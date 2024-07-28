@@ -1,0 +1,359 @@
+/* styles.css */
+
+/* 全体のレイアウト */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+}
+
+/* ゲームコンテナ */
+#game-container {
+    display: flex;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* ゲームボード */
+#game-board {
+    width: 1000px;
+    height: 600px;
+    background-color: #8fbc8f;
+    position: relative;
+    overflow: hidden;
+}
+
+/* サイドバー */
+#sidebar {
+    width: 200px;
+    padding: 20px;
+    background-color: #e0e0e0;
+}
+
+/* ゲームボードのセル */
+.cell {
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    background-color: #8fbc8f;
+    box-sizing: border-box;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+/* パス（道路）のスタイル */
+.path {
+    background-color: #d2b48c;
+    background-image: url('img/tiles/FieldsTile_01.png');
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+}
+
+/* 各パスの個別スタイル */
+.path-1 {
+    background-color: #e6c779 !important;
+    background-image: url('img/tiles/FieldsTile_02.png');
+}
+
+.path-2 {
+    background-color: #d4a76a !important;
+    background-image: url('img/tiles/FieldsTile_03.png');
+}
+
+.path-3 {
+    background-color: #c1885b !important;
+    background-image: url('img/tiles/FieldsTile_04.png');
+}
+
+/* 障害物 */
+.obstacle {
+    background-color: #4a4a4a !important;
+}
+
+/* タワー */
+.tower {
+    width: 18px;
+    height: 18px;
+    position: absolute;
+    border-radius: 50%;
+    transform: translate(-50%, -50%); /* 中心を基準に配置 */
+    z-index: 10;
+}
+
+/* タワーの種類別スタイル */
+.ice-tower { background-color: #ADD8E6; }
+.fire-tower { background-color: #FF4500; }
+.stone-tower { background-color: #A9A9A9; }
+.wind-tower { background-color: #98FB98; }
+
+/* 敵キャラクター */
+.enemy {
+    width: 16px;
+    height: 16px;
+    position: absolute;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 5;
+    transition: left 0.1s linear, top 0.1s linear;
+}
+
+/* 敵キャラクターの種類別スタイル */
+.goblin { background-color: #32cd32; }
+.orc { background-color: #8b0000; }
+.skeleton { background-color: #f0f0f0; }
+.slime { background-color: #00ff00; }
+
+/* プロジェクタイル（弾） */
+.projectile {
+    width: 6px;
+    height: 6px;
+    position: absolute;
+    border-radius: 50%;
+    background-color: #000;
+    z-index: 15;
+}
+
+/* ダメージテキスト */
+.damage-text {
+    position: absolute;
+    color: red;
+    font-weight: bold;
+    font-size: 14px;
+    pointer-events: none;
+    transition: transform 0.5s, opacity 0.5s;
+    z-index: 1000;
+}
+
+/* ダメージテキストのフェードアウトアニメーション */
+@keyframes fadeOut {
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
+/* エラー表示 */
+#error-display {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #ff6b6b;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    display: none;
+    z-index: 100;
+}
+
+/* ボタン */
+button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+/* コア（中心部） */
+#core {
+    width: 60px;
+    height: 60px;
+    position: absolute;
+    background-color: #FFD700;
+    border-radius: 50%;
+    z-index: 20;
+    box-shadow: 0 0 10px #FFA500;
+}
+
+/* スキル選択システム用のスタイル */
+/* スキルシステム用のスタイル */
+#skill-system {
+    margin-top: 20px;
+    border-top: 1px solid #ccc;
+    padding-top: 10px;
+}
+
+#skill-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.skill-icon {
+    width: 40px;
+    height: 40px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    cursor: pointer;
+    overflow: hidden; /* はみ出た部分を隠す */
+    display: flex; /* Flexboxを使用 */
+    justify-content: center; /* 水平方向の中央揃え */
+    align-items: center; /* 垂直方向の中央揃え */
+}
+
+.skill-icon img {
+    max-width: 100%; /* 親要素の幅に合わせる */
+    max-height: 100%; /* 親要素の高さに合わせる */
+    object-fit: contain; /* アスペクト比を維持しつつ、コンテナに収める */
+}
+
+/* モーダルスタイル */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 600px;
+}
+
+#skill-selection-options {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.skill-option {
+    width: 32%; /* 30% から微調整 */
+    text-align: center;
+    cursor: pointer;
+}
+
+.skill-option img {
+    width: 80px;
+    height: 80px;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+}
+
+/* styles.css に追加 */
+
+/* スキル選択モーダル全体 */
+#skill-selection-modal {
+    padding: 20px 10px; /* 左右のパディングを減らす */
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 20px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* スキル選択のタイトル */
+#skill-selection-modal h2 {
+    color: #ffffff;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+/* スキルオプションのコンテナ */
+#skill-selection-options {
+    display: flex;
+    justify-content: space-around;
+    width: 90%;
+    max-width: 1200px;
+    margin-top: 20px;
+}
+
+/* 個々のスキルカード */
+.skill-option {
+    background-color: rgba(44, 62, 80, 0.8);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 10px;
+    width: 30%;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.skill-option:hover {
+    transform: scale(1.05);
+    background-color: rgba(44, 62, 80, 1);
+}
+
+/* スキル画像コンテナ */
+.skill-image-container {
+    width: 100%;
+    height: 150px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+/* スキル画像 */
+.skill-image-container img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 10px;
+}
+
+/* スキル名 */
+.skill-info h3 {
+    color: #ecf0f1;
+    font-size: 1.2em;
+    margin-bottom: 10px;
+}
+
+/* スキル説明 */
+.skill-info p {
+    color: #bdc3c7;
+    font-size: 0.9em;
+    margin-bottom: 5px;
+}
+
+/* スキルタイプ */
+.skill-type {
+    color: #3498db;
+    font-size: 0.9em;
+    font-style: italic;
+    margin-top: 10px;
+}
+
+/* 閉じるボタン */
+#close-skill-selection {
+    display: block; /* inline-block から変更 */
+    width: 100%; /* 幅を100%に設定 */
+    max-width: 800px; /* スキルオプションコンテナと同じ最大幅 */
+    margin: 20px auto 0; /* 上部のマージンを調整し、中央揃え */    
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 20px;
+}
+
+#close-skill-selection:hover {
+    background-color: #c0392b;
+}
