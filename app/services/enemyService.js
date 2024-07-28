@@ -23,49 +23,24 @@ export class EnemyService {
      * @param {string} type - 敵の種類
      */
     createEnemy(type) {
-        const enemy = document.createElement('div');
-        enemy.className = `enemy ${type}`;
-        this.gameBoard.appendChild(enemy);
-        
-        const health = this.getEnemyHealth(type);
-        const speed = this.getEnemySpeed(type);
-        
+        const enemyElement = document.createElement('div');
+        enemyElement.className = `enemy ${type}`;
+        this.gameBoard.appendChild(enemyElement);
+
         // CellManagerからパスを取得
         const paths = this.cellManager.getPaths();
         const pathIndex = Math.floor(Math.random() * paths.length);
         
+        // Enemyのコンストラクタでhealthとspeedを初期化する
         const newEnemy = new Enemy(
             type,
-            health,
-            speed,
-            enemy,
+            enemyElement,
             paths[pathIndex]
         );
 
         this.enemies.push(newEnemy);
         this.totalEnemiesSpawned++;
-
         console.log(`新しい敵キャラクター(${type})を作成しました。総生成数: ${this.totalEnemiesSpawned}`);
-    }
-
-    /**
-     * 敵の体力を取得する
-     * @param {string} type - 敵の種類
-     * @returns {number} 敵の体力
-     */
-    getEnemyHealth(type) {
-        const healthMap = { goblin: 40, orc: 115, skeleton: 30, slime: 120 };
-        return healthMap[type] || 50; // デフォルト値として50を設定
-    }
-
-    /**
-     * 敵の速度を取得する
-     * @param {string} type - 敵の種類
-     * @returns {number} 敵の速度
-     */
-    getEnemySpeed(type) {
-        const speedMap = { goblin: 0.02, orc: 0.01, skeleton: 0.04, slime: 0.006 };
-        return speedMap[type] || 0.015; // デフォルト値として0.015を設定
     }
 
     /**
