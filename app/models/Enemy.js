@@ -68,4 +68,34 @@ export class Enemy {
         return speedMap[type] || 0.015; // デフォルト値として0.015を設定
     }
 
+    /**
+     * 敵キャラクターを移動させる
+     * @param {HTMLElement} gameBoard - ゲームボード要素 - 敵の削除に必要
+     */
+    move(gameBoard) {
+        this.pathIndex += this.speed;
+
+        // 敵がパスの終点に到達した場合
+        if (this.pathIndex >= this.path.length - 1) {
+            gameBoard.removeChild(this.element);
+            // ここでは敵をthis.enemiesから削除する処理は行わず、
+            // EnemyServiceに処理を委ねる
+            console.log(`敵がコアに到達しました。`);
+            return false; // 終点に到達したことを通知
+        }
+
+        // 敵の位置を更新
+        const currentPos = this.path[Math.floor(this.pathIndex)];
+        const nextPos = this.path[Math.min(Math.ceil(this.pathIndex), this.path.length - 1)];
+        const progress = this.pathIndex - Math.floor(this.pathIndex);
+
+        const x = currentPos.x * 20 + (nextPos.x - currentPos.x) * 20 * progress + 10;
+        const y = currentPos.y * 20 + (nextPos.y - currentPos.y) * 20 * progress + 10;
+
+        this.element.style.left = `${x}px`;
+        this.element.style.top = `${y}px`;
+
+        return true; // まだ終点に到達していないことを通知
+    }    
+
 }

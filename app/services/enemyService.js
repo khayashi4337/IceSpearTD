@@ -47,28 +47,13 @@ export class EnemyService {
      * 全ての敵キャラクターを移動させる
      */
     moveEnemies() {
+        // 敵をループ処理で回して、moveメソッドを呼び出す
         this.enemies.forEach((enemy, index) => {
-            enemy.pathIndex += enemy.speed;
-            
-            // 敵がパスの終点に到達した場合
-            if (enemy.pathIndex >= enemy.path.length - 1) {
-                this.gameBoard.removeChild(enemy.element);
+            // moveメソッドの結果がfalseだったら終点に到着しているので削除
+            if (!enemy.move(this.gameBoard)) {
                 this.enemies.remove(index);
                 // TODO: コアへのダメージ処理をゲームマネージャーに通知する処理を追加
-                console.log(`敵がコアに到達しました。残り敵数: ${this.enemies.length}`);
-                return;
             }
-            
-            // 敵の位置を更新
-            const currentPos = enemy.path[Math.floor(enemy.pathIndex)];
-            const nextPos = enemy.path[Math.min(Math.ceil(enemy.pathIndex), enemy.path.length - 1)];
-            const progress = enemy.pathIndex - Math.floor(enemy.pathIndex);
-            
-            const x = currentPos.x * 20 + (nextPos.x - currentPos.x) * 20 * progress + 10;
-            const y = currentPos.y * 20 + (nextPos.y - currentPos.y) * 20 * progress + 10;
-            
-            enemy.element.style.left = `${x}px`;
-            enemy.element.style.top = `${y}px`;
         });
     }
 
