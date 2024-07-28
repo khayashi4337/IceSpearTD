@@ -1,4 +1,5 @@
 // services/enemyService.js
+import { EnemyList } from '../models/EnemyList.js';
 
 /**
  * 敵キャラクターの管理を行うサービスクラス
@@ -12,7 +13,7 @@ export class EnemyService {
     constructor(gameBoard, cellManager) {
         this.gameBoard = gameBoard;
         this.cellManager = cellManager;
-        this.enemies = [];
+        this.enemies = new EnemyList();;
         this.totalEnemiesSpawned = 0;
     }
 
@@ -78,7 +79,7 @@ export class EnemyService {
             // 敵がパスの終点に到達した場合
             if (enemy.pathIndex >= enemy.path.length - 1) {
                 this.gameBoard.removeChild(enemy.element);
-                this.enemies.splice(index, 1);
+                this.enemies.remove(index);
                 // TODO: コアへのダメージ処理をゲームマネージャーに通知する処理を追加
                 console.log(`敵がコアに到達しました。残り敵数: ${this.enemies.length}`);
                 return;
