@@ -1,41 +1,20 @@
 // game.js
 
-import { Projectile } from './Projectile.js';
 import { WaveManager } from './WaveManager.js';
-import {
-    playerSkills,
-    showSkillSelection, 
-    closeSkillSelection, 
-    initializeSkillSystem, 
-    getPlayerSkills, 
-    addSkillData,
-    enableSkillSelection,
-    waveClearSkillBox,
-    disableSkillSelection
-} from './skill/skill-system.js';
-import { 
-    Skill,
-    BasicSkill,
-    TopSkill,
-    TypeASkill,
-    TypeBSkill
-} from './skill/skill-classes.js';
 import { loadJsonData } from './jsonLoader.js';
 import { CellManager } from './map/cellManager.js';
-import { SkillList } from './skill/skillList.js';
-import { WaveClearSkillBox } from './skill/wave-clear-skill-box-class.js';
-import { skillSetManager } from './skill/skillSetInitialization.js';
 import { PathNetwork } from './map/pathNetwork.js';
 import { EnemyService } from './services/enemyService.js';
 import { TowerService } from './services/TowerService.js';
+import { SkillService } from './services/SkillService.js';
+import { ProjectileService } from './services/ProjectileService.js';
 
 // グローバル変数の定義
 let gameBoard, goldDisplay, manaDisplay, waveDisplay, coreHealthDisplay, errorDisplay;
-let waveManager, towerService, enemyService;
+let waveManager, towerService, enemyService, skillService, projectileService;
 let gold = 500;
 let mana = 100;
 let coreHealth = 1000;
-let projectiles = [];
 let upgrades = { damage: 0, range: 0, speed: 0 };
 
 // ゲームボードのサイズ定数
@@ -45,7 +24,8 @@ const BOARD_HEIGHT = 30;
 // セルマネージャーのインスタンス
 let cellManager;
 
-const CORE_POSITION = { x: 47, y: 14 };  // コアの位置を定義 座標
+// コアの位置を定義
+const CORE_POSITION = { x: 47, y: 14 };
 
 /**
  * ゲームの初期化関数
@@ -73,21 +53,20 @@ async function initGame() {
         cellManager = new CellManager(BOARD_WIDTH, BOARD_HEIGHT);
         cellManager.initializeBoard(gameBoard, paths, obstacles, CORE_POSITION);     
 
-        // EnemyServiceの初期化
+        // サービスの初期化
         enemyService = new EnemyService(gameBoard, cellManager);
-
-        // TowerServiceの初期化
         towerService = new TowerService(gameBoard, cellManager);
+        skillService = new SkillService();
+        projectileService = new ProjectileService(gameBoard);
+        await skillService.initialize();
 
         // WaveManagerのインスタンス化
         waveManager = new WaveManager(createEnemy, showError);
         window.waveManager = waveManager;
 
-        // スキルシステムの初期化
-        initializeSkillSystem();
         console.log("スキルシステムが初期化されました");
 
-        disableSkillSelection(); // ゲーム開始時はスキル選択を無効に
+        skillService.disableSkillSelection(); // ゲーム開始時はスキル選択を無効に
 
         // イベントリスナーの設定
         setupEventListeners();
@@ -111,10 +90,10 @@ function setupEventListeners() {
     // スキルダイアログ表示ボタン
     document.getElementById('show-skill-selection').addEventListener('click', (event) => {
         event.preventDefault();
-        showSkillSelection();
+        skillService.showSkillSelection(event);
     });
 
-    document.getElementById('close-skill-selection').addEventListener('click', closeSkillSelection);
+    document.getElementById('close-skill-selection').addEventListener('click', () => skillService.closeSkillSelection());
 
     // タワー選択ボタンのイベントリスナーを設定
     document.querySelectorAll('#tower-buttons button').forEach(button => {
@@ -129,7 +108,13 @@ function setupEventListeners() {
         const rect = gameBoard.getBoundingClientRect();
         const x = Math.floor((event.clientX - rect.left) / 20);
         const y = Math.floor((event.clientY - rect.top) / 20);
-        placeTower({ x, y });
+        const result = towerService.placeTower({ x, y }, gold);
+        if (result.success) {
+            gold -= result.cost;
+            updateDisplays();
+        } else {
+            showError(result.message);
+        }
     });
 }
 
@@ -157,20 +142,6 @@ function updateDisplays() {
 }
 
 /**
- * タワーを配置する関数
- * @param {{x: number, y: number}} position - 配置する位置
- */
-function placeTower(position) {
-    const result = towerService.placeTower(position, gold);
-    if (result.success) {
-        gold -= result.cost;
-        updateDisplays();
-    } else {
-        showError(result.message);
-    }
-}
-
-/**
  * タワーやグローバルアップグレードを行う関数
  * @param {string} type - アップグレードの種類（'damage', 'range', 'speed'のいずれか）
  */
@@ -182,7 +153,7 @@ function upgrade(type) {
         towerService.updateAllTowers(upgrades[type]);
         
         // スキル効果の適用
-        applySkillEffects();
+        skillService.applySkillEffects(towerService.towers);
     } else {
         showError("ゴールドが足りないか、最大アップグレード数に達しています！");
     }
@@ -197,36 +168,20 @@ function createEnemy(type) {
 }
 
 /**
- * プロジェクタイルを移動させ、衝突判定を行う関数
- * @param {HTMLElement} gameBoard - ゲームボード要素
- */
-function moveProjectiles(gameBoard) {
-    projectiles = projectiles.filter(projectile => {
-        const hitTarget = projectile.move(gameBoard);
-        
-        if (hitTarget) {
-            const enemyDestroyed = projectile.hit(gameBoard, (destroyedEnemy) => {
-                enemyService.removeEnemy(destroyedEnemy);
-                gold += enemyService.getEnemyGoldReward(destroyedEnemy.type);
-                updateDisplays();
-            });
-            
-            projectile.destroy(gameBoard);
-            return false; // このプロジェクタイルをリストから削除
-        }
-        return true; // このプロジェクタイルをリストに残す
-    });
-}
-
-/**
  * ゲームのメインループ
  * 各フレームごとに呼び出され、ゲームの状態を更新する
  */
 function gameLoop() {
     enemyService.moveEnemies();
     const newProjectiles = towerService.shootEnemies(enemyService.getEnemies());
-    projectiles = projectiles.concat(newProjectiles);
-    moveProjectiles(gameBoard);
+    newProjectiles.forEach(proj => {
+        projectileService.createProjectile(proj.x, proj.y, proj.targetX, proj.targetY, proj.towerType, proj.damage, proj.target);
+    });
+    const destroyedEnemiesCount = projectileService.updateProjectiles((destroyedEnemy) => {
+        enemyService.removeEnemy(destroyedEnemy);
+        gold += enemyService.getEnemyGoldReward(destroyedEnemy.type);
+        updateDisplays();
+    });
 
     // ゲームオーバーチェック
     if (coreHealth <= 0) {
@@ -255,54 +210,22 @@ function handleWaveClear() {
     console.log('ウェーブクリア、次のウェーブの準備中');
     showError('ウェーブクリア！ +150ゴールド獲得');
 
-    // プレイヤーの現在のスキルに基づいて、利用可能なスキルのリストを取得
-    waveClearSkillBox.generateSkillOptions(playerSkills);
-    
-    // 利用可能なスキルからランダムに3つ選択
-    const skillChoices = waveClearSkillBox.selectRandomSkills(3);
-
-    // スキル選択を有効にする
-    enableSkillSelection();
+    skillService.enableSkillSelection();
+    skillService.showSkillSelection();
 
     // スキル選択ダイアログを表示し、プレイヤーの選択を処理
-    showSkillSelection(skillChoices.toArray(), (selectedSkill) => {
-        // 選択されたスキルをプレイヤーのスキルリストに追加
-        playerSkills.add(selectedSkill);
+    skillService.onSkillSelected = (selectedSkill) => {
         console.log(`プレイヤーが新しいスキルを獲得しました: ${selectedSkill.name}`);
         
         // UI更新
-        updateSkillDisplay();
+        skillService.updateSkillDisplay();
         
         // スキル選択を無効にする
-        disableSkillSelection();
+        skillService.disableSkillSelection();
         
         // 次のウェーブの準備を行う
         prepareNextWave();
-    });
-}
-
-/**
- * スキル効果を適用する関数
- */
-function applySkillEffects() {
-    playerSkills.forEach(skillId => {
-        const skill = getSkillById(skillId);
-        if (skill && skill.effect) {
-            skill.effect(towerService.towers);
-        }
-    });
-}
-
-/**
- * スキルIDからスキルオブジェクトを取得する関数
- * @param {string} skillId - スキルのID
- * @returns {Object|null} スキルオブジェクト、または null
- */
-function getSkillById(skillId) {
-    // この関数の実装は、スキルデータの管理方法に依存します
-    // 例えば、スキルデータをグローバル変数や別のモジュールで管理している場合は
-    // そこからスキルオブジェクトを取得する処理を書きます
-    return null; // 仮の実装
+    };
 }
 
 /**
@@ -312,15 +235,6 @@ function prepareNextWave() {
     // ここに次のウェーブの準備に必要な処理を記述します
     console.log("次のウェーブの準備中...");
     // 例: 敵の強さを増加させる、新しい敵タイプを追加する、など
-}
-
-/**
- * スキル表示を更新する関数
- */
-function updateSkillDisplay() {
-    // ここにスキル表示を更新する処理を記述します
-    console.log("スキル表示を更新しています...");
-    // 例: 現在のスキルリストをUIに反映させる
 }
 
 // グローバルスコープに公開する関数
