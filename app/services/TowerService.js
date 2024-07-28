@@ -74,7 +74,8 @@ export class TowerService {
         this.towers.forEach(tower => {
             const now = Date.now();
             if (now - tower.lastShot > tower.fireRate * 1000) {
-                const target = this.findTargetForTower(tower, enemies);
+                // findTargetForTower に enemies を渡す
+                const target = this.findTargetForTower(tower, enemies); 
                 
                 if (target) {
                     tower.lastShot = now;
@@ -194,7 +195,7 @@ export class TowerService {
     /**
      * タワーの攻撃範囲内にいる最初の敵を見つける関数
      * @param {Object} tower - タワーオブジェクト
-     * @param {Array} enemies - 敵の配列
+     * @param {Enemy[]} enemies - 敵の配列
      * @returns {Object|null} 見つかった敵オブジェクト、または null
      */
     findTargetForTower(tower, enemies) {

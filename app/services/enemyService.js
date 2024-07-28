@@ -1,5 +1,6 @@
 // services/enemyService.js
 import { EnemyList } from '../models/EnemyList.js';
+import { Enemy } from '../models/Enemy.js';
 
 /**
  * 敵キャラクターの管理を行うサービスクラス
@@ -13,7 +14,7 @@ export class EnemyService {
     constructor(gameBoard, cellManager) {
         this.gameBoard = gameBoard;
         this.cellManager = cellManager;
-        this.enemies = new EnemyList();;
+        this.enemies = new EnemyList();
         this.totalEnemiesSpawned = 0;
     }
 
@@ -22,85 +23,43 @@ export class EnemyService {
      * @param {string} type - 敵の種類
      */
     createEnemy(type) {
-        const enemy = document.createElement('div');
-        enemy.className = `enemy ${type}`;
-        this.gameBoard.appendChild(enemy);
-        
-        const health = this.getEnemyHealth(type);
-        const speed = this.getEnemySpeed(type);
-        
+        const enemyElement = document.createElement('div');
+        enemyElement.className = `enemy ${type}`;
+        this.gameBoard.appendChild(enemyElement);
+
         // CellManagerからパスを取得
         const paths = this.cellManager.getPaths();
         const pathIndex = Math.floor(Math.random() * paths.length);
         
-        const newEnemy = { 
-            type, 
-            health, 
-            maxHealth: health, 
-            speed, 
-            pathIndex: 0, 
-            element: enemy,
-            path: paths[pathIndex]
-        };
+        // Enemyのコンストラクタでhealthとspeedを初期化する
+        const newEnemy = new Enemy(
+            type,
+            enemyElement,
+            paths[pathIndex]
+        );
 
         this.enemies.push(newEnemy);
         this.totalEnemiesSpawned++;
-
         console.log(`新しい敵キャラクター(${type})を作成しました。総生成数: ${this.totalEnemiesSpawned}`);
-    }
-
-    /**
-     * 敵の体力を取得する
-     * @param {string} type - 敵の種類
-     * @returns {number} 敵の体力
-     */
-    getEnemyHealth(type) {
-        const healthMap = { goblin: 40, orc: 115, skeleton: 30, slime: 120 };
-        return healthMap[type] || 50; // デフォルト値として50を設定
-    }
-
-    /**
-     * 敵の速度を取得する
-     * @param {string} type - 敵の種類
-     * @returns {number} 敵の速度
-     */
-    getEnemySpeed(type) {
-        const speedMap = { goblin: 0.02, orc: 0.01, skeleton: 0.04, slime: 0.006 };
-        return speedMap[type] || 0.015; // デフォルト値として0.015を設定
     }
 
     /**
      * 全ての敵キャラクターを移動させる
      */
     moveEnemies() {
+        // 敵をループ処理で回して、moveメソッドを呼び出す
         this.enemies.forEach((enemy, index) => {
-            enemy.pathIndex += enemy.speed;
-            
-            // 敵がパスの終点に到達した場合
-            if (enemy.pathIndex >= enemy.path.length - 1) {
-                this.gameBoard.removeChild(enemy.element);
+            // moveメソッドの結果がfalseだったら終点に到着しているので削除
+            if (!enemy.move(this.gameBoard)) {
                 this.enemies.remove(index);
                 // TODO: コアへのダメージ処理をゲームマネージャーに通知する処理を追加
-                console.log(`敵がコアに到達しました。残り敵数: ${this.enemies.length}`);
-                return;
             }
-            
-            // 敵の位置を更新
-            const currentPos = enemy.path[Math.floor(enemy.pathIndex)];
-            const nextPos = enemy.path[Math.min(Math.ceil(enemy.pathIndex), enemy.path.length - 1)];
-            const progress = enemy.pathIndex - Math.floor(enemy.pathIndex);
-            
-            const x = currentPos.x * 20 + (nextPos.x - currentPos.x) * 20 * progress + 10;
-            const y = currentPos.y * 20 + (nextPos.y - currentPos.y) * 20 * progress + 10;
-            
-            enemy.element.style.left = `${x}px`;
-            enemy.element.style.top = `${y}px`;
         });
     }
 
     /**
      * 敵をゲームから削除する
-     * @param {Object} enemy - 削除する敵オブジェクト
+     * @param {Enemy} enemy - 削除する敵オブジェクト
      */
     removeEnemy(enemy) {
         if (enemy.element && enemy.element.parentNode === this.gameBoard) {
@@ -122,7 +81,7 @@ export class EnemyService {
 
     /**
      * 全ての敵キャラクターを取得する
-     * @returns {Array} 敵キャラクターの配列
+     * @returns {EnemyList} 敵キャラクターのリスト
      */
     getEnemies() {
         return this.enemies;
@@ -135,4 +94,5 @@ export class EnemyService {
     getTotalEnemiesSpawned() {
         return this.totalEnemiesSpawned;
     }
+
 }

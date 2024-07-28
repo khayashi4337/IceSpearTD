@@ -18,7 +18,7 @@ export class EnemyList {
 
     /**
      * 新しい敵キャラクターを追加する。
-     * @param {Object} newEnemy - 新しい敵キャラクターオブジェクト。
+     * @param {Enemy} newEnemy - 新しい敵キャラクターオブジェクト。
      */
     push(newEnemy) {
         this.enemies.push(newEnemy);
@@ -51,7 +51,7 @@ export class EnemyList {
      * 条件に合致する最初の敵キャラクターを見つける。
      * @param {Function} callback - 各敵キャラクターに対して実行するコールバック関数。
      * @param {Object} thisArg - コールバック関数内で`this`として使用するオブジェクト。
-     * @returns {Object|null} 条件に合致する最初の敵キャラクターオブジェクト、または null。
+     * @returns {Enemy|null} 条件に合致する最初の敵キャラクターオブジェクト、または null。
      */
     find(callback, thisArg) {
         return this.enemies.find(callback, thisArg);
@@ -61,7 +61,7 @@ export class EnemyList {
      * 条件に合致する敵キャラクターのみを含む新しい配列を返す。
      * @param {Function} callback - 各敵キャラクターに対して実行するコールバック関数。
      * @param {Object} thisArg - コールバック関数内で`this`として使用するオブジェクト。
-     * @returns {Array<Object>} 条件に合致する敵キャラクターの配列。
+     * @returns {Array<Enemy>} 条件に合致する敵キャラクターの配列。
      */
     filter(callback, thisArg) {
         return this.enemies.filter(callback, thisArg);
