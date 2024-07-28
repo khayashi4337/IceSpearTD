@@ -1,5 +1,6 @@
 // services/enemyService.js
 import { EnemyList } from '../models/EnemyList.js';
+import { Enemy } from '../models/Enemy.js';
 
 /**
  * 敵キャラクターの管理を行うサービスクラス
@@ -13,7 +14,7 @@ export class EnemyService {
     constructor(gameBoard, cellManager) {
         this.gameBoard = gameBoard;
         this.cellManager = cellManager;
-        this.enemies = new EnemyList();;
+        this.enemies = new EnemyList();
         this.totalEnemiesSpawned = 0;
     }
 
@@ -33,15 +34,13 @@ export class EnemyService {
         const paths = this.cellManager.getPaths();
         const pathIndex = Math.floor(Math.random() * paths.length);
         
-        const newEnemy = { 
-            type, 
-            health, 
-            maxHealth: health, 
-            speed, 
-            pathIndex: 0, 
-            element: enemy,
-            path: paths[pathIndex]
-        };
+        const newEnemy = new Enemy(
+            type,
+            health,
+            speed,
+            enemy,
+            paths[pathIndex]
+        );
 
         this.enemies.push(newEnemy);
         this.totalEnemiesSpawned++;
@@ -100,7 +99,7 @@ export class EnemyService {
 
     /**
      * 敵をゲームから削除する
-     * @param {Object} enemy - 削除する敵オブジェクト
+     * @param {Enemy} enemy - 削除する敵オブジェクト
      */
     removeEnemy(enemy) {
         if (enemy.element && enemy.element.parentNode === this.gameBoard) {
@@ -122,7 +121,7 @@ export class EnemyService {
 
     /**
      * 全ての敵キャラクターを取得する
-     * @returns {Array} 敵キャラクターの配列
+     * @returns {EnemyList} 敵キャラクターのリスト
      */
     getEnemies() {
         return this.enemies;
@@ -135,4 +134,5 @@ export class EnemyService {
     getTotalEnemiesSpawned() {
         return this.totalEnemiesSpawned;
     }
+
 }
