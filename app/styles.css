@@ -40,6 +40,7 @@ body {
     height: 20px;
     position: absolute;
     background-color: #8fbc8f;
+    background-image: url('img/tiles/FieldsTile_01.png');
     box-sizing: border-box;
     border: 1px solid rgba(0,0,0,0.1);
 }
@@ -47,30 +48,9 @@ body {
 /* パス（道路）のスタイル */
 .path {
     background-color: #d2b48c;
-    background-image: url('img/tiles/FieldsTile_01.png');
+    background-image: url('img/tiles/FieldsTile_02.png');
     background-repeat: no-repeat;
     background-size: 100% 100%;
-}
-
-/* 各パスの個別スタイル */
-.path-1 {
-    background-color: #e6c779 !important;
-    background-image: url('img/tiles/FieldsTile_02.png');
-}
-
-.path-2 {
-    background-color: #d4a76a !important;
-    background-image: url('img/tiles/FieldsTile_03.png');
-}
-
-.path-3 {
-    background-color: #c1885b !important;
-    background-image: url('img/tiles/FieldsTile_04.png');
-}
-
-/* 障害物 */
-.obstacle {
-    background-color: #4a4a4a !important;
 }
 
 /* タワー */
