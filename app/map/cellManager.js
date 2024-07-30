@@ -126,7 +126,7 @@ export class CellManager {
                 if (cell) {
                     cell.type = 'path';
                     cell.addClass('path');
-                    cell.addClass(`path-${index + 1}`);
+                    cell.addClass('path');
                 }
             });
             console.log(`パス${index + 1}を適用しました`);
