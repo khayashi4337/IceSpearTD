@@ -205,4 +205,58 @@ export class TowerService {
             return Math.sqrt(dx * dx + dy * dy) < tower.range;
         });
     }
+
+    /**
+     * タワーを合成する
+     * @param {Tower} tower1 - 1つ目のタワー
+     * @param {Tower} tower2 - 2つ目のタワー
+     * @returns {string|null} 合成されたタワーのタイプ、または合成できない場合はnull
+     */
+        synthesizeTowers(tower1, tower2) {
+            const combination = [tower1.type, tower2.type].sort().join('-');
+            const synthesisMap = {
+                'fire-ice': 'water',
+                'ice-stone': 'frozenEarth',
+                'ice-wind': 'coldAir',
+                'fire-stone': 'iron',
+                'fire-wind': 'hotWind',
+                'stone-wind': 'sand'
+            };
+            return synthesisMap[combination] || null;
+        }
+    
+        /**
+         * 合成されたタワーを作成する
+         * @param {number} x - タワーのX座標
+         * @param {number} y - タワーのY座標
+         * @param {string} type - 合成されたタワーのタイプ
+         * @returns {Tower} 作成された合成タワー
+         */
+        createSynthesizedTower(x, y, type) {
+            const towerElement = document.createElement('div');
+            towerElement.className = `tower ${type}-tower`;
+            towerElement.style.left = `${x}px`;
+            towerElement.style.top = `${y}px`;
+            towerElement.style.backgroundColor = Tower.getTowerColor(type);
+            this.gameBoard.appendChild(towerElement);
+    
+            const tower = new Tower(x, y, type, towerElement);
+            this.towers.push(tower);
+            console.log(`合成タワー(${type})を作成しました。座標: (${x}, ${y})`);
+            return tower;
+        }
+    
+        /**
+         * 指定された座標にあるタワーを取得する
+         * @param {number} x - X座標
+         * @param {number} y - Y座標
+         * @returns {Tower|null} 指定された座標のタワー、またはnull
+         */
+        getTowerAt(x, y) {
+            return this.towers.find(tower => 
+                Math.floor(tower.x / 20) === x && Math.floor(tower.y / 20) === y
+            ) || null;
+        }
+    
 }
+

@@ -29,7 +29,6 @@
                 <button onclick="upgrade('range')">Upgrade Range (100g)</button>
                 <button onclick="upgrade('speed')">Upgrade Speed (100g)</button>
             </div>
-            <button id="show-synthesis">合成</button>
             <p>Wave: <span id="wave">1</span></p>
             <p>Core Health: <span id="core-health">1000</span></p>
             <button onclick="waveManager.startWave()">Start Wave</button>
@@ -49,15 +48,6 @@
                 <button id="close-skill-selection">閉じる</button>
             </div>
         </div>
-
-        <!-- 合成モーダル -->
-        <div id="synthesis-modal" class="side-modal">
-            <h2>合成モード</h2>
-            <p id="synthesis-status">合成モード: 無効</p>
-            <p id="synthesis-instruction">2つのタワーを選択してください</p>
-            <button id="cancel-synthesis">合成をキャンセル</button>
-        </div>
-    </div>
 
     </div>
 

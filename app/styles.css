@@ -64,10 +64,16 @@ body {
 }
 
 /* タワーの種類別スタイル */
-.ice-tower { background-color: #ADD8E6; }
+.ice-tower { background-color: #ADD8E6; } /* 第一世代 */
 .fire-tower { background-color: #FF4500; }
 .stone-tower { background-color: #A9A9A9; }
 .wind-tower { background-color: #98FB98; }
+.water-tower { background-color: #4169E1;} /* 第二世代 */
+.frozenEarth-tower { background-color: #E0FFFF;}
+.coldAir-tower { background-color: #F0F8FF;}
+.iron-tower { background-color: #708090;}
+.hotWind-tower { background-color: #FF6347;}
+.sand-tower { background-color: #F4A460;}
 
 /* 敵キャラクター */
 .enemy {
@@ -336,4 +342,94 @@ button:hover {
 
 #close-skill-selection:hover {
     background-color: #c0392b;
+}
+
+
+/* 合成ボタンのスタイル */
+#show-synthesis {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+#show-synthesis:hover {
+    background-color: #45a049;
+}
+
+/* 合成モーダルのスタイル */
+.side-modal {
+    position: fixed;
+    right: -300px; /* 初期状態では画面外に配置 */
+    top: 0;
+    width: 300px;
+    height: 100%;
+    background-color: #f0f0f0;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.3);
+    transition: right 0.3s ease-in-out;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.side-modal.show {
+    right: 0; /* モーダルを表示するときに右から滑り込む */
+}
+
+#synthesis-status, #synthesis-instruction {
+    margin-bottom: 15px;
+}
+
+#cancel-synthesis {
+    background-color: #ff4444;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+#cancel-synthesis:hover {
+    background-color: #cc0000;
+}
+
+/* 合成モード時のカーソルスタイル */
+.synthesis-mode {
+    cursor: crosshair;
+}
+
+/* 選択されたタワーのハイライトスタイル */
+.tower.highlighted {
+    box-shadow: 0 0 10px 5px #FFD700;
+    z-index: 100;
+}
+
+/* 合成モードの指示テキストのスタイル */
+#synthesis-instruction {
+    font-weight: bold;
+    color: #4CAF50;
+    margin-top: 10px;
+}
+
+/* 合成確認ダイアログのスタイル（オプション） */
+.synthesis-confirmation {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    z-index: 1000;
+}
+
+.synthesis-confirmation button {
+    margin: 0 10px;
 }

@@ -17,6 +17,11 @@ let mana = 100;
 let coreHealth = 1000;
 let upgrades = { damage: 0, range: 0, speed: 0 };
 
+
+// 合成モード関連のグローバル変数
+let synthesisMode = false;
+let selectedTowers = [];
+
 // ゲームボードのサイズ定数
 const BOARD_WIDTH = 50;
 const BOARD_HEIGHT = 30;
@@ -102,6 +107,15 @@ function setupEventListeners() {
             towerService.selectTower(towerType);
         });
     });
+
+
+    // ゲームボードのクリックイベントを更新
+    gameBoard.addEventListener('click', handleBoardClick);
+
+    // 合成ボタンのイベントリスナーを追加
+    document.getElementById('show-synthesis').addEventListener('click', toggleSynthesisMode);
+    document.getElementById('cancel-synthesis').addEventListener('click', cancelSynthesis);
+
 
     // ゲームボードのクリックイベントリスナーを設定
     gameBoard.addEventListener('click', (event) => {
@@ -228,6 +242,7 @@ function handleWaveClear() {
     };
 }
 
+
 /**
  * 次のウェーブの準備を行う関数
  */
@@ -242,3 +257,163 @@ window.upgrade = upgrade;
 
 // DOMの読み込みが完了したらゲームを初期化
 document.addEventListener('DOMContentLoaded', initGame);
+
+
+function toggleSynthesisMode() {
+    synthesisMode = !synthesisMode;
+    const synthesisModal = document.getElementById('synthesis-modal');
+    const synthesisStatus = document.getElementById('synthesis-status');
+    const gameBoard = document.getElementById('game-board');
+
+    if (synthesisMode) {
+        synthesisModal.classList.add('show');
+        synthesisStatus.textContent = '合成モード: 有効';
+        gameBoard.classList.add('synthesis-mode');
+    } else {
+        synthesisModal.classList.remove('show');
+        synthesisStatus.textContent = '合成モード: 無効';
+        gameBoard.classList.remove('synthesis-mode');
+    }
+
+    selectedTowers = [];
+    updateSynthesisInstruction();
+}
+
+function cancelSynthesis() {
+    if (synthesisMode) {
+        toggleSynthesisMode();
+    }
+}
+
+function handleBoardClick(event) {
+    const rect = gameBoard.getBoundingClientRect();
+    const x = Math.floor((event.clientX - rect.left) / 20);
+    const y = Math.floor((event.clientY - rect.top) / 20);
+
+    if (synthesisMode) {
+        handleSynthesisClick(x, y);
+    } else {
+        // 既存のタワー配置ロジック
+        const result = towerService.placeTower({ x, y }, gold);
+        if (result.success) {
+            gold -= result.cost;
+            updateDisplays();
+        } else {
+            showError(result.message);
+        }
+    }
+}
+
+
+/**
+ * 合成モード中のクリックを処理する関数
+ */
+function handleSynthesisClick(x, y) {
+    const clickedTower = towerService.getTowerAt(x, y);
+
+    if (clickedTower) {
+        if (selectedTowers.length < 2 && !selectedTowers.includes(clickedTower)) {
+            selectedTowers.push(clickedTower);
+            highlightTower(clickedTower);
+            updateSynthesisInstruction();
+        }
+
+        if (selectedTowers.length === 2) {
+            const synthesizedType = towerService.synthesizeTowers(selectedTowers[0], selectedTowers[1]);
+            if (synthesizedType) {
+                showSynthesisConfirmation(synthesizedType);
+            } else {
+                showError('選択されたタワーは合成できません。');
+                resetSynthesisSelection();
+            }
+        }
+    } else if (selectedTowers.length === 2) {
+        placeSynthesizedTower(x, y);
+    }
+}
+
+/**
+ * 合成の確認ダイアログを表示する関数
+ */
+function showSynthesisConfirmation(synthesizedType) {
+    const confirmation = confirm(`${selectedTowers[0].type}タワーと${selectedTowers[1].type}タワーを合成して${synthesizedType}タワーを作成しますか？`);
+    if (confirmation) {
+        // 合成を確定し、新しいタワーの配置を待つ
+        updateSynthesisInstruction();
+    } else {
+        resetSynthesisSelection();
+    }
+}
+
+
+/**
+ * 合成されたタワーを配置する関数
+ */
+function placeSynthesizedTower(x, y) {
+    const synthesizedType = towerService.synthesizeTowers(selectedTowers[0], selectedTowers[1]);
+    if (synthesizedType) {
+        // 選択されたタワーを削除
+        selectedTowers.forEach(tower => {
+            towerService.removeTower(tower);
+            unhighlightTower(tower);
+        });
+
+        // 新しいタワーを作成
+        const newTower = towerService.createSynthesizedTower(x * 20 + 10, y * 20 + 10, synthesizedType);
+        
+        showMessage(`新しい${synthesizedType}タワーが作成されました！`);
+        resetSynthesisSelection();
+        toggleSynthesisMode();
+    } else {
+        showError('タワーの合成に失敗しました。');
+        resetSynthesisSelection();
+    }
+}
+
+/**
+ * 合成の指示を更新する関数
+ */
+function updateSynthesisInstruction() {
+    const instruction = document.getElementById('synthesis-instruction');
+    if (selectedTowers.length === 0) {
+        instruction.textContent = '1つ目のタワーを選択してください';
+    } else if (selectedTowers.length === 1) {
+        instruction.textContent = '2つ目のタワーを選択してください';
+    } else {
+        instruction.textContent = '新しいタワーを配置する場所を選択してください';
+    }
+}
+
+
+/**
+ * タワーをハイライトする関数
+ */
+function highlightTower(tower) {
+    tower.element.classList.add('highlighted');
+}
+
+
+/**
+ * タワーのハイライトを解除する関数
+ */
+function unhighlightTower(tower) {
+    tower.element.classList.remove('highlighted');
+}
+
+
+/**
+ * 合成の選択をリセットする関数
+ */
+function resetSynthesisSelection() {
+    selectedTowers.forEach(unhighlightTower);
+    selectedTowers = [];
+    updateSynthesisInstruction();
+}
+
+/**
+ * メッセージを表示する関数
+ */
+function showMessage(message) {
+    // メッセージ表示の実装（例: アラートを使用）
+    alert(message);
+}
