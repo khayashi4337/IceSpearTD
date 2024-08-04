@@ -496,30 +496,37 @@ button:hover {
 #synthesis-modal {
     display: none;
     position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    top: 20px;
+    right: 20px;
+    width: 250px;
     background-color: rgba(0, 0, 0, 0.8);
     padding: 20px;
     border-radius: 10px;
     z-index: 1000;
+    color: white;
 }
 
 #synthesis-modal button {
-    margin: 10px;
+    display: block;
+    width: 100%;
+    margin: 10px 0;
     padding: 10px 20px;
     font-size: 16px;
     cursor: pointer;
+    border: none;
+    border-radius: 5px;
 }
 
 #confirm-synthesis {
     background-color: #4CAF50;
     color: white;
-    border: none;
 }
 
 #cancel-synthesis {
     background-color: #f44336;
     color: white;
-    border: none;
+}
+
+#synthesis-modal-content {
+    margin-bottom: 15px;
 }

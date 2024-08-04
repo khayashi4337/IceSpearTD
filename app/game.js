@@ -129,11 +129,19 @@ function setupEventListeners() {
     // 合成ボタンのイベントリスナー
     document.getElementById('synthesis-button').addEventListener('click', () => {
         const isSynthesisMode = towerSynthesisService.toggleSynthesisMode();
+        currentModeManager.setMode(isSynthesisMode ? CURRENT_MODE.SYNTHESIS : CURRENT_MODE.NONE);
         updateSynthesisUI(isSynthesisMode);
+    });  
+
+    // 合成確認ボタンのイベントリスナー
+    document.getElementById('confirm-synthesis').addEventListener('click', () => {
+        towerSynthesisService.onConfirmSynthesis();
+        updateSynthesisUI(true);
     });
-    
+
+    // 合成キャンセルボタンのイベントリスナー
     document.getElementById('cancel-synthesis').addEventListener('click', () => {
-        currentModeManager.resetCurrentMode();
+        towerSynthesisService.resetSelection();
         updateSynthesisUI(true);
     });
 
@@ -190,6 +198,7 @@ function updateSynthesisUI(isSynthesisMode) {
     const synthesisButton = document.getElementById('synthesis-button');
     const synthesisInstruction = document.getElementById('synthesis-instruction');
     const synthesisModal = document.getElementById('synthesis-modal');
+    const synthesisModalContent = document.getElementById('synthesis-modal-content');
 
     synthesisButton.textContent = towerSynthesisService.getSynthesisButtonLabel();
     
@@ -200,6 +209,12 @@ function updateSynthesisUI(isSynthesisMode) {
         // タワーが2つ選択された場合、合成確認モーダルを表示
         if (towerSynthesisService.getCurrentSelectionStatus() === TowerSelectionStatus.TOWER_SELECT_TWO) {
             synthesisModal.style.display = 'block';
+            const selectedTowers = towerSynthesisService.getSelectedTowers();
+            const newTowerType = towerSynthesisService.getSynthesizedTowerType();
+            synthesisModalContent.innerHTML = `
+                <p>${selectedTowers[0].towerType}タワーと${selectedTowers[1].towerType}タワーを合成して、
+                ${newTowerType}タワーを作成しますか？</p>
+            `;
         } else {
             synthesisModal.style.display = 'none';
         }
@@ -252,15 +267,6 @@ function handleBoardClick(event) {
     } else if (currentModeManager.getCurrentMode() === CURRENT_MODE.TOWER_SELECT) {
         placeTower(x, y);
     }
-}
-
-/**
- * 合成の指示を更新する関数です
- * @param {string} message - 表示するメッセージ
- */
-function updateSynthesisInstruction(message) {
-    const instruction = document.getElementById('synthesis-instruction');
-    instruction.textContent = message;
 }
 
 
