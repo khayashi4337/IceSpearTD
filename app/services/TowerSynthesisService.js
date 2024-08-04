@@ -1,6 +1,7 @@
 // services/TowerSynthesisService.js
 
 import { SynthesisTower } from '../models/SynthesisTower.js';
+import { TOWER_TYPES, SYNTHESIS_RULES } from '../models/TowerTypes.js';
 
 /**
  * タワー選択のステータスを表す列挙型
@@ -126,6 +127,14 @@ export class TowerSynthesisService {
     }
 
     /**
+     * 現在の選択状態を取得する
+     * @returns {TowerSelectionStatus} 現在の選択状態
+     */
+    getCurrentSelectionStatus() {
+        return this.selectionStatus;
+    }
+
+    /**
      * 合成確認ボタンがクリックされた時の処理
      */
     onConfirmSynthesis() {
@@ -144,26 +153,25 @@ export class TowerSynthesisService {
     getSynthesizedTowerType() {
         if (this.tower1 && this.tower2) {
             const combination = [this.tower1.towerType, this.tower2.towerType].sort().join('-');
-            const synthesisMap = {
-                'fire-ice': 'water',
-                'ice-stone': 'frozenEarth',
-                'ice-wind': 'coldAir',
-                'fire-stone': 'iron',
-                'fire-wind': 'hotWind',
-                'stone-wind': 'sand'
-            };
-            return synthesisMap[combination] || null;
+            return SYNTHESIS_RULES[combination] || null;
         }
         return null;
     }
-    
+
     /**
-     * 現在の選択状態を取得する
-     * @returns {TowerSelectionStatus} 現在の選択状態
+     * 選択されているタワーを取得する
+     * @returns {SynthesisTower[]} 選択されているタワーの配列
      */
-    getCurrentSelectionStatus() {
-        return this.selectionStatus;
-    }    
+    getSelectedTowers() {
+        return [this.tower1, this.tower2].filter(tower => tower !== null);
+    }
 
-
+    /**
+     * 合成元のタワーを削除する
+     */
+    removeSynthesisSourceTowers() {
+        if (this.tower1) this.towerManager.removeTower(this.tower1.gameJsObject);
+        if (this.tower2) this.towerManager.removeTower(this.tower2.gameJsObject);
+        console.log('合成元のタワーが削除されました');
+    }
 }

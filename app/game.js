@@ -11,6 +11,7 @@ import { SkillService } from './services/SkillService.js';
 import { ProjectileService } from './services/ProjectileService.js';
 import { CurrentModeManager, CURRENT_MODE } from './CurrentModeManager.js';
 import { TowerSynthesisService, TowerSelectionStatus } from './services/TowerSynthesisService.js';
+import { TOWER_TYPES, TOWER_ATTRIBUTES } from './models/TowerTypes.js';
 
 
 // ゲームで使用するグローバル変数を定義します
@@ -210,24 +211,53 @@ function handleBoardClick(event) {
         towerSynthesisService.onClickMap(clickedTower, { x, y });
         updateSynthesisUI();
 
-        // 合成確認後の新しいタワーの配置
-        if (towerSynthesisService.selectionStatus === TowerSelectionStatus.TOWER_SELECT_SYNTHESIS_CONFIRMED) {
+        if (towerSynthesisService.getCurrentSelectionStatus() === TowerSelectionStatus.TOWER_SELECT_SYNTHESIS_CONFIRMED) {
             const newTowerType = towerSynthesisService.getSynthesizedTowerType();
-            if (newTowerType) {
-                const result = towerService.placeTower({ x, y }, gold, newTowerType);
-                if (result.success) {
-                    gold -= result.cost;
+            if (newTowerType && canPlaceTower(x, y)) {
+                const cost = TOWER_ATTRIBUTES[newTowerType].cost;
+                if (gold >= cost) {
+                    const newTower = towerService.createTower(x * 20 + 10, y * 20 + 10, newTowerType);
+                    gold -= cost;
+                    towerSynthesisService.removeSynthesisSourceTowers();
                     updateDisplays();
                     towerSynthesisService.resetSelection();
                     currentModeManager.resetCurrentMode();
+                    showFeedback(`新しい${newTowerType}タワーが配置されました！`);
                 } else {
-                    showError(result.message);
+                    showFeedback("タワーを合成するのに十分なゴールドがありません！", true);
                 }
+            } else {
+                showFeedback("この場所にタワーを配置できません。", true);
             }
         }
     } else if (currentModeManager.getCurrentMode() === CURRENT_MODE.TOWER_SELECT) {
         placeTower(x, y);
     }
+}
+
+/**
+ * タワーを配置できるかチェックする関数です
+ * @param {number} x - X座標
+ * @param {number} y - Y座標
+ * @returns {boolean} タワーを配置できる場合はtrue、そうでない場合はfalse
+ */
+function canPlaceTower(x, y) {
+    return cellManager.getCell({ x, y }).type === 'empty';
+}
+
+/**
+ * フィードバックメッセージを表示する関数です
+ * @param {string} message - 表示するメッセージ
+ * @param {boolean} isError - エラーメッセージかどうか
+ */
+function showFeedback(message, isError = false) {
+    const feedbackElement = document.getElementById('feedback');
+    feedbackElement.textContent = message;
+    feedbackElement.className = isError ? 'error' : 'success';
+    feedbackElement.style.display = 'block';
+    setTimeout(() => {
+        feedbackElement.style.display = 'none';
+    }, 3000);
 }
 
 /**
