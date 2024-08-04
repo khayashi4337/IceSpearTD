@@ -200,24 +200,24 @@ export class TowerService {
         });
     }
 
-    /**
-     * タワーを合成する
-     * @param {Tower} tower1 - 1つ目のタワー
-     * @param {Tower} tower2 - 2つ目のタワー
-     * @returns {string|null} 合成されたタワーのタイプ、または合成できない場合はnull
-     */
-    synthesizeTowers(tower1, tower2) {
-        const combination = [tower1.type, tower2.type].sort().join('-');
-        const synthesisMap = {
-            'fire-ice': 'water',
-            'ice-stone': 'frozenEarth',
-            'ice-wind': 'coldAir',
-            'fire-stone': 'iron',
-            'fire-wind': 'hotWind',
-            'stone-wind': 'sand'
-        };
-        return synthesisMap[combination] || null;
-    }
+    // /**
+    //  * タワーを合成する
+    //  * @param {Tower} tower1 - 1つ目のタワー
+    //  * @param {Tower} tower2 - 2つ目のタワー
+    //  * @returns {string|null} 合成されたタワーのタイプ、または合成できない場合はnull
+    //  */
+    // synthesizeTowers(tower1, tower2) {
+    //     const combination = [tower1.type, tower2.type].sort().join('-');
+    //     const synthesisMap = {
+    //         'fire-ice': 'water',
+    //         'ice-stone': 'frozenEarth',
+    //         'ice-wind': 'coldAir',
+    //         'fire-stone': 'iron',
+    //         'fire-wind': 'hotWind',
+    //         'stone-wind': 'sand'
+    //     };
+    //     return synthesisMap[combination] || null;
+    // }
 
     /**
      * 合成されたタワーを作成する

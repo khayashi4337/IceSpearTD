@@ -78,6 +78,15 @@ async function initGame() {
         // スキル選択を無効にします
         skillService.disableSkillSelection();
 
+
+        // フィードバック要素の初期化
+        if (!document.getElementById('feedback')) {
+            const feedbackElement = document.createElement('div');
+            feedbackElement.id = 'feedback';
+            feedbackElement.className = 'feedback';
+            document.body.appendChild(feedbackElement);
+        }        
+
         // 合成確認UIの作成
         createSynthesisConfirmUI();        
 
@@ -212,6 +221,8 @@ function handleBoardClick(event) {
         updateSynthesisUI();
 
         if (towerSynthesisService.getCurrentSelectionStatus() === TowerSelectionStatus.TOWER_SELECT_SYNTHESIS_CONFIRMED) {
+            // 合成確認の意図がある場合
+
             const newTowerType = towerSynthesisService.getSynthesizedTowerType();
             if (newTowerType && canPlaceTower(x, y)) {
                 const cost = TOWER_ATTRIBUTES[newTowerType].cost;
@@ -252,12 +263,17 @@ function canPlaceTower(x, y) {
  */
 function showFeedback(message, isError = false) {
     const feedbackElement = document.getElementById('feedback');
-    feedbackElement.textContent = message;
-    feedbackElement.className = isError ? 'error' : 'success';
-    feedbackElement.style.display = 'block';
-    setTimeout(() => {
-        feedbackElement.style.display = 'none';
-    }, 3000);
+    if (feedbackElement) {
+        feedbackElement.textContent = message;
+        feedbackElement.className = isError ? 'error' : 'success';
+        feedbackElement.style.display = 'block';
+        setTimeout(() => {
+            feedbackElement.style.display = 'none';
+        }, 3000);
+
+    } else {
+        console.error("Feedback element is not found.");        
+    }
 }
 
 /**
