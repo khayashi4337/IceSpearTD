@@ -124,4 +124,46 @@ export class TowerSynthesisService {
         this.selectionStatus = TowerSelectionStatus.TOWER_SELECT_NONE;
         console.log('タワー選択状態がリセットされました');
     }
+
+    /**
+     * 合成確認ボタンがクリックされた時の処理
+     */
+    onConfirmSynthesis() {
+        if (this.selectionStatus === TowerSelectionStatus.TOWER_SELECT_TWO) {
+            this.selectionStatus = TowerSelectionStatus.TOWER_SELECT_SYNTHESIS_CONFIRMED;
+            console.log('タワー合成が確認されました。新しい配置場所を選択してください');
+        } else {
+            console.log('エラー: 合成確認のタイミングが不正です');
+        }
+    }
+
+    /**
+     * 合成後の新しいタワータイプを取得する
+     * @returns {string|null} 新しいタワータイプ、または合成できない場合はnull
+     */
+    getSynthesizedTowerType() {
+        if (this.tower1 && this.tower2) {
+            const combination = [this.tower1.towerType, this.tower2.towerType].sort().join('-');
+            const synthesisMap = {
+                'fire-ice': 'water',
+                'ice-stone': 'frozenEarth',
+                'ice-wind': 'coldAir',
+                'fire-stone': 'iron',
+                'fire-wind': 'hotWind',
+                'stone-wind': 'sand'
+            };
+            return synthesisMap[combination] || null;
+        }
+        return null;
+    }
+    
+    /**
+     * 現在の選択状態を取得する
+     * @returns {TowerSelectionStatus} 現在の選択状態
+     */
+    getCurrentSelectionStatus() {
+        return this.selectionStatus;
+    }    
+
+
 }

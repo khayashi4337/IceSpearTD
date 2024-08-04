@@ -430,3 +430,35 @@ button:hover {
 .synthesis-confirmation button {
     margin: 0 10px;
 }
+
+.selected-tower {
+    box-shadow: 0 0 10px 5px #FFD700;
+    z-index: 100;
+}
+
+#synthesis-instruction {
+    font-weight: bold;
+    color: #4CAF50;
+    margin-top: 10px;
+    text-align: center;
+}
+
+#synthesis-confirm {
+    display: none;
+    margin-top: 10px;
+    text-align: center;
+}
+
+#synthesis-confirm button {
+    margin: 0 10px;
+    padding: 5px 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#synthesis-confirm button:hover {
+    background-color: #45a049;
+}

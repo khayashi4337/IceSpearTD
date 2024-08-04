@@ -10,7 +10,8 @@ import { TowerService } from './services/TowerService.js';
 import { SkillService } from './services/SkillService.js';
 import { ProjectileService } from './services/ProjectileService.js';
 import { CurrentModeManager, CURRENT_MODE } from './CurrentModeManager.js';
-import { TowerSynthesisService } from './services/TowerSynthesisService.js';
+import { TowerSynthesisService, TowerSelectionStatus } from './services/TowerSynthesisService.js';
+
 
 // ゲームで使用するグローバル変数を定義します
 let gameBoard, goldDisplay, manaDisplay, waveDisplay, coreHealthDisplay, errorDisplay;
@@ -76,6 +77,9 @@ async function initGame() {
         // スキル選択を無効にします
         skillService.disableSkillSelection();
 
+        // 合成確認UIの作成
+        createSynthesisConfirmUI();        
+
         // イベントリスナーを設定します
         setupEventListeners();
 
@@ -123,6 +127,12 @@ function setupEventListeners() {
         updateSynthesisUI();
     });
 
+    // 合成確認ボタンのイベントリスナー
+    document.getElementById('confirm-synthesis').addEventListener('click', () => {
+        towerSynthesisService.onConfirmSynthesis();
+        updateSynthesisUI();
+    });    
+
     // Escキーのイベントリスナーを追加
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && currentModeManager.isSynthesisMode()) {
@@ -150,11 +160,31 @@ function updateTowerSelectionUI() {
 }
 
 /**
+ * 合成確認UIを作成する関数です
+ */
+function createSynthesisConfirmUI() {
+    const synthesisConfirm = document.createElement('div');
+    synthesisConfirm.id = 'synthesis-confirm';
+    synthesisConfirm.innerHTML = `
+        <button id="confirm-synthesis">合成する</button>
+        <button id="cancel-synthesis">キャンセル</button>
+    `;
+    document.getElementById('sidebar').appendChild(synthesisConfirm);
+}
+
+/**
  * 合成モードのUIを更新する関数です
  */
 function updateSynthesisUI() {
     const synthesisInstruction = document.getElementById('synthesis-instruction');
+    const synthesisConfirm = document.getElementById('synthesis-confirm');
     synthesisInstruction.textContent = towerSynthesisService.getShowMessage();
+
+    if (towerSynthesisService.getCurrentSelectionStatus() === TowerSelectionStatus.TOWER_SELECT_TWO) {
+        synthesisConfirm.style.display = 'block';
+    } else {
+        synthesisConfirm.style.display = 'none';
+    }
 }
 
 /**
@@ -179,6 +209,22 @@ function handleBoardClick(event) {
         const clickedTower = towerService.getTowerAt(x, y);
         towerSynthesisService.onClickMap(clickedTower, { x, y });
         updateSynthesisUI();
+
+        // 合成確認後の新しいタワーの配置
+        if (towerSynthesisService.selectionStatus === TowerSelectionStatus.TOWER_SELECT_SYNTHESIS_CONFIRMED) {
+            const newTowerType = towerSynthesisService.getSynthesizedTowerType();
+            if (newTowerType) {
+                const result = towerService.placeTower({ x, y }, gold, newTowerType);
+                if (result.success) {
+                    gold -= result.cost;
+                    updateDisplays();
+                    towerSynthesisService.resetSelection();
+                    currentModeManager.resetCurrentMode();
+                } else {
+                    showError(result.message);
+                }
+            }
+        }
     } else if (currentModeManager.getCurrentMode() === CURRENT_MODE.TOWER_SELECT) {
         placeTower(x, y);
     }
