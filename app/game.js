@@ -1,5 +1,6 @@
 // game.js
 
+// 必要なモジュールをインポートします
 import { WaveManager } from './WaveManager.js';
 import { loadJsonData } from './jsonLoader.js';
 import { CellManager } from './map/cellManager.js';
@@ -8,32 +9,37 @@ import { EnemyService } from './services/enemyService.js';
 import { TowerService } from './services/TowerService.js';
 import { SkillService } from './services/SkillService.js';
 import { ProjectileService } from './services/ProjectileService.js';
+import { CurrentModeManager, CURRENT_MODE } from './CurrentModeManager.js';
+import { TowerSynthesisService, TowerSelectionStatus } from './services/TowerSynthesisService.js';
+import { TOWER_TYPES, TOWER_ATTRIBUTES } from './models/TowerTypes.js';
 
-// グローバル変数の定義
+
+// ゲームで使用するグローバル変数を定義します
 let gameBoard, goldDisplay, manaDisplay, waveDisplay, coreHealthDisplay, errorDisplay;
-let waveManager, towerService, enemyService, skillService, projectileService;
+let waveManager, towerService, enemyService, skillService, projectileService, currentModeManager;
 let gold = 500;
 let mana = 100;
 let coreHealth = 1000;
 let upgrades = { damage: 0, range: 0, speed: 0 };
+let towerSynthesisService;
 
-// ゲームボードのサイズ定数
+// ゲームボードのサイズを定義します
 const BOARD_WIDTH = 50;
 const BOARD_HEIGHT = 30;
 
-// セルマネージャーのインスタンス
+// セルマネージャーのインスタンスを保持する変数を定義します
 let cellManager;
 
-// コアの位置を定義
+// コアの位置を定義します
 const CORE_POSITION = { x: 47, y: 14 };
 
 /**
- * ゲームの初期化関数
- * DOMの読み込みが完了した後に呼び出される
+ * ゲームの初期化関数です。
+ * DOMの読み込みが完了した後に呼び出されます。
  */
 async function initGame() {
     try {
-        // DOM要素の取得
+        // DOM要素を取得します
         gameBoard = document.getElementById('game-board');
         goldDisplay = document.getElementById('gold');
         manaDisplay = document.getElementById('mana');
@@ -41,40 +47,56 @@ async function initGame() {
         coreHealthDisplay = document.getElementById('core-health');
         errorDisplay = document.getElementById('error-display');
         
-        // データの読み込み
+        // ゲームデータを読み込みます
         const obstacles = await loadJsonData('./data/obstacles.json', 'obstacles');
-
-        // PathNetwork用のJSONデータを読み込む
         const pathNetworkData = await loadJsonData('./data/pathNetwork.json', 'pathNetwork');
         const pathNetwork = PathNetwork.fromJson(pathNetworkData);
         const paths = pathNetwork.toOriginalData();
         
-        // セルマネージャーの初期化
+        // セルマネージャーを初期化します
         cellManager = new CellManager(BOARD_WIDTH, BOARD_HEIGHT);
         cellManager.initializeBoard(gameBoard, paths, obstacles, CORE_POSITION);     
 
-        // サービスの初期化
+        // 各種サービスを初期化します
+
+        // CurrentModeManagerを初期化します
+        currentModeManager = new CurrentModeManager();
+
         enemyService = new EnemyService(gameBoard, cellManager);
-        towerService = new TowerService(gameBoard, cellManager);
+        towerService = new TowerService(gameBoard, cellManager, currentModeManager);
+        towerSynthesisService = new TowerSynthesisService(currentModeManager, towerService);        
         skillService = new SkillService();
         projectileService = new ProjectileService(gameBoard);
         await skillService.initialize();
 
-        // WaveManagerのインスタンス化
+        // WaveManagerを初期化します
         waveManager = new WaveManager(createEnemy, showError);
         window.waveManager = waveManager;
 
-        console.log("スキルシステムが初期化されました");
+        console.log("ゲームシステムが初期化されました");
 
-        skillService.disableSkillSelection(); // ゲーム開始時はスキル選択を無効に
+        // スキル選択を無効にします
+        skillService.disableSkillSelection();
 
-        // イベントリスナーの設定
+
+        // フィードバック要素の初期化
+        if (!document.getElementById('feedback')) {
+            const feedbackElement = document.createElement('div');
+            feedbackElement.id = 'feedback';
+            feedbackElement.className = 'feedback';
+            document.body.appendChild(feedbackElement);
+        }        
+
+        // 合成確認UIの作成
+        createSynthesisConfirmUI();        
+
+        // イベントリスナーを設定します
         setupEventListeners();
 
-        // 表示の更新
+        // 表示を更新します
         updateDisplays();
         
-        // ゲームループの開始
+        // ゲームループを開始します
         gameLoop();
 
     } catch (error) {
@@ -84,10 +106,10 @@ async function initGame() {
 }
 
 /**
- * イベントリスナーを設定する関数
+ * イベントリスナーを設定する関数です
  */
 function setupEventListeners() {
-    // スキルダイアログ表示ボタン
+    // スキルダイアログ表示ボタンのイベントリスナーを設定します
     document.getElementById('show-skill-selection').addEventListener('click', (event) => {
         event.preventDefault();
         skillService.showSkillSelection(event);
@@ -95,44 +117,256 @@ function setupEventListeners() {
 
     document.getElementById('close-skill-selection').addEventListener('click', () => skillService.closeSkillSelection());
 
-    // タワー選択ボタンのイベントリスナーを設定
+    // タワー選択ボタンのイベントリスナーを設定します
     document.querySelectorAll('#tower-buttons button').forEach(button => {
         button.addEventListener('click', () => {
             const towerType = button.dataset.towerType;
-            towerService.selectTower(towerType);
+            currentModeManager.onClickTowerButton(towerType);
+            updateTowerSelectionUI();
         });
     });
 
-    // ゲームボードのクリックイベントリスナーを設定
-    gameBoard.addEventListener('click', (event) => {
-        const rect = gameBoard.getBoundingClientRect();
-        const x = Math.floor((event.clientX - rect.left) / 20);
-        const y = Math.floor((event.clientY - rect.top) / 20);
-        const result = towerService.placeTower({ x, y }, gold);
-        if (result.success) {
-            gold -= result.cost;
-            updateDisplays();
+    // 合成ボタンのイベントリスナー
+    document.getElementById('synthesis-button').addEventListener('click', () => {
+        const isSynthesisMode = towerSynthesisService.toggleSynthesisMode();
+        currentModeManager.setMode(isSynthesisMode ? CURRENT_MODE.SYNTHESIS : CURRENT_MODE.NONE);
+        updateSynthesisUI(isSynthesisMode);
+    });  
+
+    // 合成確認ボタンのイベントリスナー
+    document.getElementById('confirm-synthesis').addEventListener('click', () => {
+        console.log('合成確認ボタンがクリックされました');
+        towerSynthesisService.onConfirmSynthesis();
+        updateSynthesisUI(true);
+    });
+
+    // 合成キャンセルボタンのイベントリスナー
+    document.getElementById('cancel-synthesis').addEventListener('click', () => {
+        console.log('合成キャンセルボタンがクリックされました');
+        towerSynthesisService.resetSelection();
+        updateSynthesisUI(true);
+    });
+
+    // 合成確認ボタンのイベントリスナー（モーダル内）
+    document.getElementById('confirm-synthesis-modal').addEventListener('click', (event) => {
+        console.log('合成確認ボタン（モーダル）がクリックされました');
+        towerSynthesisService.onConfirmSynthesis();
+        updateSynthesisUI(true);
+    });
+
+    // 合成キャンセルボタンのイベントリスナー（モーダル内）
+    document.getElementById('cancel-synthesis-modal').addEventListener('click', (event) => {
+        console.log('合成キャンセルボタン（モーダル）がクリックされました');
+        towerSynthesisService.resetSelection();
+        updateSynthesisUI(true);
+    });    
+
+
+    
+
+    // Escキーのイベントリスナーを追加
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && currentModeManager.isSynthesisMode()) {
+            towerSynthesisService.onClickEsc();
+            updateSynthesisUI();
+        }
+    });    
+
+    // ゲームボードのクリックイベントリスナーを設定します
+    gameBoard.addEventListener('click', handleBoardClick);
+}
+
+/**
+ * タワー選択UIを更新する関数です
+ */
+function updateTowerSelectionUI() {
+    document.querySelectorAll('#tower-buttons button').forEach(button => {
+        const towerType = button.dataset.towerType;
+        if (currentModeManager.getCurrentTower() === towerType) {
+            button.classList.add('selected');
         } else {
-            showError(result.message);
+            button.classList.remove('selected');
         }
     });
 }
 
 /**
- * エラーメッセージを表示する関数
+ * 合成確認UIを作成する関数です
+ */
+function createSynthesisConfirmUI() {
+    const synthesisConfirm = document.createElement('div');
+    synthesisConfirm.id = 'synthesis-confirm';
+    synthesisConfirm.innerHTML = `
+        <button id="confirm-synthesis">合成する</button>
+        <button id="cancel-synthesis">キャンセル</button>
+    `;
+    document.getElementById('sidebar').appendChild(synthesisConfirm);
+}
+
+/**
+ * 合成モードのUIを更新する関数です
+ * @param {boolean} isSynthesisMode - 合成モードの状態
+ */
+function updateSynthesisUI(isSynthesisMode) {
+    const synthesisButton = document.getElementById('synthesis-button');
+    const synthesisInstruction = document.getElementById('synthesis-instruction');
+    const synthesisModal = document.getElementById('synthesis-modal');
+    const synthesisModalContent = document.getElementById('synthesis-modal-content');
+
+    synthesisButton.textContent = towerSynthesisService.getSynthesisButtonLabel();
+    
+    if (isSynthesisMode) {
+        synthesisInstruction.style.display = 'block';
+        synthesisInstruction.textContent = towerSynthesisService.getShowMessage();
+
+        // タワーが2つ選択された場合、合成確認モーダルを表示
+        if (towerSynthesisService.getCurrentSelectionStatus() === TowerSelectionStatus.TOWER_SELECT_TWO) {
+            synthesisModal.style.display = 'block';
+            const selectedTowers = towerSynthesisService.getSelectedTowers();
+            const newTowerType = towerSynthesisService.getSynthesizedTowerType();
+            synthesisModalContent.innerHTML = `
+                <p>${selectedTowers[0].towerType}タワーと${selectedTowers[1].towerType}タワーを合成して、
+                ${newTowerType}タワーを作成しますか？</p>
+            `;
+        } else {
+            synthesisModal.style.display = 'none';
+        }
+    } else {
+        synthesisInstruction.style.display = 'none';
+        synthesisModal.style.display = 'none';
+    }
+
+    // 選択されたタワーの視覚的な更新
+    towerSynthesisService.getSelectedTowers().forEach(tower => {
+        if (tower && tower.gameJsObject && tower.gameJsObject.element) {
+            tower.gameJsObject.element.classList.toggle('selected-tower', isSynthesisMode);
+        }
+    });
+}
+
+/**
+ * ゲームボードのクリックを処理する関数です
+ * @param {Event} event - クリックイベント
+ */
+function handleBoardClick(event) {
+    // モーダル内のクリックイベントを無視する
+    if (event.target.closest('#synthesis-modal')) {
+        console.log('モーダル内のクリックイベントです');
+        return;
+    }
+    const rect = gameBoard.getBoundingClientRect();
+    const x = Math.floor((event.clientX - rect.left) / 20);
+    const y = Math.floor((event.clientY - rect.top) / 20);
+
+    if (currentModeManager.getCurrentMode() === CURRENT_MODE.SYNTHESIS) {
+        const clickedTower = towerService.getTowerAt(x, y);
+        towerSynthesisService.onClickMap(clickedTower, { x, y });
+        updateSynthesisUI(true);
+
+        if (towerSynthesisService.getCurrentSelectionStatus() === TowerSelectionStatus.TOWER_SELECT_SYNTHESIS_CONFIRMED) {
+            const newTowerType = towerSynthesisService.getSynthesizedTowerType();
+            if (newTowerType && canPlaceTower(x, y)) {
+                const cost = TOWER_ATTRIBUTES[newTowerType].cost;
+                if (gold >= cost) {
+                    const newTower = towerService.createTower(x * 20 + 10, y * 20 + 10, newTowerType);
+                    gold -= cost;
+                    towerSynthesisService.removeSynthesisSourceTowers();
+                    updateDisplays();
+                    towerSynthesisService.resetSelection();
+                    currentModeManager.resetCurrentMode();
+                    showFeedback(`新しい${newTowerType}タワーが配置されました！`);
+                } else {
+                    showFeedback("タワーを合成するのに十分なゴールドがありません！", true);
+                }
+            } else {
+                showFeedback("この場所にタワーを配置できません。", true);
+            }
+        }
+    } else if (currentModeManager.getCurrentMode() === CURRENT_MODE.TOWER_SELECT) {
+        placeTower(x, y);
+    }
+}
+
+
+/**
+ * タワーを配置できるかチェックする関数です
+ * @param {number} x - X座標
+ * @param {number} y - Y座標
+ * @returns {boolean} タワーを配置できる場合はtrue、そうでない場合はfalse
+ */
+function canPlaceTower(x, y) {
+    return cellManager.getCell({ x, y }).type === 'empty';
+}
+
+/**
+ * フィードバックメッセージを表示する関数です
+ * @param {string} message - 表示するメッセージ
+ * @param {boolean} isError - エラーメッセージかどうか
+ */
+function showFeedback(message, isError = false) {
+    const feedbackElement = document.getElementById('feedback');
+    if (feedbackElement) {
+        feedbackElement.textContent = message;
+        feedbackElement.className = `feedback ${isError ? 'error' : 'success'}`;
+        feedbackElement.style.display = 'block';
+        
+        // アニメーション終了後に非表示にする
+        feedbackElement.addEventListener('animationend', function() {
+            this.style.display = 'none';
+        }, {once: true});
+    } else {
+        console.error("Feedback element is not found.");        
+    }
+}
+/**
+ * タワーを配置する関数です
+ * @param {number} x - X座標
+ * @param {number} y - Y座標
+ */
+function placeTower(x, y) {
+    const currentTower = currentModeManager.getCurrentTower();
+    if (currentTower === null) {
+        showError("タワーが選択されていません");
+        return;
+    }
+
+    const result = towerService.placeTower({ x, y }, gold, currentTower);
+    if (result.success) {
+        gold -= result.cost;
+        updateDisplays();
+        currentModeManager.resetCurrentMode();
+        updateTowerSelectionUI();
+    } else {
+        showError(result.message);
+    }
+}
+
+/**
+ * 合成モードのクリックを処理する関数です
+ * @param {number} x - X座標
+ * @param {number} y - Y座標
+ */
+function handleSynthesisClick(x, y) {
+    // 合成モードの処理をここに実装します
+    // 例: タワーの選択、合成の実行など
+    console.log(`合成モードでクリックされました: (${x}, ${y})`);
+}
+
+/**
+ * エラーメッセージを表示する関数です
  * @param {string} message - 表示するエラーメッセージ
  */
 function showError(message) {
     errorDisplay.textContent = message;
     errorDisplay.style.display = 'block';
-    // 3秒後にエラーメッセージを非表示にする
+    // 3秒後にエラーメッセージを非表示にします
     setTimeout(() => {
         errorDisplay.style.display = 'none';
     }, 3000);
 }
 
 /**
- * 表示を更新する関数
+ * ゲーム画面の表示を更新する関数です
  */
 function updateDisplays() {
     goldDisplay.textContent = gold;
@@ -142,7 +376,7 @@ function updateDisplays() {
 }
 
 /**
- * タワーやグローバルアップグレードを行う関数
+ * タワーやグローバルアップグレードを行う関数です
  * @param {string} type - アップグレードの種類（'damage', 'range', 'speed'のいずれか）
  */
 function upgrade(type) {
@@ -152,7 +386,7 @@ function upgrade(type) {
         updateDisplays();
         towerService.updateAllTowers(upgrades[type]);
         
-        // スキル効果の適用
+        // スキル効果を適用します
         skillService.applySkillEffects(towerService.towers);
     } else {
         showError("ゴールドが足りないか、最大アップグレード数に達しています！");
@@ -160,7 +394,7 @@ function upgrade(type) {
 }
 
 /**
- * 敵キャラクターを作成する関数
+ * 敵キャラクターを作成する関数です
  * @param {string} type - 敵の種類
  */
 function createEnemy(type) {
@@ -168,8 +402,8 @@ function createEnemy(type) {
 }
 
 /**
- * ゲームのメインループ
- * 各フレームごとに呼び出され、ゲームの状態を更新する
+ * ゲームのメインループです
+ * 各フレームごとに呼び出され、ゲームの状態を更新します
  */
 function gameLoop() {
     enemyService.moveEnemies();
@@ -200,12 +434,12 @@ function gameLoop() {
 }
 
 /**
- * ウェーブクリア時の処理を行う関数
+ * ウェーブクリア時の処理を行う関数です
  */
 function handleWaveClear() {
     waveManager.isWaveInProgress = false;
     gold += 150; // 複数のパスをクリアしたことによる追加ゴールド報酬
-    waveManager.incrementWave(); // ウェーブ数を増やす
+    waveManager.incrementWave(); // ウェーブ数を増やします
     updateDisplays();
     console.log('ウェーブクリア、次のウェーブの準備中');
     showError('ウェーブクリア！ +150ゴールド獲得');
@@ -213,7 +447,7 @@ function handleWaveClear() {
     skillService.enableSkillSelection();
     skillService.showSkillSelection();
 
-    // スキル選択ダイアログを表示し、プレイヤーの選択を処理
+    // スキル選択ダイアログを表示し、プレイヤーの選択を処理します
     skillService.onSkillSelected = (selectedSkill) => {
         console.log(`プレイヤーが新しいスキルを獲得しました: ${selectedSkill.name}`);
         
@@ -229,16 +463,16 @@ function handleWaveClear() {
 }
 
 /**
- * 次のウェーブの準備を行う関数
+ * 次のウェーブの準備を行う関数です
  */
 function prepareNextWave() {
-    // ここに次のウェーブの準備に必要な処理を記述します
     console.log("次のウェーブの準備中...");
-    // 例: 敵の強さを増加させる、新しい敵タイプを追加する、など
+    // ここに次のウェーブの準備に必要な処理を追加します
+    // 例: 敵の強さを増加させる、新しい敵タイプを追加するなど
 }
 
 // グローバルスコープに公開する関数
 window.upgrade = upgrade;
 
-// DOMの読み込みが完了したらゲームを初期化
+// DOMの読み込みが完了したらゲームを初期化します
 document.addEventListener('DOMContentLoaded', initGame);

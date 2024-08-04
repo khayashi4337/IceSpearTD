@@ -11,7 +11,7 @@
     
     <div id="game-container">
         <div id="game-board"></div>
-        <div id="feedback" class="feedback"></div>
+        
         <div id="sidebar">
             <h2>Ice Spear Tower Defense</h2>
             <div id="resources">
@@ -19,18 +19,16 @@
                 <p>Mana: <span id="mana">100</span></p>
             </div>
             <div id="tower-buttons">
-                <button class="tower-button" data-tower-type="ice">Ice Tower (50g)</button>
-                <button class="tower-button" data-tower-type="fire">Fire Tower (100g)</button>
-                <button class="tower-button" data-tower-type="stone">Stone Tower (150g)</button>
-                <button class="tower-button" data-tower-type="wind">Wind Tower (150g)</button>
+                <button data-tower-type="ice">Ice Tower (50g)</button>
+                <button data-tower-type="fire">Fire Tower (100g)</button>
+                <button data-tower-type="stone">Stone Tower (150g)</button>
+                <button data-tower-type="wind">Wind Tower (150g)</button>
             </div>
             <div id="upgrades">
                 <button onclick="upgrade('damage')">Upgrade Damage (100g)</button>
                 <button onclick="upgrade('range')">Upgrade Range (100g)</button>
                 <button onclick="upgrade('speed')">Upgrade Speed (100g)</button>
             </div>
-            <button id="synthesis-button">合成</button>
-            <div id="synthesis-instruction"></div>
             <p>Wave: <span id="wave">1</span></p>
             <p>Core Health: <span id="core-health">1000</span></p>
             <button onclick="waveManager.startWave()">Start Wave</button>
@@ -50,15 +48,6 @@
                 <button id="close-skill-selection">閉じる</button>
             </div>
         </div>
-
-        <!-- 合成モーダル -->
-        <div id="synthesis-modal" class="side-modal">
-            <h2>合成モード</h2>
-            <div id="synthesis-modal-content"></div>
-            <button id="confirm-synthesis-modal">合成する</button>
-            <button id="cancel-synthesis-modal">合成をキャンセル</button>
-        </div>
-    </div>
 
     </div>
 
