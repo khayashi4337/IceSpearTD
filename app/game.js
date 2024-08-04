@@ -265,17 +265,17 @@ function showFeedback(message, isError = false) {
     const feedbackElement = document.getElementById('feedback');
     if (feedbackElement) {
         feedbackElement.textContent = message;
-        feedbackElement.className = isError ? 'error' : 'success';
+        feedbackElement.className = `feedback ${isError ? 'error' : 'success'}`;
         feedbackElement.style.display = 'block';
-        setTimeout(() => {
-            feedbackElement.style.display = 'none';
-        }, 3000);
-
+        
+        // アニメーション終了後に非表示にする
+        feedbackElement.addEventListener('animationend', function() {
+            this.style.display = 'none';
+        }, {once: true});
     } else {
         console.error("Feedback element is not found.");        
     }
 }
-
 /**
  * タワーを配置する関数です
  * @param {number} x - X座標
