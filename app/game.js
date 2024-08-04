@@ -10,6 +10,7 @@ import { TowerService } from './services/TowerService.js';
 import { SkillService } from './services/SkillService.js';
 import { ProjectileService } from './services/ProjectileService.js';
 import { CurrentModeManager, CURRENT_MODE } from './CurrentModeManager.js';
+import { TowerSynthesisService } from './services/TowerSynthesisService.js';
 
 // ゲームで使用するグローバル変数を定義します
 let gameBoard, goldDisplay, manaDisplay, waveDisplay, coreHealthDisplay, errorDisplay;
@@ -18,6 +19,7 @@ let gold = 500;
 let mana = 100;
 let coreHealth = 1000;
 let upgrades = { damage: 0, range: 0, speed: 0 };
+let towerSynthesisService;
 
 // ゲームボードのサイズを定義します
 const BOARD_WIDTH = 50;
@@ -60,6 +62,7 @@ async function initGame() {
 
         enemyService = new EnemyService(gameBoard, cellManager);
         towerService = new TowerService(gameBoard, cellManager, currentModeManager);
+        towerSynthesisService = new TowerSynthesisService(currentModeManager, towerService);        
         skillService = new SkillService();
         projectileService = new ProjectileService(gameBoard);
         await skillService.initialize();
@@ -120,6 +123,14 @@ function setupEventListeners() {
         updateSynthesisUI();
     });
 
+    // Escキーのイベントリスナーを追加
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && currentModeManager.isSynthesisMode()) {
+            towerSynthesisService.onClickEsc();
+            updateSynthesisUI();
+        }
+    });    
+
     // ゲームボードのクリックイベントリスナーを設定します
     gameBoard.addEventListener('click', handleBoardClick);
 }
@@ -142,21 +153,8 @@ function updateTowerSelectionUI() {
  * 合成モードのUIを更新する関数です
  */
 function updateSynthesisUI() {
-    const synthesisModal = document.getElementById('synthesis-modal');
-    const synthesisStatus = document.getElementById('synthesis-status');
-    const gameBoard = document.getElementById('game-board');
-
-    if (currentModeManager.isSynthesisMode()) {
-        synthesisModal.classList.add('show');
-        synthesisStatus.textContent = '合成モード: 有効';
-        gameBoard.classList.add('synthesis-mode');
-        updateSynthesisInstruction('タワーを選択してください');
-    } else {
-        synthesisModal.classList.remove('show');
-        synthesisStatus.textContent = '合成モード: 無効';
-        gameBoard.classList.remove('synthesis-mode');
-        updateSynthesisInstruction('');
-    }
+    const synthesisInstruction = document.getElementById('synthesis-instruction');
+    synthesisInstruction.textContent = towerSynthesisService.getShowMessage();
 }
 
 /**
@@ -178,7 +176,9 @@ function handleBoardClick(event) {
     const y = Math.floor((event.clientY - rect.top) / 20);
 
     if (currentModeManager.isSynthesisMode()) {
-        handleSynthesisClick(x, y);
+        const clickedTower = towerService.getTowerAt(x, y);
+        towerSynthesisService.onClickMap(clickedTower, { x, y });
+        updateSynthesisUI();
     } else if (currentModeManager.getCurrentMode() === CURRENT_MODE.TOWER_SELECT) {
         placeTower(x, y);
     }

@@ -1,6 +1,6 @@
 // services/TowerSynthesisService.js
-import { Enemy } from '../models/Tower.js';
 
+import { SynthesisTower } from '../models/SynthesisTower.js';
 
 /**
  * タワー選択のステータスを表す列挙型
@@ -41,7 +41,7 @@ export class TowerSynthesisService {
             case TowerSelectionStatus.TOWER_SELECT_ONE:
                 return "違う種類のタワーを選択してください。キャンセルはEscキー";
             case TowerSelectionStatus.TOWER_SELECT_TWO:
-                return "合成しますか？キャンセルはEscキー"; // TODO: 合成後のタワー情報を追加
+                return "合成しますか？キャンセルはEscキー";
             case TowerSelectionStatus.TOWER_SELECT_SYNTHESIS_CONFIRMED:
                 return "合成したタワーをどこに設置しますか";
             default:
@@ -51,20 +51,19 @@ export class TowerSynthesisService {
 
     /**
      * マップ上のクリックを処理する
-     * @param {Tower} clickedTower - クリックされたタワー（nullの場合もある）
+     * @param {Object} clickedTower - クリックされたタワー（nullの場合もある）
      * @param {Object} position - クリックされた位置
      */
     onClickMap(clickedTower, position) {
         if (clickedTower && this.selectionStatus !== TowerSelectionStatus.TOWER_SELECT_SYNTHESIS_CONFIRMED) {
-            this.selectTower(clickedTower);
-        } else if (this.selectionStatus === TowerSelectionStatus.TOWER_SELECT_SYNTHESIS_CONFIRMED) {
-            this.placeNewTower(position);
+            this.selectTower(new SynthesisTower(clickedTower.type, position, clickedTower));
         }
+        console.log(`マップがクリックされました: 位置 (${position.x}, ${position.y})`);
     }
 
     /**
      * タワーを選択する
-     * @param {Tower} tower - 選択されたタワー
+     * @param {SynthesisTower} tower - 選択されたタワー
      */
     selectTower(tower) {
         switch (this.selectionStatus) {
@@ -75,11 +74,13 @@ export class TowerSynthesisService {
                 console.log(`1つ目のタワーが選択されました: ${tower.towerType}`);
                 break;
             case TowerSelectionStatus.TOWER_SELECT_ONE:
-                if (tower !== this.tower1) {
+                if (tower.towerType !== this.tower1.towerType) {
                     this.tower2 = tower;
                     this.tower2.onSelect();
                     this.selectionStatus = TowerSelectionStatus.TOWER_SELECT_TWO;
                     console.log(`2つ目のタワーが選択されました: ${tower.towerType}`);
+                } else {
+                    console.log('同じ種類のタワーは選択できません');
                 }
                 break;
             default:
@@ -88,24 +89,12 @@ export class TowerSynthesisService {
     }
 
     /**
-     * 新しいタワーを配置する
-     * @param {Object} position - 配置する位置
-     */
-    placeNewTower(position) {
-        // TODO: 新しいタワーを生成し、配置する処理を実装
-        this.tower1.remove(this.towerManager.gameBoard, this.towerManager);
-        this.tower2.remove(this.towerManager.gameBoard, this.towerManager);
-        this.resetSelection();
-        console.log(`新しいタワーが配置されました: 位置 (${position.x}, ${position.y})`);
-    }
-
-    /**
      * Escキーが押された時の処理
      */
     onClickEsc() {
         switch (this.selectionStatus) {
             case TowerSelectionStatus.TOWER_SELECT_NONE:
-                this.currentModeManager.reset();
+                this.currentModeManager.resetCurrentMode();
                 console.log('合成モードがキャンセルされました');
                 break;
             case TowerSelectionStatus.TOWER_SELECT_ONE:
@@ -121,18 +110,6 @@ export class TowerSynthesisService {
                     this.selectionStatus = TowerSelectionStatus.TOWER_SELECT_ONE;
                     console.log('2つ目のタワー選択がキャンセルされました');
                 }
-        }
-    }
-
-    /**
-     * 合成確認ボタンがクリックされた時の処理
-     */
-    onConfirmSynthesis() {
-        if (this.selectionStatus === TowerSelectionStatus.TOWER_SELECT_TWO) {
-            this.selectionStatus = TowerSelectionStatus.TOWER_SELECT_SYNTHESIS_CONFIRMED;
-            console.log('タワー合成が確認されました。新しい配置場所を選択してください');
-        } else {
-            console.log('エラー: 合成確認のタイミングが不正です');
         }
     }
 
