@@ -151,6 +151,25 @@ button:hover {
     background-color: #45a049;
 }
 
+
+/* タワーボタン用の新しいスタイル */
+.tower-button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.tower-button.selected {
+    background-color: #45a049;
+    box-shadow: 0 0 10px #4CAF50;
+}
+
+
 /* コア（中心部） */
 #core {
     width: 60px;

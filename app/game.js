@@ -104,18 +104,20 @@ function setupEventListeners() {
     document.querySelectorAll('#tower-buttons button').forEach(button => {
         button.addEventListener('click', () => {
             const towerType = button.dataset.towerType;
-            towerService.selectTower(towerType);
+            selectTower(towerType);
         });
     });
 
-
-    // ゲームボードのクリックイベントを更新
-    gameBoard.addEventListener('click', handleBoardClick);
-
     // 合成ボタンのイベントリスナーを追加
-    document.getElementById('show-synthesis').addEventListener('click', toggleSynthesisMode);
+    document.getElementById('show-synthesis').addEventListener('click', () => {
+        deselectAllTowers();
+        toggleSynthesisMode();
+    });
+    
     document.getElementById('cancel-synthesis').addEventListener('click', cancelSynthesis);
 
+    // ゲームボードのクリックイベントを設定
+    gameBoard.addEventListener('click', handleBoardClick);
 
     // ゲームボードのクリックイベントリスナーを設定
     gameBoard.addEventListener('click', (event) => {
@@ -130,6 +132,69 @@ function setupEventListeners() {
             showError(result.message);
         }
     });
+}
+
+
+/**
+ * タワーを選択する関数
+ * @param {string} towerType - 選択されたタワーのタイプ
+ */
+function selectTower(towerType) {
+    const buttons = document.querySelectorAll('.tower-button');
+    
+    if (selectedTowerType === towerType) {
+        // 同じタワーを再度クリックした場合、選択を解除
+        selectedTowerType = null;
+        buttons.forEach(btn => btn.classList.remove('selected'));
+    } else {
+        // 新しいタワーを選択
+        selectedTowerType = towerType;
+        buttons.forEach(btn => {
+            if (btn.dataset.towerType === towerType) {
+                btn.classList.add('selected');
+            } else {
+                btn.classList.remove('selected');
+            }
+        });
+    }
+
+    // 合成モードを無効にする
+    if (synthesisMode) {
+        toggleSynthesisMode();
+    }
+
+    // TowerServiceに選択を通知
+    towerService.selectTower(selectedTowerType);
+}
+
+/**
+ * 全てのタワー選択を解除する関数
+ */
+function deselectAllTowers() {
+    selectedTowerType = null;
+    document.querySelectorAll('.tower-button').forEach(btn => btn.classList.remove('selected'));
+    towerService.selectTower(null);
+}
+
+function toggleSynthesisMode() {
+    synthesisMode = !synthesisMode;
+    const synthesisModal = document.getElementById('synthesis-modal');
+    const synthesisStatus = document.getElementById('synthesis-status');
+    const gameBoard = document.getElementById('game-board');
+
+    if (synthesisMode) {
+        synthesisModal.classList.add('show');
+        synthesisStatus.textContent = '合成モード: 有効';
+        gameBoard.classList.add('synthesis-mode');
+        deselectAllTowers(); // 合成モード開始時に全てのタワー選択を解除
+    } else {
+        synthesisModal.classList.remove('show');
+        synthesisStatus.textContent = '合成モード: 無効';
+        gameBoard.classList.remove('synthesis-mode');
+    }
+
+    selectedTowers = [];
+    updateSynthesisInstruction();
 }
 
 /**
@@ -258,27 +323,6 @@ window.upgrade = upgrade;
 // DOMの読み込みが完了したらゲームを初期化
 document.addEventListener('DOMContentLoaded', initGame);
 
-
-function toggleSynthesisMode() {
-    synthesisMode = !synthesisMode;
-    const synthesisModal = document.getElementById('synthesis-modal');
-    const synthesisStatus = document.getElementById('synthesis-status');
-    const gameBoard = document.getElementById('game-board');
-
-    if (synthesisMode) {
-        synthesisModal.classList.add('show');
-        synthesisStatus.textContent = '合成モード: 有効';
-        gameBoard.classList.add('synthesis-mode');
-    } else {
-        synthesisModal.classList.remove('show');
-        synthesisStatus.textContent = '合成モード: 無効';
-        gameBoard.classList.remove('synthesis-mode');
-    }
-
-    selectedTowers = [];
-    updateSynthesisInstruction();
-}
-
 function cancelSynthesis() {
     if (synthesisMode) {
         toggleSynthesisMode();
@@ -293,17 +337,21 @@ function handleBoardClick(event) {
     if (synthesisMode) {
         handleSynthesisClick(x, y);
     } else {
-        // 既存のタワー配置ロジック
-        const result = towerService.placeTower({ x, y }, gold);
-        if (result.success) {
-            gold -= result.cost;
-            updateDisplays();
-        } else {
-            showError(result.message);
-        }
+        placeTower(x, y);
     }
 }
 
+
+// タワー配置ロジックを別関数に分離
+function placeTower(x, y) {
+    const result = towerService.placeTower({ x, y }, gold);
+    if (result.success) {
+        gold -= result.cost;
+        updateDisplays();
+    } else {
+        showError(result.message);
+    }
+}
 
 /**
  * 合成モード中のクリックを処理する関数

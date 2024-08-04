@@ -116,6 +116,10 @@ export class TowerService {
         console.log(`タワータイプ '${type}' が選択されました`);
     }
 
+    getSelectedTowerType() {
+        return this.selectedTowerType;
+    }
+
     /**
      * タワーを配置する
      * @param {{x: number, y: number}} position - 配置する位置
