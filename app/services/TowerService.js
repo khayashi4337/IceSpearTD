@@ -3,6 +3,7 @@
 import { Tower } from '../Tower.js';
 import { Projectile } from '../Projectile.js';
 import { Damage } from '../Damage.js';
+import { CurrentModeManager, CURRENT_MODE } from '../CurrentModeManager.js';
 
 /**
  * タワーの管理を行うサービスクラス
@@ -12,13 +13,15 @@ export class TowerService {
      * TowerServiceのコンストラクタ
      * @param {HTMLElement} gameBoard - ゲームボード要素
      * @param {CellManager} cellManager - セル管理オブジェクト
+     * @param {CurrentModeManager} currentModeManager - 現在のモード管理オブジェクト
      */
-    constructor(gameBoard, cellManager) {
+    constructor(gameBoard, cellManager, currentModeManager) {
         this.gameBoard = gameBoard;
         this.cellManager = cellManager;
+        this.currentModeManager = currentModeManager;
         this.towers = [];
-        this.selectedTower = null;
         this.damage = new Damage(gameBoard);
+        console.log('TowerService initialized');
     }
 
     /**
@@ -74,8 +77,7 @@ export class TowerService {
         this.towers.forEach(tower => {
             const now = Date.now();
             if (now - tower.lastShot > tower.fireRate * 1000) {
-                // findTargetForTower に enemies を渡す
-                const target = this.findTargetForTower(tower, enemies); 
+                const target = this.findTargetForTower(tower, enemies);
                 
                 if (target) {
                     tower.lastShot = now;
@@ -108,30 +110,18 @@ export class TowerService {
     }
 
     /**
-     * タワーを選択する
-     * @param {string} type - 選択するタワーの種類
-     */
-    selectTower(type) {
-        this.selectedTower = type;
-        console.log(`タワータイプ '${type}' が選択されました`);
-    }
-
-    getSelectedTowerType() {
-        return this.selectedTowerType;
-    }
-
-    /**
      * タワーを配置する
      * @param {{x: number, y: number}} position - 配置する位置
      * @param {number} gold - 現在のゴールド量
      * @returns {{success: boolean, cost: number, message: string}} 配置結果
      */
     placeTower(position, gold) {
-        if (!this.selectedTower) {
+        const currentTower = this.currentModeManager.getCurrentTower();
+        if (!currentTower || this.currentModeManager.getCurrentMode() !== CURRENT_MODE.TOWER_SELECT) {
             return { success: false, cost: 0, message: 'タワーが選択されていません' };
         }
         
-        const cost = Tower.getTowerCost(this.selectedTower);
+        const cost = Tower.getTowerCost(currentTower);
         if (gold < cost) {
             return { success: false, cost: 0, message: "タワーを配置するのに十分なゴールドがありません！" };
         }
@@ -141,11 +131,11 @@ export class TowerService {
             return { success: false, cost: 0, message: "この場所にタワーを配置することはできません！" };
         }
         
-        console.log(`タワーを配置: タイプ ${this.selectedTower}, 座標 (${position.x}, ${position.y})`);
+        console.log(`タワーを配置: タイプ ${currentTower}, 座標 (${position.x}, ${position.y})`);
         
         const towerX = position.x * 20 + 10;
         const towerY = position.y * 20 + 10;
-        this.createTower(towerX, towerY, this.selectedTower);
+        this.createTower(towerX, towerY, currentTower);
         
         cell.type = 'tower';
         return { success: true, cost: cost, message: "タワーを配置しました" };
@@ -216,51 +206,49 @@ export class TowerService {
      * @param {Tower} tower2 - 2つ目のタワー
      * @returns {string|null} 合成されたタワーのタイプ、または合成できない場合はnull
      */
-        synthesizeTowers(tower1, tower2) {
-            const combination = [tower1.type, tower2.type].sort().join('-');
-            const synthesisMap = {
-                'fire-ice': 'water',
-                'ice-stone': 'frozenEarth',
-                'ice-wind': 'coldAir',
-                'fire-stone': 'iron',
-                'fire-wind': 'hotWind',
-                'stone-wind': 'sand'
-            };
-            return synthesisMap[combination] || null;
-        }
-    
-        /**
-         * 合成されたタワーを作成する
-         * @param {number} x - タワーのX座標
-         * @param {number} y - タワーのY座標
-         * @param {string} type - 合成されたタワーのタイプ
-         * @returns {Tower} 作成された合成タワー
-         */
-        createSynthesizedTower(x, y, type) {
-            const towerElement = document.createElement('div');
-            towerElement.className = `tower ${type}-tower`;
-            towerElement.style.left = `${x}px`;
-            towerElement.style.top = `${y}px`;
-            towerElement.style.backgroundColor = Tower.getTowerColor(type);
-            this.gameBoard.appendChild(towerElement);
-    
-            const tower = new Tower(x, y, type, towerElement);
-            this.towers.push(tower);
-            console.log(`合成タワー(${type})を作成しました。座標: (${x}, ${y})`);
-            return tower;
-        }
-    
-        /**
-         * 指定された座標にあるタワーを取得する
-         * @param {number} x - X座標
-         * @param {number} y - Y座標
-         * @returns {Tower|null} 指定された座標のタワー、またはnull
-         */
-        getTowerAt(x, y) {
-            return this.towers.find(tower => 
-                Math.floor(tower.x / 20) === x && Math.floor(tower.y / 20) === y
-            ) || null;
-        }
-    
-}
+    synthesizeTowers(tower1, tower2) {
+        const combination = [tower1.type, tower2.type].sort().join('-');
+        const synthesisMap = {
+            'fire-ice': 'water',
+            'ice-stone': 'frozenEarth',
+            'ice-wind': 'coldAir',
+            'fire-stone': 'iron',
+            'fire-wind': 'hotWind',
+            'stone-wind': 'sand'
+        };
+        return synthesisMap[combination] || null;
+    }
 
+    /**
+     * 合成されたタワーを作成する
+     * @param {number} x - タワーのX座標
+     * @param {number} y - タワーのY座標
+     * @param {string} type - 合成されたタワーのタイプ
+     * @returns {Tower} 作成された合成タワー
+     */
+    createSynthesizedTower(x, y, type) {
+        const towerElement = document.createElement('div');
+        towerElement.className = `tower ${type}-tower`;
+        towerElement.style.left = `${x}px`;
+        towerElement.style.top = `${y}px`;
+        towerElement.style.backgroundColor = Tower.getTowerColor(type);
+        this.gameBoard.appendChild(towerElement);
+
+        const tower = new Tower(x, y, type, towerElement);
+        this.towers.push(tower);
+        console.log(`合成タワー(${type})を作成しました。座標: (${x}, ${y})`);
+        return tower;
+    }
+
+    /**
+     * 指定された座標にあるタワーを取得する
+     * @param {number} x - X座標
+     * @param {number} y - Y座標
+     * @returns {Tower|null} 指定された座標のタワー、またはnull
+     */
+    getTowerAt(x, y) {
+        return this.towers.find(tower => 
+            Math.floor(tower.x / 20) === x && Math.floor(tower.y / 20) === y
+        ) || null;
+    }
+}
