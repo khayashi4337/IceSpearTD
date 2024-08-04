@@ -126,21 +126,21 @@ function setupEventListeners() {
         });
     });
 
-    // 合成ボタンのイベントリスナーを追加します
-    document.getElementById('show-synthesis').addEventListener('click', () => {
-        currentModeManager.toggleSynthesisMode();
-        updateSynthesisUI();
+    // 合成ボタンのイベントリスナー
+    document.getElementById('synthesis-button').addEventListener('click', () => {
+        const isSynthesisMode = towerSynthesisService.toggleSynthesisMode();
+        updateSynthesisUI(isSynthesisMode);
     });
     
     document.getElementById('cancel-synthesis').addEventListener('click', () => {
         currentModeManager.resetCurrentMode();
-        updateSynthesisUI();
+        updateSynthesisUI(true);
     });
 
     // 合成確認ボタンのイベントリスナー
     document.getElementById('confirm-synthesis').addEventListener('click', () => {
         towerSynthesisService.onConfirmSynthesis();
-        updateSynthesisUI();
+        updateSynthesisUI(true);
     });    
 
     // Escキーのイベントリスナーを追加
@@ -184,26 +184,36 @@ function createSynthesisConfirmUI() {
 
 /**
  * 合成モードのUIを更新する関数です
+ * @param {boolean} isSynthesisMode - 合成モードの状態
  */
-function updateSynthesisUI() {
+function updateSynthesisUI(isSynthesisMode) {
+    const synthesisButton = document.getElementById('synthesis-button');
     const synthesisInstruction = document.getElementById('synthesis-instruction');
-    const synthesisConfirm = document.getElementById('synthesis-confirm');
-    synthesisInstruction.textContent = towerSynthesisService.getShowMessage();
+    const synthesisModal = document.getElementById('synthesis-modal');
 
-    if (towerSynthesisService.getCurrentSelectionStatus() === TowerSelectionStatus.TOWER_SELECT_TWO) {
-        synthesisConfirm.style.display = 'block';
+    synthesisButton.textContent = towerSynthesisService.getSynthesisButtonLabel();
+    
+    if (isSynthesisMode) {
+        synthesisInstruction.style.display = 'block';
+        synthesisInstruction.textContent = towerSynthesisService.getShowMessage();
+
+        // タワーが2つ選択された場合、合成確認モーダルを表示
+        if (towerSynthesisService.getCurrentSelectionStatus() === TowerSelectionStatus.TOWER_SELECT_TWO) {
+            synthesisModal.style.display = 'block';
+        } else {
+            synthesisModal.style.display = 'none';
+        }
     } else {
-        synthesisConfirm.style.display = 'none';
+        synthesisInstruction.style.display = 'none';
+        synthesisModal.style.display = 'none';
     }
-}
 
-/**
- * 合成の指示を更新する関数です
- * @param {string} message - 表示するメッセージ
- */
-function updateSynthesisInstruction(message) {
-    const instruction = document.getElementById('synthesis-instruction');
-    instruction.textContent = message;
+    // 選択されたタワーの視覚的な更新
+    towerSynthesisService.getSelectedTowers().forEach(tower => {
+        if (tower && tower.gameJsObject && tower.gameJsObject.element) {
+            tower.gameJsObject.element.classList.toggle('selected-tower', isSynthesisMode);
+        }
+    });
 }
 
 /**
@@ -215,14 +225,12 @@ function handleBoardClick(event) {
     const x = Math.floor((event.clientX - rect.left) / 20);
     const y = Math.floor((event.clientY - rect.top) / 20);
 
-    if (currentModeManager.isSynthesisMode()) {
+    if (currentModeManager.getCurrentMode() === CURRENT_MODE.SYNTHESIS) {
         const clickedTower = towerService.getTowerAt(x, y);
         towerSynthesisService.onClickMap(clickedTower, { x, y });
-        updateSynthesisUI();
+        updateSynthesisUI(true);
 
         if (towerSynthesisService.getCurrentSelectionStatus() === TowerSelectionStatus.TOWER_SELECT_SYNTHESIS_CONFIRMED) {
-            // 合成確認の意図がある場合
-
             const newTowerType = towerSynthesisService.getSynthesizedTowerType();
             if (newTowerType && canPlaceTower(x, y)) {
                 const cost = TOWER_ATTRIBUTES[newTowerType].cost;
@@ -245,6 +253,16 @@ function handleBoardClick(event) {
         placeTower(x, y);
     }
 }
+
+/**
+ * 合成の指示を更新する関数です
+ * @param {string} message - 表示するメッセージ
+ */
+function updateSynthesisInstruction(message) {
+    const instruction = document.getElementById('synthesis-instruction');
+    instruction.textContent = message;
+}
+
 
 /**
  * タワーを配置できるかチェックする関数です

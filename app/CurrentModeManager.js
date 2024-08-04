@@ -24,6 +24,25 @@ export class CurrentModeManager {
         this.currentTower = null;
         console.log('CurrentModeManager initialized');
     }
+    
+
+    /**
+     * 現在のモードを設定する
+     * @param {CURRENT_MODE} mode - 設定するモード
+     */
+    setMode(mode) {
+        this.currentMode = mode;
+        console.log(`モードが ${mode} に設定されました`);
+    }    
+
+
+    /**
+     * 合成モードかどうかを確認する
+     * @returns {boolean} 合成モードの場合はtrue、そうでない場合はfalse
+     */
+    isSynthesisMode() {
+        return this.currentMode === CURRENT_MODE.SYNTHESIS;
+    }
 
     /**
      * 現在のモードとタワー選択をリセットする

@@ -1,5 +1,6 @@
 // services/TowerSynthesisService.js
 
+import { CURRENT_MODE } from '../CurrentModeManager.js';
 import { SynthesisTower } from '../models/SynthesisTower.js';
 import { TOWER_TYPES, SYNTHESIS_RULES } from '../models/TowerTypes.js';
 
@@ -28,6 +29,7 @@ export class TowerSynthesisService {
         this.tower1 = null;
         this.tower2 = null;
         this.selectionStatus = TowerSelectionStatus.TOWER_SELECT_NONE;
+        this.isSynthesisMode = false;
         console.log('TowerSynthesisServiceが初期化されました');
     }
 
@@ -56,7 +58,7 @@ export class TowerSynthesisService {
      * @param {Object} position - クリックされた位置
      */
     onClickMap(clickedTower, position) {
-        if (clickedTower && this.selectionStatus !== TowerSelectionStatus.TOWER_SELECT_SYNTHESIS_CONFIRMED) {
+        if (this.isSynthesisMode && clickedTower && this.selectionStatus !== TowerSelectionStatus.TOWER_SELECT_SYNTHESIS_CONFIRMED) {
             this.selectTower(new SynthesisTower(clickedTower.type, position, clickedTower));
         }
         console.log(`マップがクリックされました: 位置 (${position.x}, ${position.y})`);
@@ -95,7 +97,7 @@ export class TowerSynthesisService {
     onClickEsc() {
         switch (this.selectionStatus) {
             case TowerSelectionStatus.TOWER_SELECT_NONE:
-                this.currentModeManager.resetCurrentMode();
+                this.toggleSynthesisMode();
                 console.log('合成モードがキャンセルされました');
                 break;
             case TowerSelectionStatus.TOWER_SELECT_ONE:
@@ -173,5 +175,37 @@ export class TowerSynthesisService {
         if (this.tower1) this.towerManager.removeTower(this.tower1.gameJsObject);
         if (this.tower2) this.towerManager.removeTower(this.tower2.gameJsObject);
         console.log('合成元のタワーが削除されました');
+    }
+
+    /**
+     * 合成モードを切り替える
+     * @returns {boolean} 新しい合成モードの状態
+     */
+    toggleSynthesisMode() {
+        this.isSynthesisMode = !this.isSynthesisMode;
+        if (this.isSynthesisMode) {
+            this.currentModeManager.setMode(CURRENT_MODE.SYNTHESIS);
+        } else {
+            this.currentModeManager.resetCurrentMode();
+            this.resetSelection();
+        }
+        console.log(`合成モードが${this.isSynthesisMode ? '有効' : '無効'}になりました`);
+        return this.isSynthesisMode;
+    }
+
+    /**
+     * 現在の合成モードの状態を取得する
+     * @returns {boolean} 現在の合成モードの状態
+     */
+    getSynthesisMode() {
+        return this.isSynthesisMode;
+    }
+
+    /**
+     * 合成ボタンのラベルを取得する
+     * @returns {string} 合成ボタンのラベル
+     */
+    getSynthesisButtonLabel() {
+        return this.isSynthesisMode ? "合成キャンセル" : "合成";
     }
 }
