@@ -135,21 +135,34 @@ function setupEventListeners() {
 
     // 合成確認ボタンのイベントリスナー
     document.getElementById('confirm-synthesis').addEventListener('click', () => {
+        console.log('合成確認ボタンがクリックされました');
         towerSynthesisService.onConfirmSynthesis();
         updateSynthesisUI(true);
     });
 
     // 合成キャンセルボタンのイベントリスナー
     document.getElementById('cancel-synthesis').addEventListener('click', () => {
+        console.log('合成キャンセルボタンがクリックされました');
         towerSynthesisService.resetSelection();
         updateSynthesisUI(true);
     });
 
-    // 合成確認ボタンのイベントリスナー
-    document.getElementById('confirm-synthesis').addEventListener('click', () => {
+    // 合成確認ボタンのイベントリスナー（モーダル内）
+    document.getElementById('confirm-synthesis-modal').addEventListener('click', (event) => {
+        console.log('合成確認ボタン（モーダル）がクリックされました');
         towerSynthesisService.onConfirmSynthesis();
         updateSynthesisUI(true);
+    });
+
+    // 合成キャンセルボタンのイベントリスナー（モーダル内）
+    document.getElementById('cancel-synthesis-modal').addEventListener('click', (event) => {
+        console.log('合成キャンセルボタン（モーダル）がクリックされました');
+        towerSynthesisService.resetSelection();
+        updateSynthesisUI(true);
     });    
+
+
+    
 
     // Escキーのイベントリスナーを追加
     document.addEventListener('keydown', (event) => {
@@ -236,6 +249,11 @@ function updateSynthesisUI(isSynthesisMode) {
  * @param {Event} event - クリックイベント
  */
 function handleBoardClick(event) {
+    // モーダル内のクリックイベントを無視する
+    if (event.target.closest('#synthesis-modal')) {
+        console.log('モーダル内のクリックイベントです');
+        return;
+    }
     const rect = gameBoard.getBoundingClientRect();
     const x = Math.floor((event.clientX - rect.left) / 20);
     const y = Math.floor((event.clientY - rect.top) / 20);
