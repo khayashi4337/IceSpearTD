@@ -55,17 +55,22 @@ body {
 
 /* タワー共通スタイル */
 .tower {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     position: absolute;
-    border-radius: 50%;
-    transform: translate(-50%, -50%); /* 中心を基準に配置 */
     z-index: 10;
+    border: 1px solid rgba(0, 0, 0,0.1);
+    box-sizing: border-box;
+    transform: translate(-50%, -50%); /* タワーの中心を基準点にする */
 }
 
 /* タワーの種類別スタイル */
 /* 第一世代タワー */
-.ice-tower { background-color: #ADD8E6; }
+.ice-tower { 
+    background-color: #ADD8E6;
+    background-image: url('img/tower-img/tower-ice.png');
+    background-size: cover;
+}
 .fire-tower { background-color: #FF4500; }
 .stone-tower { background-color: #A9A9A9; }
 .wind-tower { background-color: #98FB98; }
