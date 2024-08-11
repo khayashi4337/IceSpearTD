@@ -1,3 +1,6 @@
+// Tower.js
+import { TOWER_ATTRIBUTES } from './TowerTypes.js';
+
 /**
  * タワーを表すクラス
  */
@@ -27,11 +30,7 @@ export class Tower {
      * @returns {number} タワーの攻撃力
      */
     static getTowerDamage(type, level) {
-        const baseDamage = {
-            ice: 20, fire: 40, stone: 100, wind: 16,//第一世代
-            water: 30, frozenEarth: 50, coldAir: 25,//第二世代
-            iron: 80, hotWind: 35, sand: 45
-        }[type];
+        const baseDamage = TOWER_ATTRIBUTES[type].baseDamage;
         return baseDamage * (1 + 0.1 * (level - 1));
     }
 
@@ -42,11 +41,7 @@ export class Tower {
      * @returns {number} タワーの攻撃範囲
      */
     static getTowerRange(type, level) {
-        const baseRange = {
-            ice: 80, fire: 80, stone: 50, wind: 160,//第一世代
-            water: 100, frozenEarth: 60, coldAir: 120,//第二世代
-            iron: 70, hotWind: 140, sand: 90
-        }[type];
+        const baseRange = TOWER_ATTRIBUTES[type].baseRange;
         return baseRange * (1 + 0.05 * (level - 1));
     }
 
@@ -57,11 +52,7 @@ export class Tower {
      * @returns {number} タワーの攻撃速度（秒単位）
      */
     static getTowerFireRate(type, level) {
-        const baseFireRate = { 
-            ice: 1, fire: 0.8, stone: 6, wind: 0.4,//第一世代
-            water: 0.9, frozenEarth: 1.2, coldAir: 0.7,//第二世代
-            iron: 1.5, hotWind: 0.5, sand: 1.1
-        }[type];
+        const baseFireRate = TOWER_ATTRIBUTES[type].baseFireRate;
         return baseFireRate * (1 - 0.05 * (level - 1));
     }
 
@@ -71,11 +62,7 @@ export class Tower {
      * @returns {number} タワーの建設コスト
      */
     static getTowerCost(type) {
-        return {
-            ice: 50, fire: 100, stone: 150, wind: 150,//第一世代
-            water: 200, frozenEarth: 250, coldAir: 200,//第二世代
-            iron: 300, hotWind: 250, sand: 200
-        }[type];
+        return TOWER_ATTRIBUTES[type].cost;
     }
 
     /**

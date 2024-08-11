@@ -18,20 +18,27 @@ export const TOWER_TYPES = {
 };
 
 /**
- * 各タワータイプの属性を定義するオブジェクト
- * @type {Object.<string, {damage: number, range: number, cost: number}>}
+ * タワーの基本属性を定義するオブジェクト
+ * @type {Object.<string, {baseDamage: number, baseRange: number, baseFireRate: number, cost: number}>}
+ * 
+ * @property {number} baseDamage - タワーの基本攻撃力
+ * @property {number} baseRange - タワーの基本攻撃範囲（ピクセル単位）
+ * @property {number} baseFireRate - タワーの基本攻撃速度（秒単位、値が小さいほど速い）
+ * @property {number} cost - タワーの建設コスト
  */
 export const TOWER_ATTRIBUTES = {
-    [TOWER_TYPES.ICE]: { damage: 20, range: 3, cost: 50 },
-    [TOWER_TYPES.FIRE]: { damage: 30, range: 2, cost: 100 },
-    [TOWER_TYPES.STONE]: { damage: 40, range: 1, cost: 150 },
-    [TOWER_TYPES.WIND]: { damage: 15, range: 4, cost: 150 },
-    [TOWER_TYPES.WATER]: { damage: 35, range: 3, cost: 200 },
-    [TOWER_TYPES.FROZEN_EARTH]: { damage: 45, range: 2, cost: 250 },
-    [TOWER_TYPES.COLD_AIR]: { damage: 25, range: 4, cost: 225 },
-    [TOWER_TYPES.IRON]: { damage: 50, range: 2, cost: 300 },
-    [TOWER_TYPES.HOT_WIND]: { damage: 30, range: 3, cost: 275 },
-    [TOWER_TYPES.SAND]: { damage: 35, range: 2, cost: 225 }
+    // 第一世代
+    [TOWER_TYPES.ICE]: { baseDamage: 20, baseRange: 80, baseFireRate: 1, cost: 50 },
+    [TOWER_TYPES.FIRE]: { baseDamage: 40, baseRange: 80, baseFireRate: 0.8, cost: 100 },
+    [TOWER_TYPES.STONE]: { baseDamage: 100, baseRange: 50, baseFireRate: 6, cost: 150 },
+    [TOWER_TYPES.WIND]: { baseDamage: 16, baseRange: 160, baseFireRate: 0.4, cost: 150 },
+    [TOWER_TYPES.WATER]: { baseDamage: 30, baseRange: 100, baseFireRate: 0.9, cost: 200 },
+    // 第二世代
+    [TOWER_TYPES.FROZEN_EARTH]: { baseDamage: 50, baseRange: 60, baseFireRate: 1.2, cost: 250 },
+    [TOWER_TYPES.COLD_AIR]: { baseDamage: 25, baseRange: 120, baseFireRate: 0.7, cost: 200 },
+    [TOWER_TYPES.IRON]: { baseDamage: 80, baseRange: 70, baseFireRate: 1.5, cost: 300 },
+    [TOWER_TYPES.HOT_WIND]: { baseDamage: 35, baseRange: 140, baseFireRate: 0.5, cost: 250 },
+    [TOWER_TYPES.SAND]: { baseDamage: 45, baseRange: 90, baseFireRate: 1.1, cost: 200 }
 };
 
 /**
