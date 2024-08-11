@@ -91,8 +91,9 @@ export class Tower {
     /**
      * タワーの効果を敵に適用するメソッド
      * @param {Object} enemy - 効果を適用する敵オブジェクト
+     * @param {Damage} damageInstance - ダメージ表示用のインスタンス
      */
-    applyEffect(enemy) {
+    applyEffect(enemy, damageInstance) {
         switch(this.type) {
             case 'ice':
                 // 氷のタワー効果：敵の速度を一時的に80%に低下
@@ -113,9 +114,17 @@ export class Tower {
                 setTimeout(() => {
                     enemy.health -= 5;
                     console.log(`Fire effect: Additional 5 damage applied to enemy at (${enemy.element.style.left}, ${enemy.element.style.top})`);
-                    // Note: showDamage function needs to be implemented or imported
-                    // showDamage(parseInt(enemy.element.style.left), parseInt(enemy.element.style.top), 5);
+                    if (damageInstance) {
+                        damageInstance.showDamage(parseInt(enemy.element.style.left), parseInt(enemy.element.style.top), 5);
+                    }
                 }, 1000);
+                break;
+            case 'stone':
+                // 石のタワー効果：10%の確率で即死
+                if (Math.random() < 0.1) {
+                    enemy.health = 0;
+                    console.log(`Stone effect: Instant kill applied to enemy at (${enemy.element.style.left}, ${enemy.element.style.top})`);
+                }
                 break;
             case 'wind':
                 // 風のタワー効果：敵を少し後退させる
