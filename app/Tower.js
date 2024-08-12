@@ -1,5 +1,5 @@
 // Tower.js
-import { TOWER_ATTRIBUTES } from './TowerTypes.js';
+import { TOWER_ATTRIBUTES } from './models/TowerTypes.js';
 
 /**
  * タワーを表すクラス
