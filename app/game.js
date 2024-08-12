@@ -407,7 +407,7 @@ function createEnemy(type) {
  */
 function gameLoop() {
     enemyService.update();
-    const newProjectiles = towerService.shootEnemies(enemyService.getEnemies());
+    const newProjectiles = towerService.update(enemyService.getEnemies());
     newProjectiles.forEach(proj => {
         projectileService.createProjectile(proj.x, proj.y, proj.targetX, proj.targetY, proj.towerType, proj.damage, proj.target);
     });
