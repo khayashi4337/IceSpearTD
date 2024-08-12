@@ -95,4 +95,9 @@ export class EnemyService {
         return this.totalEnemiesSpawned;
     }
 
+    update() {
+        this.moveEnemies();
+        // 必要に応じて他の敵関連の更新ロジックをここに追加
+    }    
+
 }

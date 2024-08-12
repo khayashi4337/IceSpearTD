@@ -406,8 +406,8 @@ function createEnemy(type) {
  * 各フレームごとに呼び出され、ゲームの状態を更新します
  */
 function gameLoop() {
-    enemyService.moveEnemies();
-    const newProjectiles = towerService.shootEnemies(enemyService.getEnemies());
+    enemyService.update();
+    const newProjectiles = towerService.update(enemyService.getEnemies());
     newProjectiles.forEach(proj => {
         projectileService.createProjectile(proj.x, proj.y, proj.targetX, proj.targetY, proj.towerType, proj.damage, proj.target);
     });

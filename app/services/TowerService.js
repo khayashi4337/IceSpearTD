@@ -93,7 +93,7 @@ export class TowerService {
                     newProjectiles.push(projectile);
 
                     // タワーの効果を敵に適用
-                    this.applyTowerEffect(target, tower.type);
+                    this.applyTowerEffect(target, tower);
                 }
             }
         });
@@ -144,46 +144,10 @@ export class TowerService {
     /**
      * タワーの効果を敵に適用する関数
      * @param {Object} enemy - 効果を適用する敵オブジェクト
-     * @param {string} towerType - タワーの種類
+     * @param {Tower} tower - 効果を適用するタワー
      */
-    applyTowerEffect(enemy, towerType) {
-        switch(towerType) {
-            case 'ice':
-                // 氷のタワー効果：敵の速度を一時的に80%に低下
-                if (!enemy.iceEffect) {
-                    enemy.iceEffect = true;
-                    enemy.originalSpeed = enemy.speed;
-                    enemy.speed *= 0.8;
-                    console.log(`Ice effect applied to enemy at (${enemy.element.style.left}, ${enemy.element.style.top})`);
-                    setTimeout(() => {
-                        enemy.speed = enemy.originalSpeed;
-                        enemy.iceEffect = false;
-                        console.log(`Ice effect removed from enemy at (${enemy.element.style.left}, ${enemy.element.style.top})`);
-                    }, 3000);
-                }
-                break;
-            case 'fire':
-                // 火のタワー効果：1秒後に追加ダメージ
-                setTimeout(() => {
-                    enemy.health -= 5;
-                    console.log(`Fire effect: Additional 5 damage applied to enemy at (${enemy.element.style.left}, ${enemy.element.style.top})`);
-                    this.damage.showDamage(parseInt(enemy.element.style.left), parseInt(enemy.element.style.top), 5);
-                }, 1000);
-                break;
-            case 'stone':
-                // 石のタワー効果：10%の確率で即死
-                if (Math.random() < 0.1) {
-                    enemy.health = 0;
-                    console.log(`Stone effect: Instant kill applied to enemy at (${enemy.element.style.left}, ${enemy.element.style.top})`);
-                }
-                break;
-            case 'wind':
-                // 風のタワー効果：敵を少し後退させる
-                const backIndex = Math.max(0, enemy.pathIndex - 1);
-                enemy.pathIndex = backIndex;
-                console.log(`Wind effect: Enemy pushed back to path index ${backIndex} at (${enemy.element.style.left}, ${enemy.element.style.top})`);
-                break;
-        }
+    applyTowerEffect(enemy, tower) {
+        tower.applyEffect(enemy, this.damage);
     }
 
     /**
