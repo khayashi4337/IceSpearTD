@@ -1,0 +1,71 @@
+# 文哉くんのアイデアまとめ
+
+```mermaid
+class Tower合成Level {
+    LEVEL1
+    LEVEL2
+    LEVEL3
+    LEVEL4
+    LEVEL5
+}
+
+class Tokka {
+
+}
+
+class TowerAttributes {
+  tower合成Level
+  towerName
+  gameBalanceTier
+  parentTower1
+  parentTower2
+  tokka
+}
+
+class 弾の大きさTokka {
+
+}
+Tokka <-- 弾の大きさTokka
+
+class 連射速度Tokka {
+
+}
+
+class リチャージTokka {
+
+}
+
+class ライフ吸収Tokka {
+
+}
+
+class 爆発Tokka {
+
+}
+
+class 燃焼Tokka {
+
+}
+
+class 毒Tokka {
+
+}
+
+class フリーズTokka {
+
+}
+
+class 超射程Tokka {
+
+}
+
+class 球数Tokka {
+
+}
+
+class シールドTokka {
+
+}
+
+
+```
