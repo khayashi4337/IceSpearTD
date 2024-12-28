@@ -49,13 +49,15 @@ export class Slime extends IEnemy {
         this.element.appendChild(body);
     }
 
-    // ダメージを受けた時の処理
+    /**
+     * ダメージを受けた時の処理
+     * @param {number} damage - ダメージ量
+     * @returns {number} 実際に適用されたダメージ量
+     */
     takeDamage(damage) {
-        if (!this.isAlive) return;
+        if (!this.isAlive) return 0;
         
-        super.takeDamage(damage);
-        this.showDamageNumber(damage);
-        this.updateHealthBar();
+        const actualDamage = super.takeDamage(damage);
         
         // ダメージエフェクト
         this.element.classList.add('damaged');
@@ -63,162 +65,7 @@ export class Slime extends IEnemy {
             this.element.classList.remove('damaged');
         }, 300);
 
-        if (this.health <= 0) {
-            this.die();
-        }
-    }
-
-    // 体力バーの更新
-    updateHealthBar() {
-        const healthPercent = (this.health / this.maxHealth) * 100;
-        const greenBar = this.element.querySelector('.health-bar-green');
-        const redBar = this.element.querySelector('.health-bar-red');
-        
-        if (greenBar && redBar) {
-            greenBar.style.width = `${healthPercent}%`;
-            redBar.style.width = `${100 - healthPercent}%`;
-        }
-    }
-
-    // ダメージ数値の表示
-    showDamageNumber(damage) {
-        const damageElem = document.createElement('div');
-        damageElem.className = 'damage-number';
-        damageElem.textContent = damage;
-        
-        const rect = this.element.getBoundingClientRect();
-        damageElem.style.left = rect.left + rect.width / 2 + 'px';
-        damageElem.style.top = rect.top + 'px';
-        
-        document.body.appendChild(damageElem);
-        setTimeout(() => damageElem.remove(), 1000);
-    }
-
-    // 状態異常の適用
-    applyEffect(effectType, duration = 3000) {
-        this.removeEffect(effectType);
-        this.effects.add(effectType);
-        this.element.classList.add(effectType);
-        
-        // エフェクトに応じたアイコンを表示
-        switch(effectType) {
-            case 'burned':
-                this.addStatusIcon('burn', '🔥');
-                // 一定間隔でダメージを与える
-                const burnTimer = setInterval(() => {
-                    if (this.isAlive) {
-                        this.takeDamage(3);
-                    }
-                }, 500);
-                this.effectTimers.set('burned', burnTimer);
-                break;
-            case 'poisoned':
-                this.addStatusIcon('poison', '☠');
-                const poisonTimer = setInterval(() => {
-                    if (this.isAlive) {
-                        this.takeDamage(2);
-                    }
-                }, 1000);
-                this.effectTimers.set('poisoned', poisonTimer);
-                break;
-            case 'frozen':
-                this.addStatusIcon('freeze', '❄');
-                this.speed = this.baseSpeed * 0.5;
-                break;
-            case 'weakened':
-                this.addStatusIcon('weak', '↓');
-                this.defense *= 0.7;
-                break;
-        }
-
-        // 一定時間後にエフェクトを解除
-        setTimeout(() => {
-            this.removeEffect(effectType);
-        }, duration);
-    }
-
-    // 状態異常の解除
-    removeEffect(effectType) {
-        if (this.effects.has(effectType)) {
-            this.effects.delete(effectType);
-            this.element.classList.remove(effectType);
-            
-            // タイマーの解除
-            if (this.effectTimers.has(effectType)) {
-                clearInterval(this.effectTimers.get(effectType));
-                this.effectTimers.delete(effectType);
-            }
-
-            // エフェクト固有の解除処理
-            switch(effectType) {
-                case 'frozen':
-                    this.speed = this.baseSpeed;
-                    break;
-                case 'weakened':
-                    this.defense = this.defense / 0.7;
-                    break;
-            }
-
-            // 状態アイコンの更新
-            this.updateStatusIcon();
-        }
-    }
-
-    // 全ての状態異常を解除
-    removeAllEffects() {
-        for (const effect of this.effects) {
-            this.removeEffect(effect);
-        }
-    }
-
-    // 状態アイコンの追加
-    addStatusIcon(type, symbol) {
-        // 既存のアイコンを削除
-        this.removeStatusIcon();
-        
-        const icon = document.createElement('div');
-        icon.className = `status-icon ${type}`;
-        icon.textContent = symbol;
-        this.element.appendChild(icon);
-        this.statusIcon = icon;
-    }
-
-    // 状態アイコンの削除
-    removeStatusIcon() {
-        if (this.statusIcon && this.statusIcon.parentElement) {
-            this.statusIcon.remove();
-            this.statusIcon = null;
-        }
-    }
-
-    // 状態アイコンの更新（最新の状態を表示）
-    updateStatusIcon() {
-        if (this.effects.size === 0) {
-            this.removeStatusIcon();
-            return;
-        }
-
-        // 優先順位の高い状態を表示
-        const effectPriority = ['burned', 'poisoned', 'frozen', 'weakened'];
-        for (const effect of effectPriority) {
-            if (this.effects.has(effect)) {
-                switch(effect) {
-                    case 'burned':
-                        this.addStatusIcon('burn', '🔥');
-                        break;
-                    case 'poisoned':
-                        this.addStatusIcon('poison', '☠');
-                        break;
-                    case 'frozen':
-                        this.addStatusIcon('freeze', '❄');
-                        break;
-                    case 'weakened':
-                        this.addStatusIcon('weak', '↓');
-                        break;
-                }
-                break;
-            }
-        }
+        return actualDamage;
     }
 
     die() {
