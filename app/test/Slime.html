@@ -85,140 +85,72 @@
         <button onclick="damageSlime()">Damage</button>
     </div>
 
-    <div class="game-area">
-        <div class="enemy" id="slime">
-            <div class="enemy-body"></div>
-            <div class="health-bar">
+    <div class="game-area" id="gameArea"></div>
+
+    <script type="module">
+        import { Slime } from '../models/enemies/Slime.js';
+
+        let slime;
+
+        // グローバルスコープに関数を公開
+        window.normalSlime = () => {
+            slime.removeAllEffects();
+        };
+
+        window.burnSlime = () => {
+            slime.applyEffect('burned');
+        };
+
+        window.killSlime = () => {
+            slime.die();
+            // 少し待ってから新しいスライムを生成
+            setTimeout(() => {
+                initializeSlime();
+            }, 1000);
+        };
+
+        window.poisonSlime = () => {
+            slime.applyEffect('poisoned');
+        };
+
+        window.freezeSlime = () => {
+            slime.applyEffect('frozen');
+        };
+
+        window.weakenSlime = () => {
+            slime.applyEffect('weakened');
+        };
+
+        window.damageSlime = () => {
+            const damage = Math.floor(Math.random() * 30) + 10;
+            slime.takeDamage(damage);
+        };
+
+        function initializeSlime() {
+            // 既存のスライムを削除
+            if (slime && slime.element && slime.element.parentElement) {
+                slime.element.remove();
+            }
+
+            // 新しいスライムを生成
+            slime = new Slime();
+            
+            // 体力バーを追加
+            const healthBar = document.createElement('div');
+            healthBar.className = 'health-bar';
+            healthBar.innerHTML = `
                 <div class="health-bar-green" style="width: 100%"></div>
                 <div class="health-bar-red" style="width: 0%"></div>
-            </div>
-        </div>
-    </div>
+            `;
+            slime.element.appendChild(healthBar);
 
-    <script>
-        const slime = document.getElementById('slime');
-        let health = 100;
-
-        function normalSlime() {
-            slime.className = 'enemy';
-            resetHealth();
+            // ゲームエリアに追加
+            const gameArea = document.getElementById('gameArea');
+            gameArea.appendChild(slime.element);
         }
 
-        function burnSlime() {
-            slime.className = 'enemy burned';
-            addStatusIcon('burn', '🔥');
-        }
-
-        function killSlime() {
-            slime.className = 'enemy dying';
-            createSplashEffect();
-            setTimeout(() => {
-                slime.style.display = 'none';
-                setTimeout(() => {
-                    slime.style.display = '';
-                    normalSlime();
-                }, 1000);
-            }, 200);
-        }
-
-        function poisonSlime() {
-            slime.className = 'enemy poisoned';
-            addStatusIcon('poison', '☠');
-        }
-
-        function freezeSlime() {
-            slime.className = 'enemy frozen';
-            addStatusIcon('freeze', '❄');
-        }
-
-        function weakenSlime() {
-            slime.className = 'enemy weakened';
-            addStatusIcon('weak', '↓');
-        }
-
-        function damageSlime() {
-            const damage = Math.floor(Math.random() * 30) + 10;
-            health = Math.max(0, health - damage);
-            updateHealthBar();
-            showDamageNumber(damage);
-            slime.classList.add('damaged');
-            setTimeout(() => slime.classList.remove('damaged'), 300);
-
-            if (health <= 0) {
-                killSlime();
-            }
-        }
-
-        function resetHealth() {
-            health = 100;
-            updateHealthBar();
-        }
-
-        function updateHealthBar() {
-            const greenBar = slime.querySelector('.health-bar-green');
-            const redBar = slime.querySelector('.health-bar-red');
-            
-            greenBar.style.width = health + '%';
-            redBar.style.width = (100 - health) + '%';
-        }
-
-        function createSplashEffect() {
-            const numParticles = 8;
-            const colors = ['#27ae60', '#2ecc71', '#229954'];
-
-            for (let i = 0; i < numParticles; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'splash-particle';
-                particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-
-                const angle = (i / numParticles) * Math.PI * 2;
-                const distance = 50 + Math.random() * 30;
-                const tx = Math.cos(angle) * distance;
-                const ty = Math.sin(angle) * distance;
-
-                particle.style.setProperty('--tx', `${tx}px`);
-                particle.style.setProperty('--ty', `${ty}px`);
-
-                particle.style.animation = 'splashParticle 0.5s ease-out forwards';
-
-                slime.appendChild(particle);
-                setTimeout(() => particle.remove(), 500);
-            }
-
-            const ring = document.createElement('div');
-            ring.className = 'death-burst-ring';
-            ring.style.borderColor = '#27ae60';
-            slime.appendChild(ring);
-            setTimeout(() => ring.remove(), 500);
-        }
-
-        function showDamageNumber(damage) {
-            const damageElem = document.createElement('div');
-            damageElem.className = 'damage-number';
-            damageElem.textContent = damage;
-            
-            const rect = slime.getBoundingClientRect();
-            damageElem.style.left = rect.left + rect.width / 2 + 'px';
-            damageElem.style.top = rect.top + 'px';
-            
-            document.body.appendChild(damageElem);
-            setTimeout(() => damageElem.remove(), 1000);
-        }
-
-        function addStatusIcon(type, symbol) {
-            const existingIcon = slime.querySelector('.status-icon');
-            if (existingIcon) {
-                existingIcon.remove();
-            }
-
-            const icon = document.createElement('div');
-            icon.className = `status-icon ${type}`;
-            icon.textContent = symbol;
-            slime.appendChild(icon);
-        }
-
-        // 初期状態を設定
-        normalSlime();
+        // 初期化
+        window.addEventListener('load', initializeSlime);
     </script>
 </body>
 </html>
