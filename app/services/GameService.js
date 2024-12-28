@@ -1,5 +1,9 @@
 // GameService.js
-
+/**
+ * ゲーム全体のロジックを管理するサービスクラス
+ * 各種サービス（Enemy, Tower, Projectileなど）の統合と
+ * ゲームの状態管理を担当します。
+ */
 import { WaveManager } from '../WaveManager.js';
 import { loadJsonData } from '../jsonLoader.js';
 import { CellManager } from '../map/cellManager.js';
@@ -12,7 +16,12 @@ import { CurrentModeManager } from '../CurrentModeManager.js';
 import { TowerSynthesisService } from './TowerSynthesisService.js';
 
 export class GameService {
+    /**
+     * GameServiceのコンストラクタ
+     * ゲームの初期状態とリソースを設定します
+     */
     constructor() {
+        // ゲームの基本リソース
         this.gold = 500;
         this.mana = 100;
         this.coreHealth = 1000;
@@ -28,6 +37,11 @@ export class GameService {
         this.cellManager = null;
     }
 
+    /**
+     * ゲームの初期化を行います
+     * マップデータの読み込み、各種サービスの初期化を実行します
+     * @returns {Promise<boolean>} 初期化が成功したかどうか
+     */
     async initGame() {
         try {
             // 各種サービスの初期化
@@ -61,10 +75,17 @@ export class GameService {
         }
     }
 
+    /**
+     * ゲームのメインループ
+     * 敵の移動、タワーの攻撃、プロジェクタイルの更新などを処理します
+     * @returns {boolean} ゲームを継続するかどうか
+     */
     gameLoop() {
+        // 敵の移動処理
         this.enemyService.moveEnemies();
+
+        // タワーの攻撃処理
         const newProjectiles = this.towerService.shootEnemies(this.enemyService.getEnemies());
-        
         newProjectiles.forEach(proj => {
             this.projectileService.createProjectile(
                 proj.x, proj.y, proj.targetX, proj.targetY,
@@ -72,19 +93,20 @@ export class GameService {
             );
         });
 
+        // プロジェクタイルの更新と敵の撃破処理
         this.projectileService.updateProjectiles((destroyedEnemy) => {
             this.enemyService.removeEnemy(destroyedEnemy);
             this.gold += this.enemyService.getEnemyGoldReward(destroyedEnemy.type);
             this.updateGameState();
         });
 
-        // ゲームの状態チェック
+        // ゲームオーバー判定
         if (this.coreHealth <= 0) {
             this.handleGameOver();
             return false;
         }
         
-        // ウェーブクリア条件のチェック
+        // ウェーブクリア判定
         if (this.waveManager.isWaveInProgress && 
             this.enemyService.getEnemies().length === 0 && 
             this.enemyService.getTotalEnemiesSpawned() >= this.waveManager.waveEnemyCount) {
@@ -94,6 +116,10 @@ export class GameService {
         return true;
     }
 
+    /**
+     * ゲームオーバー時の処理
+     * ウェーブを停止し、ゲームオーバーイベントを発火します
+     */
     handleGameOver() {
         this.waveManager.isWaveInProgress = false;
         if (this.onGameOver) {
@@ -101,6 +127,10 @@ export class GameService {
         }
     }
 
+    /**
+     * ウェーブクリア時の処理
+     * ボーナスの付与、次のウェーブの準備、スキル選択の有効化を行います
+     */
     handleWaveClear() {
         this.waveManager.isWaveInProgress = false;
         this.gold += 150; // ウェーブクリアボーナス
@@ -111,10 +141,16 @@ export class GameService {
             this.onWaveClear();
         }
 
+        // スキル選択の有効化
         this.skillService.enableSkillSelection();
         this.skillService.showSkillSelection();
     }
 
+    /**
+     * タワーやグローバルアップグレードを行います
+     * @param {string} type - アップグレードの種類（'damage', 'range', 'speed'のいずれか）
+     * @returns {boolean} アップグレードが成功したかどうか
+     */
     upgrade(type) {
         if (this.gold >= 100 && this.upgrades[type] < 5) {
             this.gold -= 100;
@@ -127,6 +163,10 @@ export class GameService {
         return false;
     }
 
+    /**
+     * エラーメッセージを表示します
+     * @param {string} message - 表示するエラーメッセージ
+     */
     showError(message) {
         if (this.eventHandlers?.onError) {
             this.eventHandlers.onError(message);
@@ -135,10 +175,17 @@ export class GameService {
         }
     }
 
+    /**
+     * 敵を生成します
+     * @param {string} type - 敵の種類
+     */
     createEnemy(type) {
         this.enemyService.createEnemy(type);
     }
 
+    /**
+     * ゲームの状態を更新し、UIに反映します
+     */
     updateGameState() {
         if (this.onStateUpdate) {
             this.onStateUpdate({
@@ -150,7 +197,14 @@ export class GameService {
         }
     }
 
-    // イベントハンドラの設定
+    /**
+     * イベントハンドラを設定します
+     * @param {Object} handlers - イベントハンドラのオブジェクト
+     * @param {Function} handlers.onGameOver - ゲームオーバー時のハンドラ
+     * @param {Function} handlers.onWaveClear - ウェーブクリア時のハンドラ
+     * @param {Function} handlers.onStateUpdate - 状態更新時のハンドラ
+     * @param {Function} handlers.onError - エラー発生時のハンドラ
+     */
     setEventHandlers({
         onGameOver,
         onWaveClear,
