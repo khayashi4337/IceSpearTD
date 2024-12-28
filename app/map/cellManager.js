@@ -183,7 +183,8 @@ export class CellManager {
      */
     setPaths(paths) {
         if (Array.isArray(paths)) {
-            this.paths = paths;
+            // パスデータのディープコピーを作成
+            this.paths = paths.map(path => path.map(point => ({ ...point })));
             console.log(`${paths.length}個のパスを設定しました`);
         } else {
             console.error('setPaths: 無効なパスデータです。配列が期待されます。');
@@ -196,7 +197,8 @@ export class CellManager {
      * @returns {Array} パスデータの配列
      */
     getPaths() {
-        return this.paths;
+        // パスデータのディープコピーを返す
+        return this.paths.map(path => path.map(point => ({ ...point })));
     }
 
     /**

@@ -48,7 +48,7 @@ export class EnemyService {
         this.enemies.forEach((enemy, index) => {
             // moveメソッドの結果がfalseだったら終点に到着しているので削除
             if (!enemy.move(this.gameBoard)) {
-                this.enemies.remove(index);
+                this.enemies.removeAt(index);
                 // TODO: コアへのダメージ処理をゲームマネージャーに通知する処理を追加
             }
         });

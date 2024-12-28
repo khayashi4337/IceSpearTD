@@ -1,6 +1,8 @@
 // IEnemy.js
 import { DeathEffect } from '../../effects/DeathEffect.js';
 import { Health } from '../../ui/Health.js';
+import { PixelCoordinate } from '../../map/Coordinate.js';
+import { gameConfig } from '../../config/gameConfig.js';
 
 /**
  * 敵キャラクターの基本インターフェース
@@ -40,8 +42,7 @@ export class IEnemy {
         // 移動関連
         this.path = null;
         this.currentPathIndex = 0;
-        this.x = 0;
-        this.y = 0;
+        this.position = null; // PixelCoordinateを使用するように変更
 
         // エフェクト関連
         this.effects = new Set(); // 適用中のエフェクト
@@ -58,8 +59,13 @@ export class IEnemy {
         this.type = type;
         this.element = element;
         this.path = path;
-        this.x = path[0].x;
-        this.y = path[0].y;
+        
+        // パスの開始点を初期位置として設定
+        const startPoint = path[0];
+        this.position = new PixelCoordinate(
+            startPoint.x * gameConfig.grid.cellSize,
+            startPoint.y * gameConfig.grid.cellSize
+        );
         
         this.initializeVisuals();
         this.updatePosition();
@@ -69,6 +75,11 @@ export class IEnemy {
      * 視覚的な要素を初期化
      */
     initializeVisuals() {
+        // 敵要素の基本スタイルを設定
+        this.element.style.position = 'absolute';
+        this.element.style.width = `${this.sprite.size}px`;
+        this.element.style.height = `${this.sprite.size}px`;
+        
         // 頭部と胴体のパーツを作成
         if (this.type !== 'slime') {
             const head = document.createElement('div');
@@ -89,8 +100,13 @@ export class IEnemy {
      * 敵の位置を更新
      */
     updatePosition() {
-        const x = this.x * 20 + 10;
-        const y = this.y * 20 + 10;
+        // スプライトサイズに基づいてオフセットを計算
+        // グリッドの中央にスプライトの中心を配置
+        const spriteOffset = (gameConfig.grid.cellSize - this.sprite.size) / 2;
+        
+        const x = this.position.x * gameConfig.grid.cellSize + spriteOffset;
+        const y = this.position.y * gameConfig.grid.cellSize + spriteOffset;
+        
         this.element.style.left = `${x}px`;
         this.element.style.top = `${y}px`;
     }
@@ -200,19 +216,30 @@ export class IEnemy {
     move(gameBoard) {
         this.updateStates();
 
-        this.currentPathIndex += this.speed;
-
-        if (this.currentPathIndex >= this.path.length - 1) {
+        // 現在のインデックスを基に次の位置を計算
+        const nextIndex = this.currentPathIndex + this.speed;
+        
+        // パスの終点に到達したら敵を削除
+        if (nextIndex >= this.path.length - 1) {
             gameBoard.removeChild(this.element);
             return false;
         }
 
-        const currentPos = this.path[Math.floor(this.currentPathIndex)];
-        const nextPos = this.path[Math.min(Math.ceil(this.currentPathIndex), this.path.length - 1)];
-        const progress = this.currentPathIndex - Math.floor(this.currentPathIndex);
+        // 現在の位置と次の位置を取得
+        const currentIndex = Math.floor(nextIndex);
+        const currentPos = this.path[currentIndex];
+        const nextPos = this.path[Math.min(currentIndex + 1, this.path.length - 1)];
+        
+        // 2点間の進行度を計算
+        const progress = nextIndex - currentIndex;
 
-        this.x = currentPos.x + (nextPos.x - currentPos.x) * progress;
-        this.y = currentPos.y + (nextPos.y - currentPos.y) * progress;
+        // 線形補間で新しい位置を計算
+        const newX = currentPos.x + (nextPos.x - currentPos.x) * progress;
+        const newY = currentPos.y + (nextPos.y - currentPos.y) * progress;
+        
+        // 位置を更新
+        this.position = new PixelCoordinate(newX, newY);
+        this.currentPathIndex = nextIndex;
         this.updatePosition();
 
         return true;
