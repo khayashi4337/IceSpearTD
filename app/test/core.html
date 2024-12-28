@@ -6,84 +6,6 @@
     <title>Core Effect Test</title>
     <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="../styles/core.css">
-    <style>
-        .test-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-            padding: 20px;
-            background-color: #f0f0f0;
-            min-height: 100vh;
-        }
-
-        .control-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            padding: 20px;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .button-group {
-            display: flex;
-            gap: 10px;
-        }
-
-        button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-        }
-
-        button:hover {
-            opacity: 0.9;
-        }
-
-        .damage-button {
-            background-color: #ff4444;
-            color: white;
-        }
-
-        .heal-button {
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        .toggle-button {
-            background-color: #2196F3;
-            color: white;
-        }
-
-        .destroy-button {
-            background-color: #9c27b0;
-            color: white;
-        }
-
-        #core-container {
-            position: relative;
-            width: 300px;
-            height: 300px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #8fbc8f;
-            border-radius: 10px;
-        }
-
-        #health-display {
-            position: absolute;
-            top: 20px;
-            font-size: 18px;
-            font-weight: bold;
-            color: #333;
-        }
-    </style>
 </head>
 <body>
     <div class="test-container">
@@ -110,6 +32,7 @@
 
     <script type="module">
         import { Health } from '../ui/Health.js';
+        import { Damage } from '../Damage.js';  
 
         const core = document.getElementById('core');
         const coreContainer = document.getElementById('core-container');
@@ -165,7 +88,7 @@
             }, 400);
 
             // クリティカル状態チェック
-            if (health.getHealth() <= health.getMaxHealth() * 0.3) {
+            if (health.isCritical()) {
                 core.classList.add('core-health-critical');
             }
 
@@ -178,9 +101,7 @@
         function heal(amount) {
             if (isDestroyed) return; // 破壊状態では回復不可
             
-            const oldHealth = health.getHealth();
-            health.currentHealth = Math.min(health.getMaxHealth(), health.getHealth() + amount);
-            const actualHeal = health.getHealth() - oldHealth;
+            const actualHeal = health.heal(amount);
             
             if (actualHeal > 0) {
                 showFloatingText(actualHeal, 'heal');
@@ -189,7 +110,7 @@
             updateHealthDisplay();
 
             // クリティカル状態解除チェック
-            if (health.getHealth() > health.getMaxHealth() * 0.3) {
+            if (!health.isCritical()) {
                 core.classList.remove('core-health-critical');
             }
         }
@@ -212,18 +133,18 @@
         function setDestroyed(destroyed) {
             isDestroyed = destroyed;
             if (destroyed) {
-                health.currentHealth = 0;
+                health.takeDamage(health.getHealth());  // 現在のHPを全て失う
                 core.classList.add('destroyed');
                 core.classList.remove('core-health-critical', 'core-damage');
             } else {
-                health.currentHealth = Math.max(1, health.getHealth());
+                health.heal(1);  // 1だけ回復
                 core.classList.remove('destroyed');
             }
             updateHealthDisplay();
         }
 
         function resetHealth() {
-            health.currentHealth = health.getMaxHealth();
+            health.heal(health.getMaxHealth());  // 最大値まで回復
             updateHealthDisplay();
             core.classList.remove('core-health-critical', 'destroyed');
             isCritical = false;

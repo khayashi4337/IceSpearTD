@@ -9,6 +9,17 @@ export class Damage {
      */
     constructor(gameBoard) {
         this.gameBoard = gameBoard;
+        this.x = 0;
+        this.y = 0;
+    }
+
+    /**
+     * テキスト要素の位置を設定する
+     * @param {HTMLElement} element - 位置を設定する要素
+     */
+    setTextPosition(element) {
+        element.style.left = `${this.x}px`;
+        element.style.top = `${this.y}px`;
     }
 
     /**
@@ -18,11 +29,12 @@ export class Damage {
      * @param {number} amount - ダメージ量
      */
     showDamage(x, y, amount) {
+        this.x = x;
+        this.y = y;
         const damageElement = document.createElement('div');
         damageElement.className = 'damage-text';
         damageElement.textContent = Math.round(amount);
-        damageElement.style.left = `${x}px`;
-        damageElement.style.top = `${y}px`;
+        this.setTextPosition(damageElement);
         this.gameBoard.appendChild(damageElement);
 
         // アニメーション効果

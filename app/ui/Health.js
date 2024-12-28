@@ -58,12 +58,23 @@ export class Health {
     }
 
     /**
+     * 体力がクリティカル状態（30%以下）かどうかを判定
+     * @returns {boolean} クリティカル状態ならtrue
+     */
+    isCritical() {
+        return this.currentHealth <= this.maxHealth * 0.3;
+    }
+
+    /**
      * 体力を回復する
      * @param {number} amount - 回復量
+     * @returns {number} 実際の回復量
      */
     heal(amount) {
+        const oldHealth = this.currentHealth;
         this.currentHealth = Math.min(this.maxHealth, this.currentHealth + amount);
         this.updateHealthBar();
+        return this.currentHealth - oldHealth;
     }
 
     /**
