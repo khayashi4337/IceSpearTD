@@ -1,6 +1,6 @@
 // services/enemyService.js
-import { EnemyList } from '../models/EnemyList.js';
 import { Enemy } from '../models/Enemy.js';
+import { EnemyList } from '../models/EnemyList.js';
 
 /**
  * 敵キャラクターの管理を行うサービスクラス
@@ -30,17 +30,14 @@ export class EnemyService {
         // CellManagerからパスを取得
         const paths = this.cellManager.getPaths();
         const pathIndex = Math.floor(Math.random() * paths.length);
-        
-        // Enemyのコンストラクタでhealthとspeedを初期化する
-        const newEnemy = new Enemy(
-            type,
-            enemyElement,
-            paths[pathIndex]
-        );
+        const path = paths[pathIndex];
 
-        this.enemies.push(newEnemy);
+        // 敵オブジェクトを作成
+        const enemy = new Enemy(type, enemyElement, path);
+        this.enemies.push(enemy);
         this.totalEnemiesSpawned++;
-        console.log(`新しい敵キャラクター(${type})を作成しました。総生成数: ${this.totalEnemiesSpawned}`);
+
+        return enemy;
     }
 
     /**
