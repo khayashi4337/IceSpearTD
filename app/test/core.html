@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Core Effect Test</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="../styles/core.css">
+    <style>
+        .test-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            background-color: #f0f0f0;
+            min-height: 100vh;
+        }
+
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .damage-button {
+            background-color: #ff4444;
+            color: white;
+        }
+
+        .heal-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .toggle-button {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .destroy-button {
+            background-color: #9c27b0;
+            color: white;
+        }
+
+        #core-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #8fbc8f;
+            border-radius: 10px;
+        }
+
+        #health-display {
+            position: absolute;
+            top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Core Effect Test</h1>
+        
+        <div id="core-container">
+            <div id="health-display">HP: 100/100</div>
+            <div id="core"></div>
+        </div>
+
+        <div class="control-panel">
+            <div class="button-group">
+                <button id="damage10" class="damage-button">ダメージ10</button>
+                <button id="damage30" class="damage-button">ダメージ30</button>
+                <button id="heal20" class="heal-button">回復20</button>
+            </div>
+            <div class="button-group">
+                <button id="toggleCritical" class="toggle-button">クリティカル状態切替</button>
+                <button id="toggleDestroyed" class="destroy-button">破壊状態切替</button>
+                <button id="resetHealth" class="toggle-button">リセット</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { Health } from '../ui/Health.js';
+
+        const core = document.getElementById('core');
+        const coreContainer = document.getElementById('core-container');
+        const healthDisplay = document.getElementById('health-display');
+        const health = new Health(100);
+        let isCritical = false;
+        let isDestroyed = false;
+
+        // ボタンのイベントリスナーを設定
+        document.getElementById('damage10').addEventListener('click', () => takeDamage(10));
+        document.getElementById('damage30').addEventListener('click', () => takeDamage(30));
+        document.getElementById('heal20').addEventListener('click', () => heal(20));
+        document.getElementById('toggleCritical').addEventListener('click', toggleCritical);
+        document.getElementById('toggleDestroyed').addEventListener('click', toggleDestroyed);
+        document.getElementById('resetHealth').addEventListener('click', resetHealth);
+
+        function updateHealthDisplay() {
+            healthDisplay.textContent = `HP: ${health.getHealth()}/${health.getMaxHealth()}`;
+        }
+
+        function showFloatingText(amount, type = 'damage') {
+            const text = document.createElement('div');
+            text.className = `damage-text ${type}`;
+            text.textContent = type === 'damage' ? `-${amount}` : `+${amount}`;
+            
+            // ランダムな位置にテキストを表示
+            const x = core.offsetLeft + (Math.random() * 40 - 20);
+            const y = core.offsetTop + (Math.random() * 40 - 20);
+            text.style.left = `${x}px`;
+            text.style.top = `${y}px`;
+            
+            coreContainer.appendChild(text);
+            
+            // アニメーション終了後に要素を削除
+            setTimeout(() => {
+                text.remove();
+            }, 1000);
+        }
+
+        function takeDamage(amount) {
+            if (isDestroyed) return; // 破壊状態ではダメージを受けない
+            
+            health.takeDamage(amount);
+            updateHealthDisplay();
+
+            // ダメージテキスト表示
+            showFloatingText(amount, 'damage');
+
+            // ダメージエフェクト
+            core.classList.add('core-damage');
+            setTimeout(() => {
+                core.classList.remove('core-damage');
+            }, 400);
+
+            // クリティカル状態チェック
+            if (health.getHealth() <= health.getMaxHealth() * 0.3) {
+                core.classList.add('core-health-critical');
+            }
+
+            // 破壊状態チェック
+            if (health.isDead()) {
+                setDestroyed(true);
+            }
+        }
+
+        function heal(amount) {
+            if (isDestroyed) return; // 破壊状態では回復不可
+            
+            const oldHealth = health.getHealth();
+            health.currentHealth = Math.min(health.getMaxHealth(), health.getHealth() + amount);
+            const actualHeal = health.getHealth() - oldHealth;
+            
+            if (actualHeal > 0) {
+                showFloatingText(actualHeal, 'heal');
+            }
+            
+            updateHealthDisplay();
+
+            // クリティカル状態解除チェック
+            if (health.getHealth() > health.getMaxHealth() * 0.3) {
+                core.classList.remove('core-health-critical');
+            }
+        }
+
+        function toggleCritical() {
+            if (isDestroyed) return; // 破壊状態では切り替え不可
+            
+            if (core.classList.contains('core-health-critical')) {
+                core.classList.remove('core-health-critical');
+            } else {
+                core.classList.add('core-health-critical');
+            }
+            isCritical = !isCritical;
+        }
+
+        function toggleDestroyed() {
+            setDestroyed(!isDestroyed);
+        }
+
+        function setDestroyed(destroyed) {
+            isDestroyed = destroyed;
+            if (destroyed) {
+                health.currentHealth = 0;
+                core.classList.add('destroyed');
+                core.classList.remove('core-health-critical', 'core-damage');
+            } else {
+                health.currentHealth = Math.max(1, health.getHealth());
+                core.classList.remove('destroyed');
+            }
+            updateHealthDisplay();
+        }
+
+        function resetHealth() {
+            health.currentHealth = health.getMaxHealth();
+            updateHealthDisplay();
+            core.classList.remove('core-health-critical', 'destroyed');
+            isCritical = false;
+            isDestroyed = false;
+        }
+    </script>
+</body>
+</html>

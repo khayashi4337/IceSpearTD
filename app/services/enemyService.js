@@ -42,16 +42,20 @@ export class EnemyService {
 
     /**
      * 全ての敵キャラクターを移動させる
+     * @param {Function} onCoreHit - コアへのダメージ時のコールバック
      */
-    moveEnemies() {
+    moveEnemies(onCoreHit) {
         // 配列の後ろから処理することで、削除による影響を防ぐ
         for (let i = this.enemies.length - 1; i >= 0; i--) {
             const enemy = this.enemies.getEnemyAt(i);
             if (enemy) {
                 // moveメソッドの結果がfalseだったら終点に到着しているので削除
                 if (!enemy.move(this.gameBoard)) {
+                    // コアにダメージを与える
+                    if (onCoreHit) {
+                        onCoreHit(enemy.damage || 100); // デフォルトダメージ100
+                    }
                     this.enemies.remove(i);
-                    // TODO: コアへのダメージ処理をゲームマネージャーに通知する処理を追加
                 }
             }
         }

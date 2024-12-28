@@ -12,8 +12,7 @@ export class Slime extends IEnemy {
         // 戦闘ステータス
         this.maxHealth = 120;
         this.health = this.maxHealth;
-        this.baseSpeed = 0.006;
-        this.speed = this.baseSpeed;
+        this.speed = 0.024;         // 0.006 * 4
         this.defense = 4;
         this.goldReward = 15;
         this.size = 'large'; // large, small

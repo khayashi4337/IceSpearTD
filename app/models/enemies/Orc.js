@@ -11,8 +11,7 @@ export class Orc extends IEnemy {
         // 戦闘ステータス
         this.maxHealth = 120;
         this.health = this.maxHealth;
-        this.baseSpeed = 0.008;
-        this.speed = this.baseSpeed;
+        this.speed = 0.032;         // 0.008 * 4
         this.defense = 3;
         this.goldReward = 15;
         

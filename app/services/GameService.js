@@ -14,6 +14,7 @@ import { SkillService } from './SkillService.js';
 import { ProjectileService } from './ProjectileService.js';
 import { CurrentModeManager } from '../CurrentModeManager.js';
 import { TowerSynthesisService } from './TowerSynthesisService.js';
+import { Health } from '../ui/Health.js';
 
 export class GameService {
     /**
@@ -24,8 +25,16 @@ export class GameService {
         // ゲームの基本リソース
         this.gold = 500;
         this.mana = 100;
-        this.coreHealth = 1000;
+        this.coreHealth = new Health(500); // Healthクラスを使用
         this.upgrades = { damage: 0, range: 0, speed: 0 };
+        
+        // イベントハンドラの初期化
+        this.eventHandlers = {
+            onGameOver: null,
+            onWaveClear: null,
+            onStateUpdate: null,
+            onError: null
+        };
         
         // サービスとマネージャーの初期化はinitGame()で行う
         this.waveManager = null;
@@ -78,13 +87,51 @@ export class GameService {
     }
 
     /**
+     * コアへのダメージ処理
+     * @param {number} damage - 受けるダメージ量
+     */
+    takeCoreHit(damage) {
+        // Healthクラスのメソッドを使用
+        this.coreHealth.takeDamage(damage);
+        
+        // ダメージ演出
+        const core = document.getElementById('core');
+        const healthContainer = document.getElementById('core-health-container');
+        
+        if (core && healthContainer) {
+            // ダメージアニメーションクラスを追加
+            core.classList.add('core-damage');
+            
+            // HPが30%以下なら警告エフェクトを追加
+            if (this.coreHealth.getHealthPercent() <= 30) {
+                healthContainer.classList.add('core-health-critical');
+            } else {
+                healthContainer.classList.remove('core-health-critical');
+            }
+            
+            // アニメーション終了後にクラスを削除
+            setTimeout(() => {
+                core.classList.remove('core-damage');
+            }, 400); // アニメーションの長さに合わせて400msに変更
+        }
+
+        // ゲーム状態の更新
+        this.updateGameState();
+
+        // ゲームオーバーチェック
+        if (this.coreHealth.isDead()) {
+            this.handleGameOver();
+        }
+    }
+
+    /**
      * ゲームのメインループ
      * 敵の移動、タワーの攻撃、プロジェクタイルの更新などを処理します
      * @returns {boolean} ゲームを継続するかどうか
      */
     gameLoop() {
         // 敵の移動処理
-        this.enemyService.moveEnemies();
+        this.enemyService.moveEnemies((damage) => this.takeCoreHit(damage));
 
         // タワーの攻撃処理
         const newProjectiles = this.towerService.shootEnemies(this.enemyService.getEnemies());
@@ -103,7 +150,7 @@ export class GameService {
         });
 
         // ゲームオーバー判定
-        if (this.coreHealth <= 0) {
+        if (this.coreHealth.isDead()) {
             this.handleGameOver();
             return false;
         }
@@ -189,12 +236,17 @@ export class GameService {
      * ゲームの状態を更新し、UIに反映します
      */
     updateGameState() {
-        if (this.onStateUpdate) {
-            this.onStateUpdate({
+        // リソース表示の更新
+        document.getElementById('gold').textContent = this.gold;
+        document.getElementById('mana').textContent = this.mana;
+        document.getElementById('core-health').textContent = this.coreHealth.getHealth();
+
+        // イベントハンドラを呼び出し
+        if (this.eventHandlers.onStateUpdate) {
+            this.eventHandlers.onStateUpdate({
                 gold: this.gold,
                 mana: this.mana,
-                wave: this.waveManager.wave,
-                coreHealth: this.coreHealth
+                coreHealth: this.coreHealth.getHealth()
             });
         }
     }

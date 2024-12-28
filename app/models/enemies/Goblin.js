@@ -11,8 +11,7 @@ export class Goblin extends IEnemy {
         // 戦闘ステータス
         this.maxHealth = 40;
         this.health = this.maxHealth;
-        this.baseSpeed = 0.025;
-        this.speed = this.baseSpeed;
+        this.speed = 0.1;        // 0.025 * 4
         this.defense = 1;
         this.goldReward = 8;
         

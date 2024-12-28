@@ -1,0 +1,113 @@
+/* Core styles */
+#core {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    background: radial-gradient(circle at 30% 30%, #4a90e2, #2c3e50);
+    border-radius: 50%;
+    box-shadow: 0 0 20px rgba(74, 144, 226, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    transition: all 0.2s ease-out;
+}
+
+#core::before {
+    content: '';
+    position: absolute;
+    width: 120%;
+    height: 120%;
+    background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        rgba(255, 255, 255, 0.2) 40deg,
+        transparent 60deg
+    );
+    animation: rotate 3s linear infinite;
+}
+
+#core::after {
+    content: '';
+    position: absolute;
+    width: 80%;
+    height: 80%;
+    background: radial-gradient(circle at 40% 40%, #6ab7ff, #4a90e2);
+    border-radius: 50%;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Core damage animation */
+@keyframes damage-flash {
+    0% { 
+        background: radial-gradient(circle at 30% 30%, #ff4444, #cc0000);
+        transform: scale(1.2);
+    }
+    50% { 
+        background: radial-gradient(circle at 30% 30%, #ff6666, #ff0000);
+        transform: scale(1.1);
+    }
+    100% { 
+        background: radial-gradient(circle at 30% 30%, #4a90e2, #2c3e50);
+        transform: scale(1);
+    }
+}
+
+@keyframes damage-wave {
+    0% { 
+        box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.4),
+                    0 0 0 0 rgba(255, 0, 0, 0.2);
+    }
+    100% { 
+        box-shadow: 0 0 0 20px rgba(255, 0, 0, 0),
+                    0 0 0 40px rgba(255, 0, 0, 0);
+    }
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.core-damage {
+    animation: 
+        damage-flash 0.4s ease-out,
+        damage-wave 0.8s ease-out;
+}
+
+/* Health bar */
+#core-health-container {
+    position: absolute;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+#core-health-bar {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to right, #2ecc71, #27ae60);
+    transition: width 0.3s ease-out;
+}
+
+.core-health-critical #core-health-bar {
+    background: linear-gradient(to right, #e74c3c, #c0392b);
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+@keyframes health-pulse {
+    0% { background: linear-gradient(90deg, #e74c3c, #c0392b); }
+    50% { background: linear-gradient(90deg, #c0392b, #e74c3c); }
+    100% { background: linear-gradient(90deg, #e74c3c, #c0392b); }
+}

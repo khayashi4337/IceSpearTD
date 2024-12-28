@@ -20,12 +20,13 @@ export class IEnemy {
         this.level = 1;          // レベル
         
         // 戦闘ステータス
-        this.maxHealth = 0;      // 最大HP
-        this.health = 0;         // 現在のHP
+        this.maxHealth = 100;      // 最大HP
+        this.health = this.maxHealth;         // 現在のHP
         this.baseSpeed = 0;      // 基本移動速度
-        this.speed = 0;          // 現在の移動速度
+        this.speed = 0;          // 現在の移動速度（各敵で設定）
         this.defense = 0;        // 防御力
         this.goldReward = 0;     // 倒した時のゴールド報酬
+        this.damage = 200;       // コアに与えるダメージ
         
         // 状態管理
         this.states = new Map(); // アクティブな状態

@@ -11,8 +11,7 @@ export class Skeleton extends IEnemy {
         // 戦闘ステータス
         this.maxHealth = 80;
         this.health = this.maxHealth;
-        this.baseSpeed = 0.015;
-        this.speed = this.baseSpeed;
+        this.speed = 0.06;         // 0.015 * 4
         this.defense = 2;
         this.goldReward = 12;
         
