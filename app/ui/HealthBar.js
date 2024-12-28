@@ -7,31 +7,21 @@ export class HealthBar {
         // 体力バーのコンテナ
         this.container = document.createElement('div');
         this.container.className = 'health-bar';
+        this.container.innerHTML = `
+            <div class="health-bar-green" style="width: 100%"></div>
+            <div class="health-bar-red" style="width: 0%"></div>
+        `;
         
-        // 緑色の体力バー（現在の体力）
-        this.greenBar = document.createElement('div');
-        this.greenBar.className = 'health-bar-green';
-        
-        // 赤色の体力バー（失った体力）
-        this.redBar = document.createElement('div');
-        this.redBar.className = 'health-bar-red';
-        
-        // DOMの構築
-        this.container.appendChild(this.greenBar);
-        this.container.appendChild(this.redBar);
         parent.appendChild(this.container);
-        
-        this.update(maxHealth);
     }
 
     update(health) {
         this.currentHealth = Math.max(0, Math.min(health, this.maxHealth));
-        const totalWidth = 100;
-        const greenWidth = (totalWidth * (this.currentHealth / this.maxHealth));
-        const redWidth = totalWidth - greenWidth;
+        const greenWidth = (100 * (this.currentHealth / this.maxHealth));
+        const redWidth = 100 - greenWidth;
         
-        this.greenBar.style.width = `${greenWidth}%`;
-        this.redBar.style.width = `${redWidth}%`;
+        this.container.querySelector('.health-bar-green').style.width = `${greenWidth}%`;
+        this.container.querySelector('.health-bar-red').style.width = `${redWidth}%`;
     }
 
     remove() {

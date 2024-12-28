@@ -89,6 +89,7 @@
 
     <script type="module">
         import { Slime } from '../models/enemies/Slime.js';
+        import { HealthBar } from '../ui/HealthBar.js';
 
         let slime;
 
@@ -136,13 +137,7 @@
             slime = new Slime();
             
             // 体力バーを追加
-            const healthBar = document.createElement('div');
-            healthBar.className = 'health-bar';
-            healthBar.innerHTML = `
-                <div class="health-bar-green" style="width: 100%"></div>
-                <div class="health-bar-red" style="width: 0%"></div>
-            `;
-            slime.element.appendChild(healthBar);
+            new HealthBar(slime.element, 100);
 
             // ゲームエリアに追加
             const gameArea = document.getElementById('gameArea');
