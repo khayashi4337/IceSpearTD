@@ -1,6 +1,7 @@
 // models/Enemy.js
 
 import { EnemyFactory } from './enemies/EnemyFactory.js';
+import { DeathEffect } from '../effects/DeathEffect.js';
 
 /**
  * 敵キャラクターを表すクラス。
@@ -36,6 +37,11 @@ export class Enemy {
          */
         this.speed = enemyData.speed;
         /**
+         * 敵の防御力。
+         * @type {number}
+         */
+        this.defense = enemyData.defense;
+        /**
          * 敵を倒した時のゴールド報酬。
          * @type {number}
          */
@@ -62,6 +68,10 @@ export class Enemy {
             <div class="health-bar-inner" style="width: 100%"></div>
         `;
         element.appendChild(healthBar);
+
+        // 状態異常の管理
+        this.states = new Map();
+        this.lastUpdateTime = Date.now();
         
         // 位置の初期化
         this.path = path;
@@ -82,11 +92,45 @@ export class Enemy {
     }
 
     /**
-     * 敵キャラクターを移動させる
+     * 状態異常を追加
+     * @param {string} type - 状態異常の種類
+     * @param {EnemyState} state - 状態異常オブジェクト
+     */
+    addState(type, state) {
+        // 既存の同じ種類の状態を解除
+        if (this.states.has(type)) {
+            this.states.get(type).remove(this);
+        }
+        
+        this.states.set(type, state);
+        state.apply(this);
+    }
+
+    /**
+     * 状態異常を更新
+     */
+    updateStates() {
+        const currentTime = Date.now();
+        const deltaTime = currentTime - this.lastUpdateTime;
+
+        for (const [type, state] of this.states.entries()) {
+            if (state.update(this, deltaTime)) {
+                this.states.delete(type);
+            }
+        }
+
+        this.lastUpdateTime = currentTime;
+    }
+
+    /**
+     * 敵を移動させる
      * @param {HTMLElement} gameBoard - ゲームボード要素 - 敵の削除に必要
      * @returns {boolean} 敵がまだ生存しているかどうか
      */
     move(gameBoard) {
+        // 状態異常の更新
+        this.updateStates();
+
         this.currentPathIndex += this.speed;
 
         // 敵がパスの終点に到達した場合
@@ -108,41 +152,59 @@ export class Enemy {
     }
 
     /**
-     * ダメージを受けた時の処理
+     * ダメージを受ける
      * @param {number} damage - 受けるダメージ量
-     * @returns {number} 実際に与えられたダメージ量
+     * @returns {boolean} 敵が生存しているかどうか
      */
     takeDamage(damage) {
-        const actualDamage = Math.max(1, damage);
+        const actualDamage = Math.max(1, damage - this.defense);
         this.health = Math.max(0, this.health - actualDamage);
 
         // 体力バーの更新
-        const healthPercent = (this.health / this.maxHealth) * 100;
         const healthBar = this.element.querySelector('.health-bar-inner');
         if (healthBar) {
+            const healthPercent = (this.health / this.maxHealth) * 100;
             healthBar.style.width = `${healthPercent}%`;
         }
 
-        // ダメージエフェクトの適用
-        this.element.classList.add('damaged');
-        setTimeout(() => {
-            this.element.classList.remove('damaged');
-        }, 300);
+        // ダメージ表示
+        this.showDamageNumber(actualDamage);
 
+        // 死亡判定
         if (this.health <= 0) {
             this.die();
-            return actualDamage;
+            return false;
         }
-
-        return actualDamage;
+        return true;
     }
 
     /**
      * 敵が死亡した時の処理
      */
     die() {
+        // 死亡エフェクトを再生
+        DeathEffect.playDeathAnimation(this);
         if (this.element && this.element.parentNode) {
             this.element.parentNode.removeChild(this.element);
         }
+    }
+
+    /**
+     * ダメージ数値を表示
+     * @param {number} damage - 表示するダメージ量
+     */
+    showDamageNumber(damage) {
+        const damageText = document.createElement('div');
+        damageText.className = 'damage-number';
+        damageText.textContent = damage;
+
+        const rect = this.element.getBoundingClientRect();
+        damageText.style.left = `${rect.left + rect.width / 2}px`;
+        damageText.style.top = `${rect.top}px`;
+
+        document.getElementById('game-board').appendChild(damageText);
+
+        // アニメーション完了後に要素を削除
+        damageText.addEventListener('animationend', () => damageText.remove());
     }
 }

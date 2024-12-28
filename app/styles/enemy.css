@@ -144,3 +144,366 @@
         transform: translate(-47%, -50%);
     }
 }
+
+/* 状態異常のエフェクト */
+.enemy {
+    position: relative;
+}
+
+/* 毒状態 */
+.enemy.poisoned {
+    position: relative;
+    z-index: 2;
+}
+
+.enemy.poisoned::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    right: -5px;
+    bottom: -5px;
+    border: 2px solid #4CAF50;
+    border-radius: 50%;
+    animation: poisonPulse 2s infinite;
+    pointer-events: none;
+    z-index: -1;
+}
+
+@keyframes poisonPulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.6;
+        border-color: #4CAF50;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.3;
+        border-color: #45a049;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0.6;
+        border-color: #4CAF50;
+    }
+}
+
+/* 炎エフェクトの強化 */
+.enemy.burned::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    background: 
+        radial-gradient(circle at 30% 50%, rgba(255,87,34,0.4) 0%, transparent 50%),
+        radial-gradient(circle at 70% 50%, rgba(255,87,34,0.4) 0%, transparent 50%);
+    filter: blur(2px);
+    animation: fireWave 2s infinite alternate;
+    z-index: -1;
+    transform-origin: center;
+}
+
+.enemy.burned::after {
+    content: '';
+    position: absolute;
+    top: -15px;
+    left: -15px;
+    right: -15px;
+    bottom: -15px;
+    background: 
+        radial-gradient(circle at 40% 60%, rgba(255,165,0,0.3) 0%, transparent 60%),
+        radial-gradient(circle at 60% 40%, rgba(255,69,0,0.3) 0%, transparent 60%);
+    filter: blur(4px);
+    animation: fireGlow 1.5s infinite alternate-reverse;
+    z-index: -2;
+}
+
+@keyframes fireWave {
+    0% {
+        transform: scale(1) rotate(0deg);
+        opacity: 0.6;
+    }
+    50% {
+        transform: scale(1.1) rotate(5deg);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1.05) rotate(-5deg);
+        opacity: 0.7;
+    }
+}
+
+@keyframes fireGlow {
+    0% {
+        opacity: 0.4;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0.7;
+        transform: scale(1.15);
+    }
+}
+
+.enemy.frozen {
+    position: relative;
+    z-index: 2;
+    filter: brightness(1.2) saturate(0.8);
+}
+
+.enemy.frozen::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    right: -8px;
+    bottom: -8px;
+    background: linear-gradient(135deg, 
+        rgba(255,255,255,0.3) 0%, 
+        rgba(173,216,230,0.3) 50%,
+        rgba(255,255,255,0.3) 100%
+    );
+    border-radius: 50%;
+    animation: iceShimmer 3s infinite linear;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.enemy.frozen::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    border: 2px solid rgba(135,206,235,0.5);
+    border-radius: 50%;
+    animation: icePulse 2s infinite ease-in-out;
+    pointer-events: none;
+    z-index: -1;
+}
+
+@keyframes iceShimmer {
+    0% {
+        transform: rotate(0deg) scale(1);
+        opacity: 0.3;
+    }
+    50% {
+        transform: rotate(180deg) scale(1.1);
+        opacity: 0.5;
+    }
+    100% {
+        transform: rotate(360deg) scale(1);
+        opacity: 0.3;
+    }
+}
+
+@keyframes icePulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.5;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.3;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0.5;
+    }
+}
+
+.enemy.weakened {
+    position: relative;
+    z-index: 2;
+    opacity: 0.8;
+}
+
+.enemy.weakened::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    right: -6px;
+    bottom: -6px;
+    border: 2px dashed #9C27B0;
+    border-radius: 50%;
+    animation: weakenPulse 3s infinite linear;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.enemy.weakened::after {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    background: radial-gradient(circle, rgba(156,39,176,0.2) 0%, transparent 70%);
+    animation: weakenGlow 2s infinite alternate;
+    pointer-events: none;
+    z-index: -1;
+}
+
+@keyframes weakenPulse {
+    0% {
+        transform: scale(1) rotate(0deg);
+        opacity: 0.6;
+    }
+    50% {
+        transform: scale(1.1) rotate(180deg);
+        opacity: 0.3;
+    }
+    100% {
+        transform: scale(1) rotate(360deg);
+        opacity: 0.6;
+    }
+}
+
+@keyframes weakenGlow {
+    0% {
+        opacity: 0.3;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0.6;
+        transform: scale(1.1);
+    }
+}
+
+/* 状態アイコン */
+.status-icon {
+    position: absolute;
+    top: -15px;
+    right: -15px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    z-index: 3;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    animation: iconPop 0.3s ease-out;
+}
+
+@keyframes iconPop {
+    0% {
+        transform: scale(0);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.status-icon.poison { 
+    background-color: #4CAF50;
+    border: 1px solid #45a049;
+}
+
+.status-icon.burn { 
+    background-color: #FF5722;
+    border: 1px solid #f4511e;
+}
+
+.status-icon.freeze { 
+    background-color: #03A9F4;
+    border: 1px solid #0288d1;
+}
+
+.status-icon.weak { 
+    background-color: #9C27B0;
+    border: 1px solid #7b1fa2;
+}
+
+/* パーティクルの形状 */
+.particle.star {
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+}
+
+.particle.triangle {
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+/* パーティクルエフェクト */
+.particle {
+    position: absolute;
+    pointer-events: none;
+    z-index: 1000;
+    will-change: transform;
+    backface-visibility: hidden;
+    transform-style: preserve-3d;
+}
+
+.particle::after {
+    content: '';
+    position: absolute;
+    top: 20%;
+    left: 20%;
+    width: 60%;
+    height: 60%;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    filter: blur(1px);
+}
+
+/* 死亡バーストエフェクト */
+.death-burst-ring {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border: 2px solid;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 1000;
+    animation: burst-ring 0.5s ease-out forwards;
+}
+
+@keyframes burst-ring {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 1;
+    }
+    100% {
+        width: 100px;
+        height: 100px;
+        opacity: 0;
+    }
+}
+
+/* ダメージ数値表示 */
+.damage-number {
+    position: absolute;
+    color: #ff4444;
+    font-size: 20px;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 1000;
+    animation: damage-number 1s ease-out forwards;
+}
+
+@keyframes damage-number {
+    0% {
+        transform: translate(-50%, -50%) scale(0.5);
+        opacity: 1;
+    }
+    50% {
+        transform: translate(-50%, -100%) scale(1.2);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -150%) scale(1);
+        opacity: 0;
+    }
+}

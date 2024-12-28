@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Slime Effect Test</title>
+    <link rel="stylesheet" href="../styles/enemy.css">
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+
+        .test-area {
+            width: 300px;
+            height: 300px;
+            border: 2px solid #333;
+            margin: 20px;
+            position: relative;
+            background: linear-gradient(45deg, #2a2a2a 25%, transparent 25%, transparent 75%, #2a2a2a 75%),
+                        linear-gradient(45deg, #2a2a2a 25%, transparent 25%, transparent 75%, #2a2a2a 75%);
+            background-size: 60px 60px;
+            background-position: 0 0, 30px 30px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4a4a4a;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #666;
+        }
+
+        button.active {
+            background-color: #007bff;
+        }
+
+        .enemy.slime {
+            left: 50%;
+            top: 50%;
+        }
+
+        /* 炎エフェクトの強化 */
+        .enemy.burned::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            right: -8px;
+            bottom: -8px;
+            background: 
+                radial-gradient(circle at 50% 50%, rgba(255,87,34,0.4) 0%, transparent 60%),
+                radial-gradient(circle at 30% 50%, rgba(255,87,34,0.3) 0%, transparent 40%),
+                radial-gradient(circle at 70% 50%, rgba(255,87,34,0.3) 0%, transparent 40%);
+            filter: blur(2px);
+            animation: fireWave 2s infinite alternate;
+            z-index: -1;
+            transform-origin: center;
+            border-radius: 50%;
+        }
+
+        .enemy.burned::after {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            background: 
+                radial-gradient(circle at 50% 50%, rgba(255,165,0,0.2) 0%, transparent 70%),
+                radial-gradient(circle at 40% 60%, rgba(255,69,0,0.15) 0%, transparent 50%),
+                radial-gradient(circle at 60% 40%, rgba(255,69,0,0.15) 0%, transparent 50%);
+            filter: blur(4px);
+            animation: fireGlow 1.5s infinite alternate-reverse;
+            z-index: -2;
+            border-radius: 50%;
+        }
+
+        @keyframes fireWave {
+            0% {
+                transform: scale(0.95) rotate(-2deg);
+                opacity: 0.5;
+            }
+            50% {
+                transform: scale(1.05) rotate(2deg);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(1) rotate(-1deg);
+                opacity: 0.6;
+            }
+        }
+
+        @keyframes fireGlow {
+            0% {
+                transform: scale(0.9);
+                opacity: 0.3;
+                filter: blur(4px) brightness(1);
+            }
+            100% {
+                transform: scale(1.1);
+                opacity: 0.5;
+                filter: blur(4px) brightness(1.2);
+            }
+        }
+
+        /* 死亡エフェクトの強化 */
+        .death-burst {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            animation: deathBurst 0.5s ease-out forwards;
+        }
+
+        .death-particles {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 4px;
+            height: 4px;
+            background-color: #00FF7F;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .death-ring {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            border: 2px solid #00FF7F;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: deathRing 0.5s ease-out forwards;
+        }
+
+        @keyframes deathBurst {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+
+        @keyframes deathRing {
+            0% {
+                width: 100%;
+                height: 100%;
+                opacity: 0.8;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            100% {
+                width: 200%;
+                height: 200%;
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(2);
+            }
+        }
+
+        /* 状態アイコンの位置調整 */
+        .status-icon {
+            position: absolute;
+            top: -15px;
+            right: -5px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            z-index: 3;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            animation: iconPop 0.3s ease-out;
+        }
+
+        @keyframes iconPop {
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button id="normalBtn">Normal</button>
+        <button id="burnBtn">Burn</button>
+        <button id="deathBtn">Death</button>
+    </div>
+    <div class="test-area" id="testArea">
+        <div class="enemy slime">
+            <div class="enemy-body"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { ParticleSystem } from '../effects/ParticleSystem.js';
+
+        const testArea = document.getElementById('testArea');
+        const slime = document.querySelector('.enemy.slime');
+        const normalBtn = document.getElementById('normalBtn');
+        const burnBtn = document.getElementById('burnBtn');
+        const deathBtn = document.getElementById('deathBtn');
+        
+        const particleSystem = new ParticleSystem();
+        let currentState = null;
+
+        // モックEnemyオブジェクト
+        const mockEnemy = {
+            element: slime,
+            takeDamage(damage) {
+                console.log('Taking damage:', damage);
+                this.element.classList.add('damaged');
+                setTimeout(() => {
+                    this.element.classList.remove('damaged');
+                }, 300);
+            }
+        };
+
+        function resetSlime() {
+            slime.className = 'enemy slime';
+            if (currentState) {
+                currentState.remove(mockEnemy);
+                currentState = null;
+            }
+            // 状態アイコンのクリーンアップ
+            const statusIcons = slime.querySelectorAll('.status-icon');
+            statusIcons.forEach(icon => icon.remove());
+        }
+
+        function createDeathEffect() {
+            const slimeRect = slime.getBoundingClientRect();
+            const centerX = slimeRect.left + slimeRect.width / 2;
+            const centerY = slimeRect.top + slimeRect.height / 2;
+
+            // 死亡リング
+            const ring = document.createElement('div');
+            ring.className = 'death-ring';
+            ring.style.left = '50%';
+            ring.style.top = '50%';
+            slime.appendChild(ring);
+
+            // パーティクル
+            for (let i = 0; i < 12; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'death-particles';
+                const angle = (i / 12) * Math.PI * 2;
+                const distance = 30 + Math.random() * 20;
+                
+                slime.appendChild(particle);
+                
+                particle.animate([
+                    {
+                        transform: 'translate(-50%, -50%) scale(1)',
+                        opacity: 1
+                    },
+                    {
+                        transform: `translate(
+                            calc(-50% + ${Math.cos(angle) * distance}px), 
+                            calc(-50% + ${Math.sin(angle) * distance}px)
+                        ) scale(0)`,
+                        opacity: 0
+                    }
+                ], {
+                    duration: 500,
+                    easing: 'ease-out',
+                    fill: 'forwards'
+                });
+            }
+
+            // 要素の削除
+            setTimeout(() => {
+                const particles = slime.querySelectorAll('.death-particles, .death-ring');
+                particles.forEach(p => p.remove());
+            }, 1000);
+        }
+
+        // BurnStateのモック
+        class TestBurnState {
+            constructor(duration = 3000, damage = 3) {
+                this.duration = duration;
+                this.damage = damage;
+                this.interval = setInterval(() => {
+                    if (this.enemy) {
+                        this.onTick(this.enemy);
+                    }
+                }, 500);
+            }
+
+            apply(enemy) {
+                this.enemy = enemy;
+                enemy.element.classList.add('burned');
+                this.addStatusIcon(enemy, 'burn', '🔥');
+                
+                // パーティクルエフェクト
+                const rect = enemy.element.getBoundingClientRect();
+                particleSystem.emit(
+                    rect.left + rect.width / 2,
+                    rect.top + rect.height / 2,
+                    12,
+                    {
+                        color: '#FF5722',
+                        size: 4,
+                        speed: 2,
+                        life: 1000,
+                        shape: 'star'
+                    }
+                );
+            }
+
+            onTick(enemy) {
+                enemy.takeDamage(this.damage);
+                
+                const rect = enemy.element.getBoundingClientRect();
+                particleSystem.emit(
+                    rect.left + rect.width / 2,
+                    rect.top + rect.height / 2,
+                    5,
+                    {
+                        color: '#FF5722',
+                        size: 3,
+                        speed: 1.5,
+                        life: 800,
+                        shape: 'star'
+                    }
+                );
+            }
+
+            remove(enemy) {
+                if (this.interval) {
+                    clearInterval(this.interval);
+                }
+                enemy.element.classList.remove('burned');
+                const icon = enemy.element.querySelector('.status-icon.burn');
+                if (icon) {
+                    icon.remove();
+                }
+            }
+
+            addStatusIcon(enemy, type, symbol) {
+                const icon = document.createElement('div');
+                icon.className = `status-icon ${type}`;
+                icon.textContent = symbol;
+                enemy.element.appendChild(icon);
+            }
+        }
+
+        normalBtn.addEventListener('click', () => {
+            resetSlime();
+            normalBtn.classList.add('active');
+            burnBtn.classList.remove('active');
+            deathBtn.classList.remove('active');
+        });
+
+        burnBtn.addEventListener('click', () => {
+            resetSlime();
+            currentState = new TestBurnState();
+            currentState.apply(mockEnemy);
+            normalBtn.classList.remove('active');
+            burnBtn.classList.add('active');
+            deathBtn.classList.remove('active');
+        });
+
+        deathBtn.addEventListener('click', () => {
+            resetSlime();
+            createDeathEffect();
+            setTimeout(() => {
+                slime.style.opacity = '0';
+                setTimeout(() => {
+                    slime.style.opacity = '1';
+                }, 1000);
+            }, 100);
+            normalBtn.classList.remove('active');
+            burnBtn.classList.remove('active');
+            deathBtn.classList.add('active');
+        });
+
+        // 初期状態
+        normalBtn.click();
+    </script>
+</body>
+</html>
