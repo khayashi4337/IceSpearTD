@@ -68,10 +68,22 @@ export class EnemyList {
     }
 
     /**
-     * 敵キャラクターの数を返す。
-     * @returns {number} 敵キャラクターの数。
+     * リストの長さを取得する
+     * @returns {number} 敵の数
      */
-    length() {
+    get length() {
         return this.enemies.length;
+    }
+
+    /**
+     * 指定されたインデックスの敵を取得する
+     * @param {number} index - 取得する敵のインデックス
+     * @returns {Enemy|null} 敵オブジェクト、または範囲外の場合はnull
+     */
+    getEnemyAt(index) {
+        if (index < 0 || index >= this.enemies.length) {
+            return null;
+        }
+        return this.enemies[index];
     }
 }

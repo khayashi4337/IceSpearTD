@@ -44,14 +44,17 @@ export class EnemyService {
      * 全ての敵キャラクターを移動させる
      */
     moveEnemies() {
-        // 敵をループ処理で回して、moveメソッドを呼び出す
-        this.enemies.forEach((enemy, index) => {
-            // moveメソッドの結果がfalseだったら終点に到着しているので削除
-            if (!enemy.move(this.gameBoard)) {
-                this.enemies.removeAt(index);
-                // TODO: コアへのダメージ処理をゲームマネージャーに通知する処理を追加
+        // 配列の後ろから処理することで、削除による影響を防ぐ
+        for (let i = this.enemies.length - 1; i >= 0; i--) {
+            const enemy = this.enemies.getEnemyAt(i);
+            if (enemy) {
+                // moveメソッドの結果がfalseだったら終点に到着しているので削除
+                if (!enemy.move(this.gameBoard)) {
+                    this.enemies.remove(i);
+                    // TODO: コアへのダメージ処理をゲームマネージャーに通知する処理を追加
+                }
             }
-        });
+        }
     }
 
     /**
