@@ -1,5 +1,6 @@
 // SynthesisUI.js
-import { CURRENT_MODE } from '../CurrentModeManager.js';
+import { CURRENT_MODE } from '../constants/modes.js';
+import { Button } from './Button.js';
 
 /**
  * タワー合成に関連するUI要素を管理するクラス
@@ -62,51 +63,40 @@ export class SynthesisUI {
      * @param {GameService} gameService - ゲームサービス
      */
     setupEventListeners(gameService) {
-        // 合成ボタン
-        const synthesisButton = document.getElementById('synthesis-button');
-        if (synthesisButton) {
-            synthesisButton.addEventListener('click', () => {
-                const isSynthesisMode = gameService.towerSynthesisService.toggleSynthesisMode();
-                gameService.currentModeManager.setMode(isSynthesisMode ? CURRENT_MODE.SYNTHESIS : CURRENT_MODE.NONE);
+        // 合成ボタンの設定
+        new Button('synthesis-button', {
+            isToggleable: true,
+            onClick: (isActive) => {
+                const isSynthesisMode = gameService.toggleSynthesisMode();
                 this.updateUI(isSynthesisMode, gameService.towerSynthesisService);
-            });
-        }
+            }
+        });
 
-        // 合成確認ボタン
-        const confirmSynthesis = document.getElementById('confirm-synthesis');
-        if (confirmSynthesis) {
-            confirmSynthesis.addEventListener('click', () => {
-                gameService.towerSynthesisService.onConfirmSynthesis();
-                this.updateUI(true, gameService.towerSynthesisService);
+        // 合成確認ボタンの設定（通常とモーダル）
+        const setupConfirmButton = (buttonId) => {
+            new Button(buttonId, {
+                onClick: () => {
+                    gameService.towerSynthesisService.onConfirmSynthesis();
+                    this.updateUI(true, gameService.towerSynthesisService);
+                }
             });
-        }
+        };
 
-        // 合成キャンセルボタン
-        const cancelSynthesis = document.getElementById('cancel-synthesis');
-        if (cancelSynthesis) {
-            cancelSynthesis.addEventListener('click', () => {
-                gameService.towerSynthesisService.resetSelection();
-                this.updateUI(true, gameService.towerSynthesisService);
+        // 合成キャンセルボタンの設定（通常とモーダル）
+        const setupCancelButton = (buttonId) => {
+            new Button(buttonId, {
+                onClick: () => {
+                    gameService.towerSynthesisService.resetSelection();
+                    this.updateUI(true, gameService.towerSynthesisService);
+                }
             });
-        }
+        };
 
-        // モーダル内の合成確認ボタン
-        const confirmSynthesisModal = document.getElementById('confirm-synthesis-modal');
-        if (confirmSynthesisModal) {
-            confirmSynthesisModal.addEventListener('click', () => {
-                gameService.towerSynthesisService.onConfirmSynthesis();
-                this.updateUI(true, gameService.towerSynthesisService);
-            });
-        }
-
-        // モーダル内の合成キャンセルボタン
-        const cancelSynthesisModal = document.getElementById('cancel-synthesis-modal');
-        if (cancelSynthesisModal) {
-            cancelSynthesisModal.addEventListener('click', () => {
-                gameService.towerSynthesisService.resetSelection();
-                this.updateUI(true, gameService.towerSynthesisService);
-            });
-        }
+        // 各ボタンの設定
+        setupConfirmButton('confirm-synthesis');
+        setupConfirmButton('confirm-synthesis-modal');
+        setupCancelButton('cancel-synthesis');
+        setupCancelButton('cancel-synthesis-modal');
     }
 
     /**

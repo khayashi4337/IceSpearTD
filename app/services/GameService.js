@@ -35,6 +35,7 @@ export class GameService {
         this.projectileService = null;
         this.currentModeManager = null;
         this.cellManager = null;
+        this.towerSynthesisService = null;
     }
 
     /**
@@ -65,6 +66,7 @@ export class GameService {
             this.towerService = new TowerService(gameBoard, this.cellManager, this.currentModeManager);
             this.projectileService = new ProjectileService(gameBoard);
             this.waveManager = new WaveManager(this.createEnemy.bind(this), this.showError.bind(this));
+            this.towerSynthesisService = new TowerSynthesisService();
 
             console.log("ゲームシステムが初期化されました");
             return true;
@@ -195,6 +197,16 @@ export class GameService {
                 coreHealth: this.coreHealth
             });
         }
+    }
+
+    /**
+     * 合成モードを切り替えます
+     * @returns {boolean} 現在の合成モードの状態
+     */
+    toggleSynthesisMode() {
+        const isSynthesisMode = this.towerSynthesisService.toggleSynthesisMode();
+        this.currentModeManager.setMode(isSynthesisMode ? CURRENT_MODE.SYNTHESIS : CURRENT_MODE.NONE);
+        return isSynthesisMode;
     }
 
     /**
