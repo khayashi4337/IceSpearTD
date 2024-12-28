@@ -33,7 +33,7 @@
             <div id="synthesis-instruction"></div>
             <p>Wave: <span id="wave">1</span></p>
             <p>Core Health: <span id="core-health">1000</span></p>
-            <button onclick="waveManager.startWave()">Start Wave</button>
+            <button id="start-wave" onclick="game.service.waveManager.startWave()" disabled>Start Wave</button>
             <!-- スキル選択システム用のUI -->
             <div id="skill-system">
                 <h3>Skills</h3>
