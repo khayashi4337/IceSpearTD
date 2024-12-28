@@ -1,5 +1,5 @@
 // services/enemyService.js
-import { Enemy } from '../models/Enemy.js';
+import { EnemyFactory } from '../models/enemies/EnemyFactory.js';
 import { EnemyList } from '../models/EnemyList.js';
 
 /**
@@ -33,7 +33,7 @@ export class EnemyService {
         const path = paths[pathIndex];
 
         // 敵オブジェクトを作成
-        const enemy = new Enemy(type, enemyElement, path);
+        const enemy = EnemyFactory.createEnemy(type, enemyElement, path);
         this.enemies.push(enemy);
         this.totalEnemiesSpawned++;
 
@@ -91,5 +91,4 @@ export class EnemyService {
     getTotalEnemiesSpawned() {
         return this.totalEnemiesSpawned;
     }
-
 }

@@ -6,33 +6,39 @@ export class Orc extends IEnemy {
         super();
         this.type = 'orc';
         this.name = 'オーク';
-        this.description = '頑丈な中型の敵。高い防御力を持つ。';
+        this.description = '頑丈な戦士。防御力が高い。';
         
         // 戦闘ステータス
-        this.maxHealth = 115;
+        this.maxHealth = 120;
         this.health = this.maxHealth;
-        this.baseSpeed = 0.01;
+        this.baseSpeed = 0.008;
         this.speed = this.baseSpeed;
-        this.defense = 8;
-        this.goldReward = 20;
+        this.defense = 3;
+        this.goldReward = 15;
         
-        // 視覚設定
+        // スプライト情報
         this.sprite = {
-            color: '#8B4513',     // サドルブラウン
-            size: 25,
-            shape: 'humanoid'
+            size: 30,
+            color: '#8B4513',
+            borderColor: '#654321'
         };
     }
 
-    // オークは防御力が高いため、ダメージ計算を上書き
     takeDamage(damage) {
-        const actualDamage = Math.max(1, damage - this.defense * 1.2); // 20%追加防御
-        this.health = Math.max(0, this.health - actualDamage);
+        if (!this.isAlive) return 0;
         
-        if (this.health <= 0) {
-            this.die();
-        }
+        // オークは防御力が20%高い
+        const originalDefense = this.defense;
+        this.defense = Math.floor(this.defense * 1.2); // 一時的に防御力を増加
+        const actualDamage = super.takeDamage(damage);
+        this.defense = originalDefense; // 防御力を元に戻す
         
+        // ダメージエフェクト
+        this.element.classList.add('damaged');
+        setTimeout(() => {
+            this.element.classList.remove('damaged');
+        }, 300);
+
         return actualDamage;
     }
 }

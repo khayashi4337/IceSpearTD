@@ -23,9 +23,13 @@ export class DeathEffect {
         // パーティクルシステムの更新を開始
         startUpdateLoop();
 
-        const rect = enemy.element.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
+        const enemyRect = enemy.element.getBoundingClientRect();
+        const container = enemy.element.parentElement;
+        const containerRect = container.getBoundingClientRect();
+
+        // コンテナに対する相対座標を計算
+        const centerX = enemyRect.left - containerRect.left + enemyRect.width / 2;
+        const centerY = enemyRect.top - containerRect.top + enemyRect.height / 2;
 
         // エフェクトの種類を取得
         const effects = DeathEffectPresets[enemy.type.toUpperCase()];
@@ -47,13 +51,14 @@ export class DeathEffect {
                     particleSystem.createParticle(centerX, centerY, {
                         ...effect,
                         speedX: speedX,
-                        speedY: speedY
+                        speedY: speedY,
+                        container: container
                     });
                 }
 
                 // 追加のバーストエフェクト
                 if (index === 0) {
-                    this.createBurstEffect(centerX, centerY, enemy.type);
+                    this.createBurstEffect(centerX, centerY, enemy.type, container);
                 }
             }, index * 100); // エフェクトを少しずつ遅延させて再生
         });
@@ -66,7 +71,7 @@ export class DeathEffect {
         }, 1000); // 1秒後に削除
     }
 
-    static createBurstEffect(x, y, type) {
+    static createBurstEffect(x, y, type, container) {
         const burstConfig = {
             GOBLIN: { color: '#90EE90', size: 2 },
             ORC: { color: '#8B4513', size: 3 },
@@ -74,7 +79,7 @@ export class DeathEffect {
             SLIME: { color: '#00FF7F', size: 3 }
         }[type.toUpperCase()];
 
-        if (!burstConfig) return;
+        if (!burstConfig || !container) return;
 
         // 円形の光の輪エフェクト
         const ring = document.createElement('div');
@@ -82,7 +87,7 @@ export class DeathEffect {
         ring.style.left = `${x}px`;
         ring.style.top = `${y}px`;
         ring.style.borderColor = burstConfig.color;
-        document.getElementById('game-board').appendChild(ring);
+        container.appendChild(ring);
 
         // アニメーション完了後に要素を削除
         ring.addEventListener('animationend', () => ring.remove());

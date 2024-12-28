@@ -6,26 +6,44 @@ export class Goblin extends IEnemy {
         super();
         this.type = 'goblin';
         this.name = 'ゴブリン';
-        this.description = '小型の雑魚敵。素早く移動する。';
+        this.description = '素早い小型の敵。時々ダメージを回避する。';
         
         // 戦闘ステータス
         this.maxHealth = 40;
         this.health = this.maxHealth;
-        this.baseSpeed = 0.02;
+        this.baseSpeed = 0.025;
         this.speed = this.baseSpeed;
-        this.defense = 3;
-        this.goldReward = 10;
+        this.defense = 1;
+        this.goldReward = 8;
         
-        // 視覚設定
+        // スプライト情報
         this.sprite = {
-            color: '#90EE90',     // ライトグリーン
-            size: 20,
-            shape: 'humanoid'
+            size: 18,
+            color: '#90EE90',
+            borderColor: '#32CD32'
         };
     }
 
-    onDeath() {
-        // 死亡時にパーティクルエフェクトを表示
-        this.addVisualEffect('deathParticles');
+    takeDamage(damage) {
+        if (!this.isAlive) return 0;
+        
+        // ゴブリンは20%の確率でダメージを回避
+        if (Math.random() < 0.2) {
+            this.element.classList.add('dodge');
+            setTimeout(() => {
+                this.element.classList.remove('dodge');
+            }, 300);
+            return 0;
+        }
+        
+        const actualDamage = super.takeDamage(damage);
+        
+        // ダメージエフェクト
+        this.element.classList.add('damaged');
+        setTimeout(() => {
+            this.element.classList.remove('damaged');
+        }, 300);
+
+        return actualDamage;
     }
 }

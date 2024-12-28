@@ -6,40 +6,49 @@ export class Skeleton extends IEnemy {
         super();
         this.type = 'skeleton';
         this.name = 'スケルトン';
-        this.description = '素早い不死の敵。防御力は低いが移動速度が速い。';
+        this.description = '不死の戦士。一度だけ復活する。';
         
         // 戦闘ステータス
-        this.maxHealth = 30;
+        this.maxHealth = 80;
         this.health = this.maxHealth;
-        this.baseSpeed = 0.04;
+        this.baseSpeed = 0.015;
         this.speed = this.baseSpeed;
         this.defense = 2;
-        this.goldReward = 15;
+        this.goldReward = 12;
         
-        // 視覚設定
+        // 復活フラグ
+        this.hasRevived = false;
+        
+        // スプライト情報
         this.sprite = {
-            color: '#E6E6FA',     // ラベンダー
-            size: 18,
-            shape: 'humanoid'
+            size: 25,
+            color: '#E0E0E0',
+            borderColor: '#A0A0A0'
         };
     }
 
-    // スケルトンは不死のため、一度だけ復活する特殊能力を持つ
     takeDamage(damage) {
-        const actualDamage = Math.max(1, damage - this.defense);
-        this.health = Math.max(0, this.health - actualDamage);
+        if (!this.isAlive) return 0;
         
-        if (this.health <= 0 && this.isAlive && !this.hasRevived) {
+        const actualDamage = super.takeDamage(damage);
+        
+        // ダメージエフェクト
+        this.element.classList.add('damaged');
+        setTimeout(() => {
+            this.element.classList.remove('damaged');
+        }, 300);
+
+        // スケルトンは不死のため、一度だけ復活する
+        if (this.health <= 0 && !this.hasRevived) {
             this.health = this.maxHealth * 0.3; // 30%のHPで復活
             this.hasRevived = true;
-            this.addVisualEffect('revival');
-            return 0; // 復活時はダメージを0として扱う
+            this.element.classList.add('revival');
+            setTimeout(() => {
+                this.element.classList.remove('revival');
+            }, 1000);
+            return actualDamage;
         }
-        
-        if (this.health <= 0) {
-            this.die();
-        }
-        
+
         return actualDamage;
     }
 }

@@ -22,31 +22,33 @@
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 5px;
             display: flex;
             gap: 10px;
-            z-index: 1000;
         }
 
-        button {
-            padding: 8px 16px;
+        .control-panel button {
+            padding: 5px 10px;
             border: none;
-            border-radius: 4px;
+            border-radius: 3px;
             background: #3498db;
             color: white;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.3s;
         }
 
-        button:hover {
+        .control-panel button:hover {
             background: #2980b9;
         }
 
         .game-area {
-            position: relative;
             width: 800px;
             height: 600px;
-            background: #34495e;
-            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            position: relative;
             overflow: hidden;
         }
 
@@ -89,7 +91,7 @@
 
     <script type="module">
         import { Slime } from '../models/enemies/Slime.js';
-        import { HealthBar } from '../ui/HealthBar.js';
+        import { Health } from '../ui/Health.js';
 
         let slime;
 
@@ -136,9 +138,6 @@
             // 新しいスライムを生成
             slime = new Slime();
             
-            // 体力バーを追加
-            new HealthBar(slime.element, 100);
-
             // ゲームエリアに追加
             const gameArea = document.getElementById('gameArea');
             gameArea.appendChild(slime.element);

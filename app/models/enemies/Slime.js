@@ -1,5 +1,6 @@
 // Slime.js
 import { IEnemy } from './IEnemy.js';
+import { Health } from '../../ui/Health.js';
 
 export class Slime extends IEnemy {
     constructor() {
@@ -24,11 +25,6 @@ export class Slime extends IEnemy {
             shape: 'slime'
         };
 
-        // エフェクト管理
-        this.effects = new Set();
-        this.statusIcon = null;
-        this.effectTimers = new Map();
-
         // HTML要素の初期化
         this.initializeElement();
     }
@@ -37,7 +33,7 @@ export class Slime extends IEnemy {
     initializeElement() {
         // メイン要素
         this.element = document.createElement('div');
-        this.element.className = 'enemy';
+        this.element.className = 'enemy slime';
         
         // 本体要素
         const body = document.createElement('div');
@@ -47,6 +43,10 @@ export class Slime extends IEnemy {
         body.style.height = this.sprite.size + 'px';
         
         this.element.appendChild(body);
+
+        // 体力バーの初期化
+        this.healthBar = new Health(this.maxHealth);
+        this.element.appendChild(this.healthBar.element);
     }
 
     /**
@@ -59,81 +59,21 @@ export class Slime extends IEnemy {
         
         const actualDamage = super.takeDamage(damage);
         
-        // ダメージエフェクト
-        this.element.classList.add('damaged');
-        setTimeout(() => {
-            this.element.classList.remove('damaged');
-        }, 300);
-
         return actualDamage;
     }
 
     die() {
         if (!this.isAlive) return;
         
-        // エフェクトをすべて解除
-        this.removeAllEffects();
+        super.die();
         
-        // 死亡エフェクトを表示
-        this.element.classList.add('dying');
-        this.createSplashEffect();
-
-        // フェードアウトとパーティクルエフェクトの完了を待つ
-        setTimeout(() => {
-            // 要素を非表示にする
-            this.element.style.display = 'none';
-            
-            super.die();
-            
-            // 大きいスライムの場合、2体の小さいスライムに分裂
-            if (this.size === 'large' && this.onSplit) {
-                // 元の要素を削除してから分裂
-                if (this.element.parentElement) {
-                    this.element.remove();
-                }
-                this.onSplit();
+        // 大きいスライムの場合、2体の小さいスライムに分裂
+        if (this.size === 'large' && this.onSplit) {
+            // 元の要素を削除してから分裂
+            if (this.element.parentElement) {
+                this.element.remove();
             }
-        }, 500); // パーティクルエフェクトの完了を待つため、時間を500msに延長
-    }
-
-    createSplashEffect() {
-        const particleCount = 16;
-        const container = this.element.parentElement;
-        const slimeRect = this.element.getBoundingClientRect();
-        const containerRect = container.getBoundingClientRect();
-        const centerX = slimeRect.left - containerRect.left + slimeRect.width / 2;
-        const centerY = slimeRect.top - containerRect.top + slimeRect.height / 2;
-
-        for (let i = 0; i < particleCount; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'splash-particle';
-            particle.style.backgroundColor = this.sprite.color;
-            
-            // パーティクルの初期位置を設定
-            particle.style.left = `${centerX}px`;
-            particle.style.top = `${centerY}px`;
-
-            // パーティクルが飛び散る方向をランダムに設定
-            const angle = (i / particleCount) * Math.PI * 2 + Math.random() * 0.2;
-            const distance = 60 + Math.random() * 40;
-            const tx = Math.cos(angle) * distance;
-            const ty = Math.sin(angle) * distance;
-            
-            particle.style.setProperty('--tx', `${tx}px`);
-            particle.style.setProperty('--ty', `${ty}px`);
-            
-            // アニメーションを適用（少しランダム性を持たせる）
-            const duration = 0.4 + Math.random() * 0.2;
-            particle.style.animation = `splashParticle ${duration}s ease-out forwards`;
-            
-            container.appendChild(particle);
-            
-            // アニメーション終了後にパーティクルを削除
-            setTimeout(() => {
-                if (particle.parentElement) {
-                    particle.remove();
-                }
-            }, duration * 1000);
+            this.onSplit();
         }
     }
 

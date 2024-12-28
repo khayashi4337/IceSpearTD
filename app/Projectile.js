@@ -90,12 +90,11 @@ export class Projectile {
      * @returns {boolean} 敵が倒されたかどうか
      */
     hit(gameBoard, onEnemyDestroyed) {
-        if (this.target && this.target.health) {
-            this.target.health -= this.damage;
-            this.showDamage(gameBoard);
+        if (this.target) {
+            const isAlive = this.target.takeDamage(this.damage);
             this.applyTowerEffect(gameBoard);
             
-            if (this.target.health <= 0) {
+            if (!isAlive) {
                 onEnemyDestroyed(this.target);
                 return true;
             }
