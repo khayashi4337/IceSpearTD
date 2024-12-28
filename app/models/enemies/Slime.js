@@ -26,11 +26,61 @@ export class Slime extends IEnemy {
     }
 
     die() {
-        super.die();
+        if (!this.isAlive) return;
         
-        // 大きいスライムの場合、2体の小さいスライムに分裂
-        if (this.size === 'large' && this.onSplit) {
-            this.onSplit();
+        // 死亡エフェクトを表示
+        this.element.classList.add('dying');
+        this.createSplashEffect();
+
+        // 少し待ってから親クラスのdie()を呼び出し
+        setTimeout(() => {
+            super.die();
+            
+            // 大きいスライムの場合、2体の小さいスライムに分裂
+            if (this.size === 'large' && this.onSplit) {
+                this.onSplit();
+            }
+        }, 200);
+    }
+
+    createSplashEffect() {
+        const particleCount = 16;
+        const container = this.element.parentElement;
+        const slimeRect = this.element.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        const centerX = slimeRect.left - containerRect.left + slimeRect.width / 2;
+        const centerY = slimeRect.top - containerRect.top + slimeRect.height / 2;
+
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'splash-particle';
+            particle.style.backgroundColor = this.sprite.color;
+            
+            // パーティクルの初期位置を設定
+            particle.style.left = `${centerX}px`;
+            particle.style.top = `${centerY}px`;
+
+            // パーティクルが飛び散る方向をランダムに設定
+            const angle = (i / particleCount) * Math.PI * 2 + Math.random() * 0.2;
+            const distance = 60 + Math.random() * 40;
+            const tx = Math.cos(angle) * distance;
+            const ty = Math.sin(angle) * distance;
+            
+            particle.style.setProperty('--tx', `${tx}px`);
+            particle.style.setProperty('--ty', `${ty}px`);
+            
+            // アニメーションを適用（少しランダム性を持たせる）
+            const duration = 0.4 + Math.random() * 0.2;
+            particle.style.animation = `splashParticle ${duration}s ease-out forwards`;
+            
+            container.appendChild(particle);
+            
+            // アニメーション終了後にパーティクルを削除
+            setTimeout(() => {
+                if (particle.parentElement) {
+                    particle.remove();
+                }
+            }, duration * 1000);
         }
     }
 
