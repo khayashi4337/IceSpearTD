@@ -37,9 +37,14 @@
         const core = document.getElementById('core');
         const coreContainer = document.getElementById('core-container');
         const healthDisplay = document.getElementById('health-display');
+        // Healthクラスのインスタンスを作成
         const health = new Health(100);
-        let isCritical = false;
+        // Damageクラスのインスタンスを作成
+        const damage = new Damage(coreContainer);
         let isDestroyed = false;
+
+        // ヘルスバー表示
+        coreContainer.appendChild(health.element);
 
         // ボタンのイベントリスナーを設定
         document.getElementById('damage10').addEventListener('click', () => takeDamage(10));
@@ -53,25 +58,6 @@
             healthDisplay.textContent = `HP: ${health.getHealth()}/${health.getMaxHealth()}`;
         }
 
-        function showFloatingText(amount, type = 'damage') {
-            const text = document.createElement('div');
-            text.className = `damage-text ${type}`;
-            text.textContent = type === 'damage' ? `-${amount}` : `+${amount}`;
-            
-            // ランダムな位置にテキストを表示
-            const x = core.offsetLeft + (Math.random() * 40 - 20);
-            const y = core.offsetTop + (Math.random() * 40 - 20);
-            text.style.left = `${x}px`;
-            text.style.top = `${y}px`;
-            
-            coreContainer.appendChild(text);
-            
-            // アニメーション終了後に要素を削除
-            setTimeout(() => {
-                text.remove();
-            }, 1000);
-        }
-
         function takeDamage(amount) {
             if (isDestroyed) return; // 破壊状態ではダメージを受けない
             
@@ -79,7 +65,7 @@
             updateHealthDisplay();
 
             // ダメージテキスト表示
-            showFloatingText(amount, 'damage');
+            damage.showFloatingText(core.offsetLeft, core.offsetTop, amount, 'damage');
 
             // ダメージエフェクト
             core.classList.add('core-damage');
@@ -104,7 +90,7 @@
             const actualHeal = health.heal(amount);
             
             if (actualHeal > 0) {
-                showFloatingText(actualHeal, 'heal');
+                damage.showFloatingText(core.offsetLeft, core.offsetTop, actualHeal, 'heal');
             }
             
             updateHealthDisplay();
@@ -123,7 +109,6 @@
             } else {
                 core.classList.add('core-health-critical');
             }
-            isCritical = !isCritical;
         }
 
         function toggleDestroyed() {
@@ -147,7 +132,7 @@
             health.heal(health.getMaxHealth());  // 最大値まで回復
             updateHealthDisplay();
             core.classList.remove('core-health-critical', 'destroyed');
-            isCritical = false;
+
             isDestroyed = false;
         }
     </script>

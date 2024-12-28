@@ -16,10 +16,42 @@ export class Damage {
     /**
      * テキスト要素の位置を設定する
      * @param {HTMLElement} element - 位置を設定する要素
+     * @param {boolean} [addRandomOffset=false] - ランダムなオフセットを追加するかどうか
      */
-    setTextPosition(element) {
-        element.style.left = `${this.x}px`;
-        element.style.top = `${this.y}px`;
+    setTextPosition(element, addRandomOffset = false) {
+        let x = this.x;
+        let y = this.y;
+        
+        if (addRandomOffset) {
+            x += Math.random() * 40 - 20;
+            y += Math.random() * 40 - 20;
+        }
+        
+        element.style.left = `${x}px`;
+        element.style.top = `${y}px`;
+    }
+
+    /**
+     * 浮動テキストを表示する
+     * @param {number} x - テキスト表示のX座標
+     * @param {number} y - テキスト表示のY座標
+     * @param {number} amount - 数値
+     * @param {string} type - テキストタイプ ('damage' または 'heal')
+     */
+    showFloatingText(x, y, amount, type = 'damage') {
+        this.x = x;
+        this.y = y;
+        const text = document.createElement('div');
+        text.className = `damage-text ${type}`;
+        text.textContent = type === 'damage' ? `-${Math.round(amount)}` : `+${Math.round(amount)}`;
+        
+        this.setTextPosition(text, true);
+        this.gameBoard.appendChild(text);
+        
+        // アニメーション終了後に要素を削除
+        setTimeout(() => {
+            text.remove();
+        }, 1000);
     }
 
     /**
@@ -29,23 +61,6 @@ export class Damage {
      * @param {number} amount - ダメージ量
      */
     showDamage(x, y, amount) {
-        this.x = x;
-        this.y = y;
-        const damageElement = document.createElement('div');
-        damageElement.className = 'damage-text';
-        damageElement.textContent = Math.round(amount);
-        this.setTextPosition(damageElement);
-        this.gameBoard.appendChild(damageElement);
-
-        // アニメーション効果
-        setTimeout(() => {
-            damageElement.style.transform = 'translateY(-20px)';
-            damageElement.style.opacity = '0';
-        }, 50);
-
-        // 要素を削除
-        setTimeout(() => {
-            this.gameBoard.removeChild(damageElement);
-        }, 1000);
+        this.showFloatingText(x, y, amount, 'damage');
     }
 }
