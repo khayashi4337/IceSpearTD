@@ -88,59 +88,72 @@
             const gameBoard = document.getElementById('game-board');
             const damage = new Damage(gameBoard);
 
+            // ダメージ処理の共通関数
+            function handleDamage(damageAmount) {
+                const core = document.getElementById('core');
+                if (!core || !window.game?.service?.coreHealth) return;
+
+                const coreRect = core.getBoundingClientRect();
+                const gameBoardRect = gameBoard.getBoundingClientRect();
+                const x = coreRect.left - gameBoardRect.left + core.offsetWidth / 2 - 30;
+                const y = coreRect.top - gameBoardRect.top + core.offsetHeight / 2;
+                
+                // ダメージ表示
+                damage.showDamage(x, y, damageAmount);
+                
+                // ダメージを与える
+                window.game.service.takeCoreHit(damageAmount);
+                
+                // 状態チェック
+                if (window.game.service.coreHealth.isDead()) {
+                    core.classList.add('destroyed');
+                    core.classList.remove('core-health-critical');
+                } else if (window.game.service.coreHealth.isCritical()) {
+                    core.classList.add('core-health-critical');
+                    core.classList.remove('destroyed');
+                } else {
+                    core.classList.remove('core-health-critical', 'destroyed');
+                }
+            }
+
+            // グローバルに公開
+            window.handleDamage = handleDamage;
+
+            // 回復処理の共通関数
+            function handleHeal(healAmount) {
+                const core = document.getElementById('core');
+                if (!core || !window.game?.service?.coreHealth) return;
+
+                const coreRect = core.getBoundingClientRect();
+                const gameBoardRect = gameBoard.getBoundingClientRect();
+                const x = coreRect.left - gameBoardRect.left + core.offsetWidth / 2 - 30;
+                const y = coreRect.top - gameBoardRect.top + core.offsetHeight / 2;
+                
+                // 回復表示
+                damage.showFloatingText(x, y, healAmount, 'heal');
+                
+                // 回復処理
+                window.game.service.coreHealth.heal(healAmount);
+                
+                // 表示を更新
+                const coreHealthDisplay = document.getElementById('core-health');
+                if (coreHealthDisplay) {
+                    coreHealthDisplay.textContent = window.game.service.coreHealth.getHealth();
+                }
+                
+                // 状態チェック
+                if (window.game.service.coreHealth.isCritical()) {
+                    core.classList.add('core-health-critical');
+                } else {
+                    core.classList.remove('core-health-critical');
+                }
+                core.classList.remove('destroyed'); // 回復時は必ず破壊状態を解除
+            }
+
             // ボタンのイベントリスナーを設定
-            document.getElementById('damage10').addEventListener('click', () => {
-                const core = document.getElementById('core');
-                if (core) {
-                    const coreRect = core.getBoundingClientRect();
-                    const gameBoardRect = gameBoard.getBoundingClientRect();
-                    const x = coreRect.left - gameBoardRect.left + core.offsetWidth / 2 - 30;
-                    const y = coreRect.top - gameBoardRect.top + core.offsetHeight / 2;
-                    damage.showDamage(x, y, 10);
-                    
-                    // コアのHPを更新
-                    if (window.game && window.game.service) {
-                        window.game.service.takeCoreHit(10);
-                    }
-                }
-            });
-
-            document.getElementById('damage30').addEventListener('click', () => {
-                const core = document.getElementById('core');
-                if (core) {
-                    const coreRect = core.getBoundingClientRect();
-                    const gameBoardRect = gameBoard.getBoundingClientRect();
-                    const x = coreRect.left - gameBoardRect.left + core.offsetWidth / 2 - 30;
-                    const y = coreRect.top - gameBoardRect.top + core.offsetHeight / 2;
-                    damage.showDamage(x, y, 30);
-                    
-                    // コアのHPを更新
-                    if (window.game && window.game.service) {
-                        window.game.service.takeCoreHit(30);
-                    }
-                }
-            });
-
-            document.getElementById('heal20').addEventListener('click', () => {
-                const core = document.getElementById('core');
-                if (core) {
-                    const coreRect = core.getBoundingClientRect();
-                    const gameBoardRect = gameBoard.getBoundingClientRect();
-                    const x = coreRect.left - gameBoardRect.left + core.offsetWidth / 2 - 30;
-                    const y = coreRect.top - gameBoardRect.top + core.offsetHeight / 2;
-                    damage.showFloatingText(x, y, 20, 'heal');
-                    
-                    // コアのHPを回復
-                    if (window.game && window.game.service) {
-                        window.game.service.coreHealth.heal(20);
-                        // 表示を更新
-                        const coreHealthDisplay = document.getElementById('core-health');
-                        if (coreHealthDisplay) {
-                            coreHealthDisplay.textContent = window.game.service.coreHealth.getHealth();
-                        }
-                    }
-                }
-            });
+            document.getElementById('damage10').addEventListener('click', () => window.handleDamage(10));
+            document.getElementById('damage30').addEventListener('click', () => window.handleDamage(30));
+            document.getElementById('heal20').addEventListener('click', () => handleHeal(20));
 
             // クリティカル、破壊、リセットボタンのイベントリスナー
             document.getElementById('toggleCritical').addEventListener('click', () => {

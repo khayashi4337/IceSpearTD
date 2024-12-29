@@ -52,8 +52,8 @@ export class EnemyService {
                 // moveメソッドの結果がfalseだったら終点に到着しているので削除
                 if (!enemy.move(this.gameBoard)) {
                     // コアにダメージを与える
-                    if (onCoreHit) {
-                        onCoreHit(enemy.damage || 100); // デフォルトダメージ100
+                    if (onCoreHit && window.handleDamage) {
+                        window.handleDamage(enemy.damage || 100);
                     }
                     this.enemies.remove(i);
                 }
