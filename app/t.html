@@ -81,5 +81,47 @@
 
     <script type="module" src="game.js"></script>
     
+    <script type="module">
+        import { Damage } from './Damage.js';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const gameBoard = document.getElementById('game-board');
+            const damage = new Damage(gameBoard);
+
+            // ボタンのイベントリスナーを設定
+            document.getElementById('damage10').addEventListener('click', () => {
+                const core = document.getElementById('core');
+                if (core) {
+                    const coreRect = core.getBoundingClientRect();
+                    const gameBoardRect = gameBoard.getBoundingClientRect();
+                    const x = coreRect.left - gameBoardRect.left + core.offsetWidth / 2 - 30; // 30px左にオフセット
+                    const y = coreRect.top - gameBoardRect.top + core.offsetHeight / 2;
+                    damage.showDamage(x, y, 10);
+                }
+            });
+
+            document.getElementById('damage30').addEventListener('click', () => {
+                const core = document.getElementById('core');
+                if (core) {
+                    const coreRect = core.getBoundingClientRect();
+                    const gameBoardRect = gameBoard.getBoundingClientRect();
+                    const x = coreRect.left - gameBoardRect.left + core.offsetWidth / 2 - 30; // 30px左にオフセット
+                    const y = coreRect.top - gameBoardRect.top + core.offsetHeight / 2;
+                    damage.showDamage(x, y, 30);
+                }
+            });
+
+            document.getElementById('heal20').addEventListener('click', () => {
+                const core = document.getElementById('core');
+                if (core) {
+                    const coreRect = core.getBoundingClientRect();
+                    const gameBoardRect = gameBoard.getBoundingClientRect();
+                    const x = coreRect.left - gameBoardRect.left + core.offsetWidth / 2 - 30; // 30px左にオフセット
+                    const y = coreRect.top - gameBoardRect.top + core.offsetHeight / 2;
+                    damage.showFloatingText(x, y, 20, 'heal');
+                }
+            });
+        });
+    </script>
 </body>
 </html>
