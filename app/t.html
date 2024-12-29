@@ -121,6 +121,31 @@
                     damage.showFloatingText(x, y, 20, 'heal');
                 }
             });
+
+            // クリティカル、破壊、リセットボタンのイベントリスナー
+            document.getElementById('toggleCritical').addEventListener('click', () => {
+                console.log('クリティカル状態切替ボタンがクリックされました');
+                const core = document.getElementById('core');
+                if (core) {
+                    console.log('現在のクリティカル状態:', core.classList.contains('core-health-critical'));
+                }
+            });
+
+            document.getElementById('toggleDestroyed').addEventListener('click', () => {
+                console.log('破壊状態切替ボタンがクリックされました');
+                const core = document.getElementById('core');
+                if (core) {
+                    console.log('現在の破壊状態:', core.classList.contains('destroyed'));
+                }
+            });
+
+            document.getElementById('resetHealth').addEventListener('click', () => {
+                console.log('リセットボタンがクリックされました');
+                const core = document.getElementById('core');
+                if (core) {
+                    console.log('リセット前のクラス:', core.className);
+                }
+            });
         });
     </script>
 </body>
