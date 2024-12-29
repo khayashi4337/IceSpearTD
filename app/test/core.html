@@ -31,110 +31,22 @@
     </div>
 
     <script type="module">
-        import { Health } from '../ui/Health.js';
-        import { Damage } from '../Damage.js';  
+        import { Core } from './core.js';
 
-        const core = document.getElementById('core');
+        const coreElement = document.getElementById('core');
         const coreContainer = document.getElementById('core-container');
         const healthDisplay = document.getElementById('health-display');
-        // Healthクラスのインスタンスを作成
-        const health = new Health(100);
-        // Damageクラスのインスタンスを作成
-        const damage = new Damage(coreContainer);
-        let isDestroyed = false;
 
-        // ヘルスバー表示
-        coreContainer.appendChild(health.element);
+        // Coreクラスのインスタンスを作成
+        const core = new Core(coreElement, coreContainer, healthDisplay);
 
         // ボタンのイベントリスナーを設定
-        document.getElementById('damage10').addEventListener('click', () => takeDamage(10));
-        document.getElementById('damage30').addEventListener('click', () => takeDamage(30));
-        document.getElementById('heal20').addEventListener('click', () => heal(20));
-        document.getElementById('toggleCritical').addEventListener('click', toggleCritical);
-        document.getElementById('toggleDestroyed').addEventListener('click', toggleDestroyed);
-        document.getElementById('resetHealth').addEventListener('click', resetHealth);
-
-        function updateHealthDisplay() {
-            healthDisplay.textContent = `HP: ${health.getHealth()}/${health.getMaxHealth()}`;
-        }
-
-        function takeDamage(amount) {
-            if (isDestroyed) return; // 破壊状態ではダメージを受けない
-            
-            health.takeDamage(amount);
-            updateHealthDisplay();
-
-            // ダメージテキスト表示
-            damage.showFloatingText(core.offsetLeft, core.offsetTop, amount, 'damage');
-
-            // ダメージエフェクト
-            core.classList.add('core-damage');
-            setTimeout(() => {
-                core.classList.remove('core-damage');
-            }, 400);
-
-            // クリティカル状態チェック
-            if (health.isCritical()) {
-                core.classList.add('core-health-critical');
-            }
-
-            // 破壊状態チェック
-            if (health.isDead()) {
-                setDestroyed(true);
-            }
-        }
-
-        function heal(amount) {
-            if (isDestroyed) return; // 破壊状態では回復不可
-            
-            const actualHeal = health.heal(amount);
-            
-            if (actualHeal > 0) {
-                damage.showFloatingText(core.offsetLeft, core.offsetTop, actualHeal, 'heal');
-            }
-            
-            updateHealthDisplay();
-
-            // クリティカル状態解除チェック
-            if (!health.isCritical()) {
-                core.classList.remove('core-health-critical');
-            }
-        }
-
-        function toggleCritical() {
-            if (isDestroyed) return; // 破壊状態では切り替え不可
-            
-            if (core.classList.contains('core-health-critical')) {
-                core.classList.remove('core-health-critical');
-            } else {
-                core.classList.add('core-health-critical');
-            }
-        }
-
-        function toggleDestroyed() {
-            setDestroyed(!isDestroyed);
-        }
-
-        function setDestroyed(destroyed) {
-            isDestroyed = destroyed;
-            if (destroyed) {
-                health.takeDamage(health.getHealth());  // 現在のHPを全て失う
-                core.classList.add('destroyed');
-                core.classList.remove('core-health-critical', 'core-damage');
-            } else {
-                health.heal(1);  // 1だけ回復
-                core.classList.remove('destroyed');
-            }
-            updateHealthDisplay();
-        }
-
-        function resetHealth() {
-            health.heal(health.getMaxHealth());  // 最大値まで回復
-            updateHealthDisplay();
-            core.classList.remove('core-health-critical', 'destroyed');
-
-            isDestroyed = false;
-        }
+        document.getElementById('damage10').addEventListener('click', () => core.takeDamage(10));
+        document.getElementById('damage30').addEventListener('click', () => core.takeDamage(30));
+        document.getElementById('heal20').addEventListener('click', () => core.heal(20));
+        document.getElementById('toggleCritical').addEventListener('click', () => core.toggleCritical());
+        document.getElementById('toggleDestroyed').addEventListener('click', () => core.toggleDestroyed());
+        document.getElementById('resetHealth').addEventListener('click', () => core.resetHealth());
     </script>
 </body>
 </html>
