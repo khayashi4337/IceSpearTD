@@ -16,16 +16,6 @@
         <div id="feedback" class="feedback"></div>
         <div id="sidebar">
             <h2>Ice Spear Tower Defense</h2>
-            <div class="button-group">
-                <button id="damage10" class="damage-button">ダメージ10</button>
-                <button id="damage30" class="damage-button">ダメージ30</button>
-                <button id="heal20" class="heal-button">回復20</button>
-            </div>
-            <div class="button-group">
-                <button id="toggleCritical" class="toggle-button">クリティカル状態切替</button>
-                <button id="toggleDestroyed" class="destroy-button">破壊状態切替</button>
-                <button id="resetHealth" class="toggle-button">リセット</button>
-            </div>
             <div id="resources">
                 <p>Gold: <span id="gold">500</span></p>
                 <p>Mana: <span id="mana">100</span></p>
@@ -140,72 +130,28 @@
                 if (coreHealthDisplay) {
                     coreHealthDisplay.textContent = window.game.service.coreHealth.getHealth();
                 }
-                
+
                 // 状態チェック
                 if (window.game.service.coreHealth.isCritical()) {
                     core.classList.add('core-health-critical');
+                    core.classList.remove('destroyed');
                 } else {
-                    core.classList.remove('core-health-critical');
+                    core.classList.remove('core-health-critical', 'destroyed');
                 }
                 core.classList.remove('destroyed'); // 回復時は必ず破壊状態を解除
             }
 
-            // ボタンのイベントリスナーを設定
-            document.getElementById('damage10').addEventListener('click', () => window.handleDamage(10));
-            document.getElementById('damage30').addEventListener('click', () => window.handleDamage(30));
-            document.getElementById('heal20').addEventListener('click', () => handleHeal(20));
+            // グローバルに公開
+            window.handleHeal = handleHeal;
 
-            // クリティカル、破壊、リセットボタンのイベントリスナー
-            document.getElementById('toggleCritical').addEventListener('click', () => {
-                console.log('クリティカル状態切替ボタンがクリックされました');
-                if (window.game && window.game.service) {
-                    console.log('現在のクリティカル状態:', window.game.service.coreHealth.isCritical());
-                    const core = document.getElementById('core');
-                    if (core) {
-                        if (window.game.service.coreHealth.isCritical()) {
-                            core.classList.add('core-health-critical');
-                        } else {
-                            core.classList.remove('core-health-critical');
-                        }
-                    }
-                }
-            });
+            // ゲームの初期化
+            window.game = new Game();
+            window.game.init();
 
-            document.getElementById('toggleDestroyed').addEventListener('click', () => {
-                console.log('破壊状態切替ボタンがクリックされました');
-                if (window.game && window.game.service) {
-                    console.log('現在の破壊状態:', window.game.service.coreHealth.isDead());
-                    const core = document.getElementById('core');
-                    if (core) {
-                        if (window.game.service.coreHealth.isDead()) {
-                            core.classList.add('destroyed');
-                        } else {
-                            core.classList.remove('destroyed');
-                        }
-                    }
-                }
-            });
-
-            document.getElementById('resetHealth').addEventListener('click', () => {
-                console.log('リセットボタンがクリックされました');
-                if (window.game && window.game.service) {
-                    // HPを最大値に戻す
-                    window.game.service.coreHealth.currentHealth = window.game.service.coreHealth.getMaxHealth();
-                    
-                    // 表示を更新
-                    const coreHealthDisplay = document.getElementById('core-health');
-                    if (coreHealthDisplay) {
-                        coreHealthDisplay.textContent = window.game.service.coreHealth.getHealth();
-                    }
-                    
-                    // コアの状態をリセット
-                    const core = document.getElementById('core');
-                    if (core) {
-                        core.classList.remove('core-health-critical', 'destroyed');
-                        console.log('コアの状態をリセットしました');
-                    }
-                }
-            });
+            // ゲームボードの初期化
+            const core = document.createElement('div');
+            core.id = 'core';
+            gameBoard.appendChild(core);
         });
     </script>
 </body>
