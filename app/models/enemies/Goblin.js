@@ -14,13 +14,6 @@ export class Goblin extends IEnemy {
         this.speed = 0.1;        // 0.025 * 4
         this.defense = 1;
         this.goldReward = 8;
-        
-        // スプライト情報
-        this.sprite = {
-            size: 18,
-            color: '#90EE90',
-            borderColor: '#32CD32'
-        };
     }
 
     takeDamage(damage) {

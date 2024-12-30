@@ -6,6 +6,7 @@
     align-items: center;
     transform: translate(-50%, -50%);
     transition: transform 0.2s ease-out;
+    background: transparent;  /* 背景を透明に */
 }
 
 .enemy:hover {

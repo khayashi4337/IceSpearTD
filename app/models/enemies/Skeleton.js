@@ -17,13 +17,6 @@ export class Skeleton extends IEnemy {
         
         // 復活フラグ
         this.hasRevived = false;
-        
-        // スプライト情報
-        this.sprite = {
-            size: 25,
-            color: '#E0E0E0',
-            borderColor: '#A0A0A0'
-        };
     }
 
     takeDamage(damage) {

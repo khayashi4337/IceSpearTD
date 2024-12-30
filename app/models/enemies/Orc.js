@@ -14,13 +14,6 @@ export class Orc extends IEnemy {
         this.speed = 0.032;         // 0.008 * 4
         this.defense = 3;
         this.goldReward = 15;
-        
-        // スプライト情報
-        this.sprite = {
-            size: 30,
-            color: '#8B4513',
-            borderColor: '#654321'
-        };
     }
 
     takeDamage(damage) {

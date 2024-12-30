@@ -35,7 +35,6 @@ export class IEnemy {
         
         // 視覚表現
         this.element = null;     // HTML要素
-        this.sprite = null;      // スプライト情報
         this.currentAnimation = null; // 現在のアニメーション
         this.visualEffects = new Set(); // 視覚効果
         this.healthBar = null;   // 体力バー管理
@@ -78,8 +77,6 @@ export class IEnemy {
     initializeVisuals() {
         // 敵要素の基本スタイルを設定
         this.element.style.position = 'absolute';
-        this.element.style.width = `${this.sprite.size}px`;
-        this.element.style.height = `${this.sprite.size}px`;
         
         // 頭部と胴体のパーツを作成
         if (this.type !== 'slime') {
@@ -103,7 +100,7 @@ export class IEnemy {
     updatePosition() {
         // スプライトサイズに基づいてオフセットを計算
         // グリッドの中央にスプライトの中心を配置
-        const spriteOffset = (gameConfig.grid.cellSize - this.sprite.size) / 2;
+        const spriteOffset = (gameConfig.grid.cellSize) / 2;
         
         const x = this.position.x * gameConfig.grid.cellSize + spriteOffset;
         const y = this.position.y * gameConfig.grid.cellSize + spriteOffset;
