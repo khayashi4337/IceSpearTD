@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ice Spear TD - Stage Select</title>
+    <link rel="stylesheet" href="styles/stageSelect.css">
+</head>
+<body>
+    <div class="container">
+        <h1>ステージ選択</h1>
+        <div class="stage-grid">
+            <div class="stage-card" onclick="selectStage(1)">
+                <div class="stage-image">
+                    <img src="img/menu/stage1.png" alt="ステージ1">
+                </div>
+                <div class="stage-info">
+                    <h2>ステージ 1</h2>
+                    <p>氷の平原</p>
+                    <div class="difficulty">難易度: ★☆☆</div>
+                </div>
+            </div>
+            <div class="stage-card" onclick="selectStage(2)">
+                <div class="stage-image">
+                    <img src="img/menu/stage2.png" alt="ステージ2">
+                </div>
+                <div class="stage-info">
+                    <h2>ステージ 2</h2>
+                    <p>凍結峡谷</p>
+                    <div class="difficulty">難易度: ★★☆</div>
+                </div>
+            </div>
+            <div class="stage-card" onclick="selectStage(3)">
+                <div class="stage-image">
+                    <img src="img/menu/stage3.png" alt="ステージ3">
+                </div>
+                <div class="stage-info">
+                    <h2>ステージ 3</h2>
+                    <p>永久氷河</p>
+                    <div class="difficulty">難易度: ★★★</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="stageSelect.js"></script>
+</body>
+</html>

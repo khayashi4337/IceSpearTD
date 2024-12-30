@@ -16,6 +16,10 @@
         <div id="feedback" class="feedback"></div>
         <div id="sidebar">
             <h2>Ice Spear Tower Defense</h2>
+            <div id="stage-info">
+                <h3>ステージ <span id="stage-number"></span></h3>
+                <p id="stage-name"></p>
+            </div>
             <div id="resources">
                 <p>Gold: <span id="gold">500</span></p>
                 <p>Mana: <span id="mana">100</span></p>
@@ -73,8 +77,22 @@
     
     <script type="module">
         import { Damage } from './Damage.js';
+        import { stageConfig } from './config/stages.js';
 
         document.addEventListener('DOMContentLoaded', () => {
+            // URLからステージ番号を取得
+            const urlParams = new URLSearchParams(window.location.search);
+            const stageNumber = parseInt(urlParams.get('stage')) || 1;
+            
+            // ステージ情報を表示
+            const stageInfo = stageConfig[stageNumber];
+            if (stageInfo) {
+                document.getElementById('stage-number').textContent = stageNumber;
+                document.getElementById('stage-name').textContent = stageInfo.name;
+                document.getElementById('gold').textContent = stageInfo.initialGold;
+                document.getElementById('mana').textContent = stageInfo.initialMana;
+            }
+
             const gameBoard = document.getElementById('game-board');
             const damage = new Damage(gameBoard);
 
