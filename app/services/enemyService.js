@@ -45,18 +45,28 @@ export class EnemyService {
      * @param {Function} onCoreHit - コアへのダメージ時のコールバック
      */
     moveEnemies(onCoreHit) {
-        // 配列の後ろから処理することで、削除による影響を防ぐ
+        // 移動処理
         for (let i = this.enemies.length - 1; i >= 0; i--) {
             const enemy = this.enemies.getEnemyAt(i);
-            if (enemy) {
-                // moveメソッドの結果がfalseだったら終点に到着しているので削除
-                if (!enemy.move(this.gameBoard)) {
-                    // コアにダメージを与える
-                    if (onCoreHit && window.handleDamage) {
-                        window.handleDamage(enemy.damage || 100);
-                    }
-                    this.enemies.remove(i);
+            if (enemy && enemy.isAlive) {
+                enemy.move(this.gameBoard);
+            }
+        }
+
+        // 削除処理
+        for (let i = this.enemies.length - 1; i >= 0; i--) {
+            const enemy = this.enemies.getEnemyAt(i);
+            if (enemy && enemy.shouldBeRemoved()) {
+                // 終点到達の敵はコアにダメージを与える
+                if (enemy.isAlive && onCoreHit && window.handleDamage) {
+                    window.handleDamage(enemy.damage || 100);
                 }
+                // DOM要素の削除
+                if (enemy.element && enemy.element.parentNode === this.gameBoard) {
+                    this.gameBoard.removeChild(enemy.element);
+                }
+                // 敵リストからの削除
+                this.enemies.remove(i);
             }
         }
     }

@@ -209,7 +209,7 @@ export class IEnemy {
     /**
      * 敵を移動させる
      * @param {HTMLElement} gameBoard - ゲームボード要素
-     * @returns {boolean} 敵がまだ生存しているかどうか
+     * @returns {boolean} 敵がまだ生存していて、パスの終点に到達していないかどうか
      */
     move(gameBoard) {
         this.updateStates();
@@ -217,9 +217,8 @@ export class IEnemy {
         // 現在のインデックスを基に次の位置を計算
         const nextIndex = this.currentPathIndex + this.speed;
         
-        // パスの終点に到達したら敵を削除
+        // パスの終点に到達したかチェック
         if (nextIndex >= this.path.length - 1) {
-            gameBoard.removeChild(this.element);
             return false;
         }
 
@@ -241,6 +240,16 @@ export class IEnemy {
         this.updatePosition();
 
         return true;
+    }
+
+    /**
+     * この敵が削除対象かどうかを判定する
+     * @returns {boolean} 削除対象かどうか（死亡しているか、パスの終点に到達している場合はtrue）
+     */
+    shouldBeRemoved() {
+        if (!this.isAlive) return true;
+        if (!this.path) return false;
+        return this.currentPathIndex + this.speed >= this.path.length - 1;
     }
 
     /**
