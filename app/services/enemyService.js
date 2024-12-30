@@ -69,7 +69,7 @@ export class EnemyService {
         if (enemy.element && enemy.element.parentNode === this.gameBoard) {
             this.gameBoard.removeChild(enemy.element);
         }
-        this.enemies = this.enemies.filter(e => e !== enemy);
+        this.enemies.filterInPlace(e => e !== enemy);
         console.log(`敵を削除しました。残り敵数: ${this.enemies.length}`);
     }
 

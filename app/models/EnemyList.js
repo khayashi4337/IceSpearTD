@@ -68,6 +68,15 @@ export class EnemyList {
     }
 
     /**
+     * 条件に合致する敵キャラクターのみを残し、それ以外を削除する。
+     * @param {Function} callback - 各敵キャラクターに対して実行するコールバック関数。
+     * @param {Object} thisArg - コールバック関数内で`this`として使用するオブジェクト。
+     */
+    filterInPlace(callback, thisArg) {
+        this.enemies = this.enemies.filter(callback, thisArg);
+    }
+
+    /**
      * リストの長さを取得する
      * @returns {number} 敵の数
      */
