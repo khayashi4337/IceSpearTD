@@ -3,6 +3,7 @@ import { DeathEffect } from '../../effects/DeathEffect.js';
 import { Health } from '../../ui/Health.js';
 import { PixelCoordinate } from '../../map/Coordinate.js';
 import { gameConfig } from '../../config/gameConfig.js';
+import { EffectType } from './states/EffectType.js';
 
 /**
  * 敵キャラクターの基本インターフェース
@@ -283,7 +284,7 @@ export class IEnemy {
         // エフェクトを追加
         this.effects.add(effectType);
         
-        // エフェクトのクラスを適用
+        // エフェクトのクラス名を追加
         this.element.classList.add(effectType);
 
         // エフェクトの持続時間を設定
@@ -297,16 +298,16 @@ export class IEnemy {
 
         // エフェクトに応じた処理
         switch (effectType) {
-            case 'burned':
+            case EffectType.BURNED:
                 this.startBurnDamage();
                 break;
-            case 'poisoned':
+            case EffectType.POISONED:
                 this.startPoisonDamage();
                 break;
-            case 'frozen':
+            case EffectType.FROZEN:
                 this.speed = this.baseSpeed * 0.5;
                 break;
-            case 'weakened':
+            case EffectType.WEAKENED:
                 this.defense = Math.max(0, this.defense - 2);
                 break;
         }
@@ -322,7 +323,7 @@ export class IEnemy {
         // エフェクトを削除
         this.effects.delete(effectType);
         
-        // エフェクトのクラスを削除
+        // エフェクトのクラス名を削除
         this.element.classList.remove(effectType);
 
         // タイマーをクリア
@@ -333,10 +334,10 @@ export class IEnemy {
 
         // エフェクト解除時の処理
         switch (effectType) {
-            case 'frozen':
+            case EffectType.FROZEN:
                 this.speed = this.baseSpeed;
                 break;
-            case 'weakened':
+            case EffectType.WEAKENED:
                 this.defense += 2;
                 break;
         }
@@ -352,19 +353,23 @@ export class IEnemy {
     }
 
     /**
-     * エフェクトの持続時間を取得
+     * エフェクトの持続時間を取得する
      * @param {string} effectType - エフェクトの種類
-     * @returns {number} 持続時間（ミリ秒）
+     * @returns {number} エフェクトの持続時間（ミリ秒）
      */
     getEffectDuration(effectType) {
         switch (effectType) {
-            case 'burned':
-            case 'poisoned':
+            case EffectType.BURNED:
+            case EffectType.POISONED:
                 return 5000;
-            case 'frozen':
+            case EffectType.FROZEN:
                 return 3000;
-            case 'weakened':
+            case EffectType.WEAKENED:
                 return 4000;
+            case EffectType.SLOWED:
+                return 3000;
+            case EffectType.STUNNED:
+                return 2000;
             default:
                 return 0;
         }
@@ -375,7 +380,7 @@ export class IEnemy {
      */
     startBurnDamage() {
         const burnInterval = setInterval(() => {
-            if (!this.effects.has('burned')) {
+            if (!this.effects.has(EffectType.BURNED)) {
                 clearInterval(burnInterval);
                 return;
             }
@@ -388,7 +393,7 @@ export class IEnemy {
      */
     startPoisonDamage() {
         const poisonInterval = setInterval(() => {
-            if (!this.effects.has('poisoned')) {
+            if (!this.effects.has(EffectType.POISONED)) {
                 clearInterval(poisonInterval);
                 return;
             }

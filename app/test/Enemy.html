@@ -139,9 +139,11 @@
         <button onclick="normalEnemy()">Normal</button>
         <button onclick="burnEnemy()">Burn</button>
         <button onclick="killEnemy()">Death</button>
+        <button onclick="stunEnemy()">Stun</button>
         <button onclick="poisonEnemy()">Poison</button>
         <button onclick="freezeEnemy()">Freeze</button>
         <button onclick="weakenEnemy()">Weaken</button>
+        <button onclick="slowEnemy()">Slow</button>
         <button onclick="damageEnemy()">Damage</button>
     </div>
 
@@ -149,6 +151,7 @@
 
     <script type="module">
         import { EnemyFactory } from '../models/enemies/EnemyFactory.js';
+        import { EffectType } from '../models/enemies/states/EffectType.js';
         import { gameConfig } from '../config/gameConfig.js';
 
         let enemy;
@@ -169,7 +172,7 @@
         };
 
         window.burnEnemy = () => {
-            enemy.applyEffect('burned');
+            enemy.applyEffect(EffectType.BURNED);
         };
 
         window.killEnemy = () => {
@@ -181,16 +184,24 @@
             }, 1000);
         };
 
+        window.stunEnemy = () => {
+            enemy.applyEffect(EffectType.STUNNED);
+        };
+
         window.poisonEnemy = () => {
-            enemy.applyEffect('poisoned');
+            enemy.applyEffect(EffectType.POISONED);
         };
 
         window.freezeEnemy = () => {
-            enemy.applyEffect('frozen');
+            enemy.applyEffect(EffectType.FROZEN);
         };
 
         window.weakenEnemy = () => {
-            enemy.applyEffect('weakened');
+            enemy.applyEffect(EffectType.WEAKENED);
+        };
+
+        window.slowEnemy = () => {
+            enemy.applyEffect(EffectType.SLOWED);
         };
 
         window.damageEnemy = () => {

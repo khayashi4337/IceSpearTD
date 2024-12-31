@@ -3,6 +3,8 @@
 /**
  * プロジェクタイル（弾）を表すクラス
  */
+import { EffectType } from './models/enemies/states/EffectType.js';
+
 export class Projectile {
     /**
      * @param {number} x - プロジェクタイルの開始X座標
@@ -119,22 +121,22 @@ export class Projectile {
 
             // 各種エフェクトの適用
             if (this.isBurn) {
-                this.target.applyEffect('burn');
+                this.target.applyEffect(EffectType.BURNED);
             }
             if (this.isFreeze) {
-                this.target.applyEffect('freeze');
+                this.target.applyEffect(EffectType.FROZEN);
             }
             if (this.isPoison) {
-                this.target.applyEffect('poison');
+                this.target.applyEffect(EffectType.POISONED);
             }
             if (this.isSlow) {
-                this.target.applyEffect('slow');
+                this.target.applyEffect(EffectType.SLOWED);
             }
             if (this.isStun) {
-                this.target.applyEffect('stun');
+                this.target.applyEffect(EffectType.STUNNED);
             }
             if (this.isWeaken) {
-                this.target.applyEffect('weaken');
+                this.target.applyEffect(EffectType.WEAKENED);
             }
 
             if (!isAlive) {

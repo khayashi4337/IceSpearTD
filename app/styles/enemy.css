@@ -459,22 +459,22 @@
     }
 }
 
-.status-icon.poison { 
+.status-icon.poisoned { 
     background-color: #4CAF50;
     border: 1px solid #45a049;
 }
 
-.status-icon.burn { 
+.status-icon.burned { 
     background-color: #FF5722;
     border: 1px solid #f4511e;
 }
 
-.status-icon.freeze { 
+.status-icon.frozen { 
     background-color: #03A9F4;
     border: 1px solid #0288d1;
 }
 
-.status-icon.weak { 
+.status-icon.weakened { 
     background-color: #9C27B0;
     border: 1px solid #7b1fa2;
 }
@@ -576,6 +576,15 @@
 
 .enemy.weakened .enemy-body {
     filter: brightness(0.7);
+}
+
+.enemy.stunned .enemy-body {
+    opacity: 0.5;
+    filter: grayscale(0.5);
+}
+
+.enemy.slowed .enemy-body {
+    filter: brightness(0.8) sepia(0.2);
 }
 
 .enemy.damaged .enemy-body {
