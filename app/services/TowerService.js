@@ -87,7 +87,15 @@ export class TowerService {
                     
                     const projectile = new Projectile(
                         tower.x, tower.y, targetX, targetY, 
-                        tower.type, tower.damage, target
+                        tower.type, tower.damage, target,
+                        {
+                            isBurn: tower.type === 'fire' || tower.type === 'hotWind',
+                            isFreeze: tower.type === 'ice' || tower.type === 'frozenEarth' || tower.type === 'coldAir',
+                            isPoison: false, // 今後実装予定
+                            isSlow: tower.type === 'ice' || tower.type === 'water' || tower.type === 'coldAir',
+                            isStun: tower.type === 'stone' || tower.type === 'iron',
+                            isWeaken: tower.type === 'wind' || tower.type === 'hotWind' || tower.type === 'sand'
+                        }
                     );
                     projectile.createProjectileElement(this.gameBoard);
                     newProjectiles.push(projectile);

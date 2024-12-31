@@ -12,8 +12,23 @@ export class Projectile {
      * @param {string} towerType - タワーの種類
      * @param {number} damage - プロジェクタイルのダメージ
      * @param {object} target - 攻撃対象の敵オブジェクト
+     * @param {object} options - エフェクトオプション
+     * @param {boolean} options.isBurn - 延焼効果あるか
+     * @param {boolean} options.isFreeze - 凍結効果あるか
+     * @param {boolean} options.isPoison - 毒効果あるか
+     * @param {boolean} options.isSlow - 静止効果あるか
+     * @param {boolean} options.isStun - 麻痺効果あるか
+     * @param {boolean} options.isWeaken - 脆弱化効果あるか
+     * 
      */
-    constructor(x, y, targetX, targetY, towerType, damage, target) {
+    constructor(x, y, targetX, targetY, towerType, damage, target, {
+        isBurn = false,
+        isFreeze = false,
+        isPoison = false,
+        isSlow = false,
+        isStun = false,
+        isWeaken = false
+    } = {}) {
         this.x = x;
         this.y = y;
         this.targetX = targetX;
@@ -21,6 +36,15 @@ export class Projectile {
         this.towerType = towerType;
         this.damage = damage;
         this.target = target;
+        
+        // エフェクトフラグ
+        this.isBurn = isBurn;
+        this.isFreeze = isFreeze;
+        this.isPoison = isPoison;
+        this.isSlow = isSlow;
+        this.isStun = isStun;
+        this.isWeaken = isWeaken;
+
         this.element = null;
     }
 
@@ -92,8 +116,27 @@ export class Projectile {
     hit(gameBoard, onEnemyDestroyed) {
         if (this.target) {
             const isAlive = this.target.takeDamage(this.damage);
-            this.applyTowerEffect(gameBoard);
-            
+
+            // 各種エフェクトの適用
+            if (this.isBurn) {
+                this.target.applyEffect('burn');
+            }
+            if (this.isFreeze) {
+                this.target.applyEffect('freeze');
+            }
+            if (this.isPoison) {
+                this.target.applyEffect('poison');
+            }
+            if (this.isSlow) {
+                this.target.applyEffect('slow');
+            }
+            if (this.isStun) {
+                this.target.applyEffect('stun');
+            }
+            if (this.isWeaken) {
+                this.target.applyEffect('weaken');
+            }
+
             if (!isAlive) {
                 onEnemyDestroyed(this.target);
                 return true;
@@ -117,15 +160,6 @@ export class Projectile {
         setTimeout(() => {
             gameBoard.removeChild(damageText);
         }, 500);
-    }
-
-    /**
-     * タワーの特殊効果を適用する
-     * @param {HTMLElement} gameBoard - ゲームボード要素
-     */
-    applyTowerEffect(gameBoard) {
-        // ここにタワーの特殊効果を実装
-        // 例: this.target.applyEffect(this.towerType, gameBoard);
     }
 
     /**

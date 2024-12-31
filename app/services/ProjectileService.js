@@ -17,16 +17,33 @@ export class ProjectileService {
 
     /**
      * 新しいプロジェクタイルを作成する
-     * @param {number} x - 開始X座標
-     * @param {number} y - 開始Y座標
-     * @param {number} targetX - 目標X座標
-     * @param {number} targetY - 目標Y座標
-     * @param {string} towerType - タワーの種類
-     * @param {number} damage - ダメージ量
-     * @param {object} target - 攻撃対象の敵オブジェクト
+     * @param {Object} projectileData - プロジェクタイルのデータ
+     * @param {number} projectileData.x - 開始X座標
+     * @param {number} projectileData.y - 開始Y座標
+     * @param {number} projectileData.targetX - 目標X座標
+     * @param {number} projectileData.targetY - 目標Y座標
+     * @param {string} projectileData.towerType - タワーの種類
+     * @param {number} projectileData.damage - ダメージ量
+     * @param {object} projectileData.target - 攻撃対象の敵オブジェクト
      */
-    createProjectile(x, y, targetX, targetY, towerType, damage, target) {
-        const projectile = new Projectile(x, y, targetX, targetY, towerType, damage, target);
+    createProjectile(projectileData) {
+        const projectile = new Projectile(
+            projectileData.x, 
+            projectileData.y, 
+            projectileData.targetX, 
+            projectileData.targetY, 
+            projectileData.towerType, 
+            projectileData.damage, 
+            projectileData.target,
+            {
+                isBurn: projectileData.isBurn,
+                isFreeze: projectileData.isFreeze,
+                isPoison: projectileData.isPoison,
+                isSlow: projectileData.isSlow,
+                isStun: projectileData.isStun,
+                isWeaken: projectileData.isWeaken
+            }
+        );
         projectile.createProjectileElement(this.gameBoard);
         this.projectiles.push(projectile);
     }

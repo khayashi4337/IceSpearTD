@@ -136,10 +136,7 @@ export class GameService {
         // タワーの攻撃処理
         const newProjectiles = this.towerService.shootEnemies(this.enemyService.getEnemies());
         newProjectiles.forEach(proj => {
-            this.projectileService.createProjectile(
-                proj.x, proj.y, proj.targetX, proj.targetY,
-                proj.towerType, proj.damage, proj.target
-            );
+            this.projectileService.createProjectile(proj);
         });
 
         // プロジェクタイルの更新と敵の撃破処理

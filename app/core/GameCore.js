@@ -98,10 +98,7 @@ export class GameCore {
         this.enemyService.moveEnemies();
         const newProjectiles = this.towerService.shootEnemies(this.enemyService.getEnemies());
         newProjectiles.forEach(proj => {
-            this.projectileService.createProjectile(
-                proj.x, proj.y, proj.targetX, proj.targetY,
-                proj.towerType, proj.damage, proj.target
-            );
+            this.projectileService.createProjectile(proj);
         });
 
         this.projectileService.updateProjectiles((destroyedEnemy) => {
