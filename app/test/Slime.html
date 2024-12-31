@@ -100,28 +100,12 @@
             slime.removeAllEffects();
         };
 
-        window.burnSlime = () => {
-            slime.applyEffect('burned');
-        };
-
         window.killSlime = () => {
             slime.die();
             // 少し待ってから新しいスライムを生成
             setTimeout(() => {
                 initializeSlime();
             }, 1000);
-        };
-
-        window.poisonSlime = () => {
-            slime.applyEffect('poisoned');
-        };
-
-        window.freezeSlime = () => {
-            slime.applyEffect('frozen');
-        };
-
-        window.weakenSlime = () => {
-            slime.applyEffect('weakened');
         };
 
         window.damageSlime = () => {
