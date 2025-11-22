@@ -28,23 +28,31 @@ export class Menu {
         title.style.color = '#00ffff';
         title.style.textShadow = '0 0 10px #00ffff';
 
-        const startBtn = document.createElement('button');
-        startBtn.textContent = 'Start Game';
-        startBtn.style.padding = '15px 30px';
-        startBtn.style.fontSize = '24px';
-        startBtn.style.cursor = 'pointer';
-        startBtn.style.backgroundColor = '#00aaaa';
-        startBtn.style.border = 'none';
-        startBtn.style.color = 'white';
-        startBtn.style.borderRadius = '5px';
+        // Stage Selection Container
+        const stageContainer = document.createElement('div');
+        stageContainer.style.display = 'flex';
+        stageContainer.style.gap = '20px';
 
-        startBtn.addEventListener('click', () => {
+        // Stage 1 Button
+        const stage1Btn = document.createElement('button');
+        stage1Btn.textContent = 'Stage 1';
+        stage1Btn.style.padding = '15px 30px';
+        stage1Btn.style.fontSize = '24px';
+        stage1Btn.style.cursor = 'pointer';
+        stage1Btn.style.backgroundColor = '#00aaaa';
+        stage1Btn.style.border = 'none';
+        stage1Btn.style.color = 'white';
+        stage1Btn.style.borderRadius = '5px';
+
+        stage1Btn.addEventListener('click', () => {
             this.hide();
             this.game.start();
         });
 
+        stageContainer.appendChild(stage1Btn);
+
         this.menuDiv.appendChild(title);
-        this.menuDiv.appendChild(startBtn);
+        this.menuDiv.appendChild(stageContainer);
         this.container.appendChild(this.menuDiv);
     }
 

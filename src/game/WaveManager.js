@@ -53,8 +53,14 @@ export class WaveManager {
             this.isWaveActive = false;
             this.currentWaveIndex++;
             console.log('Wave Complete!');
-            // Auto start next wave for demo purposes, or wait for user
-            setTimeout(() => this.startNextWave(), 3000);
+
+            if (this.currentWaveIndex >= this.waves.length) {
+                this.isAllWavesComplete = true;
+                console.log('All waves complete!');
+            } else {
+                // Auto start next wave for demo purposes, or wait for user
+                setTimeout(() => this.startNextWave(), 3000);
+            }
         }
     }
 
@@ -68,21 +74,19 @@ export class WaveManager {
 
         if (path.length > 0) {
             // Convert grid coordinates to screen coordinates for initial position
-            const startPos = this.game.mapSystem.toScreen(startNode.x, startNode.y);
-
             let enemy;
             switch (this.currentEnemyType) {
                 case 'goblin':
-                    enemy = new Goblin(startPos.x, startPos.y, path, this.game);
+                    enemy = new Goblin(startNode.x, startNode.y, path, this.game);
                     break;
                 case 'orc':
-                    enemy = new Orc(startPos.x, startPos.y, path, this.game);
+                    enemy = new Orc(startNode.x, startNode.y, path, this.game);
                     break;
                 case 'slime':
-                    enemy = new Slime(startPos.x, startPos.y, path, this.game);
+                    enemy = new Slime(startNode.x, startNode.y, path, this.game);
                     break;
                 default:
-                    enemy = new Enemy(startPos.x, startPos.y, path, this.game);
+                    enemy = new Enemy(startNode.x, startNode.y, path, this.game);
             }
 
             this.game.enemies.push(enemy);

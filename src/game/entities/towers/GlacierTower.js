@@ -51,13 +51,58 @@ export class GlacierTower extends Tower {
     }
 
     render(renderer) {
-        renderer.drawRect(this.x - 15, this.y - 15, 30, 30, this.color);
+        const sx = this.screenX;
+        const sy = this.screenY;
+
+        // Draw Ice Block (Cube)
+        const size = 30;
+        const half = size / 2;
+        const height = 40;
+
+        // Colors
+        const topColor = '#aaddff';
+        const sideColor1 = '#88bbff';
+        const sideColor2 = '#6699ee';
+
+        // Top Face
+        renderer.ctx.fillStyle = topColor;
+        renderer.ctx.beginPath();
+        renderer.ctx.moveTo(sx, sy - height - half / 2);
+        renderer.ctx.lineTo(sx + half, sy - height);
+        renderer.ctx.lineTo(sx, sy - height + half / 2);
+        renderer.ctx.lineTo(sx - half, sy - height);
+        renderer.ctx.closePath();
+        renderer.ctx.fill();
+        renderer.ctx.stroke();
+
+        // Right Face
+        renderer.ctx.fillStyle = sideColor1;
+        renderer.ctx.beginPath();
+        renderer.ctx.moveTo(sx + half, sy - height);
+        renderer.ctx.lineTo(sx + half, sy);
+        renderer.ctx.lineTo(sx, sy + half / 2);
+        renderer.ctx.lineTo(sx, sy - height + half / 2);
+        renderer.ctx.closePath();
+        renderer.ctx.fill();
+        renderer.ctx.stroke();
+
+        // Left Face
+        renderer.ctx.fillStyle = sideColor2;
+        renderer.ctx.beginPath();
+        renderer.ctx.moveTo(sx - half, sy - height);
+        renderer.ctx.lineTo(sx - half, sy);
+        renderer.ctx.lineTo(sx, sy + half / 2);
+        renderer.ctx.lineTo(sx, sy - height + half / 2);
+        renderer.ctx.closePath();
+        renderer.ctx.fill();
+        renderer.ctx.stroke();
 
         // Draw Pulse if active
         if (this.pulseTimer > 0) {
             renderer.ctx.beginPath();
             renderer.ctx.fillStyle = 'rgba(0, 255, 255, 0.3)';
-            renderer.ctx.arc(this.x, this.y, this.range, 0, Math.PI * 2);
+            // Pulse needs to be flattened for Iso view
+            renderer.ctx.ellipse(sx, sy, this.range, this.range * 0.5, 0, 0, Math.PI * 2);
             renderer.ctx.fill();
         }
     }

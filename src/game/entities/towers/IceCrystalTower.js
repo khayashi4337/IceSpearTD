@@ -39,13 +39,40 @@ export class IceCrystalTower extends Tower {
 
     // Override render to show it's different
     render(renderer) {
-        renderer.drawRect(this.x - 10, this.y - 10, 20, 20, this.color);
+        const sx = this.screenX;
+        const sy = this.screenY;
+
+        // Floating animation
+        const floatOffset = Math.sin(Date.now() / 500) * 5;
+
+        // Draw Shadow
+        renderer.ctx.fillStyle = 'rgba(0,0,0,0.3)';
         renderer.ctx.beginPath();
+        renderer.ctx.ellipse(sx, sy, 10, 5, 0, 0, Math.PI * 2);
+        renderer.ctx.fill();
+
+        // Draw Crystal (Diamond shape floating)
+        const cy = sy - 30 + floatOffset;
+
+        renderer.ctx.fillStyle = this.color;
+        renderer.ctx.beginPath();
+        renderer.ctx.moveTo(sx, cy - 20); // Top tip
+        renderer.ctx.lineTo(sx + 10, cy); // Right
+        renderer.ctx.lineTo(sx, cy + 20); // Bottom tip
+        renderer.ctx.lineTo(sx - 10, cy); // Left
+        renderer.ctx.closePath();
+        renderer.ctx.fill();
         renderer.ctx.strokeStyle = 'white';
-        renderer.ctx.moveTo(this.x, this.y - 15);
-        renderer.ctx.lineTo(this.x, this.y + 15);
-        renderer.ctx.moveTo(this.x - 15, this.y);
-        renderer.ctx.lineTo(this.x + 15, this.y);
+        renderer.ctx.stroke();
+
+        // Inner detail
+        renderer.ctx.beginPath();
+        renderer.ctx.moveTo(sx, cy - 20);
+        renderer.ctx.lineTo(sx, cy + 20);
+        renderer.ctx.stroke();
+        renderer.ctx.beginPath();
+        renderer.ctx.moveTo(sx - 10, cy);
+        renderer.ctx.lineTo(sx + 10, cy);
         renderer.ctx.stroke();
     }
 }
