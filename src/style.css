@@ -41,3 +41,82 @@ body {
 .ui-element {
   pointer-events: auto; /* Re-enable clicks for UI elements */
 }
+
+/* Tower Selector */
+.tower-selector {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 15px;
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: 1px solid #444;
+}
+
+.tower-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 80px;
+  padding: 10px;
+  background-color: #333;
+  border: 2px solid #555;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.tower-card:hover {
+  background-color: #444;
+  border-color: #777;
+}
+
+.tower-card.selected {
+  background-color: #2a2a4a;
+  border-color: #00ffff;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+  transform: translateY(-5px);
+}
+
+.tower-key {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  font-size: 12px;
+  color: #aaa;
+  background: rgba(0,0,0,0.5);
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+
+.tower-icon {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 5px;
+  /* Placeholder for icon, can be replaced with img or canvas later */
+  background-color: #555; 
+  border-radius: 4px;
+}
+
+/* Specific Icon Styles (CSS Shapes for now) */
+.icon-spear { background: linear-gradient(45deg, #00aaff, #00ffff); clip-path: polygon(50% 0%, 100% 100%, 50% 80%, 0% 100%); }
+.icon-crystal { background: radial-gradient(circle, #fff, #aaaaff); clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
+.icon-glacier { background: linear-gradient(to bottom, #aaddff, #000088); border-radius: 2px; }
+
+.tower-name {
+  font-size: 10px;
+  color: #ddd;
+  margin-bottom: 2px;
+  text-align: center;
+}
+
+.tower-cost {
+  font-size: 12px;
+  color: #ffd700;
+  font-weight: bold;
+}
+
