@@ -7,6 +7,7 @@ export class HUD {
     }
 
     setupElements() {
+        // Top HUD
         this.hudDiv = document.createElement('div');
         this.hudDiv.className = 'ui-element hud';
         this.hudDiv.style.position = 'absolute';
@@ -19,14 +20,64 @@ export class HUD {
         this.hudDiv.style.fontSize = '18px';
         this.hudDiv.style.borderRadius = '5px';
 
-        this.updateDisplay();
         this.container.appendChild(this.hudDiv);
+
+        // Tower Selector
+        this.createTowerSelector();
+
+        this.updateDisplay();
+    }
+
+    createTowerSelector() {
+        this.selectorDiv = document.createElement('div');
+        this.selectorDiv.className = 'ui-element tower-selector';
+
+        const towers = [
+            { name: 'Ice Spear', cost: 50, key: '1', iconClass: 'icon-spear' },
+            { name: 'Ice Crystal', cost: 80, key: '2', iconClass: 'icon-crystal' },
+            { name: 'Glacier', cost: 120, key: '3', iconClass: 'icon-glacier' }
+        ];
+
+        this.towerCards = [];
+
+        towers.forEach((t, index) => {
+            const card = document.createElement('div');
+            card.className = 'tower-card';
+            card.onclick = () => {
+                this.game.selectedTowerType = index;
+                this.updateSelection();
+            };
+
+            const key = document.createElement('div');
+            key.className = 'tower-key';
+            key.textContent = t.key;
+
+            const icon = document.createElement('div');
+            icon.className = `tower-icon ${t.iconClass}`;
+
+            const name = document.createElement('div');
+            name.className = 'tower-name';
+            name.textContent = t.name;
+
+            const cost = document.createElement('div');
+            cost.className = 'tower-cost';
+            cost.textContent = `$${t.cost}`;
+
+            card.appendChild(key);
+            card.appendChild(icon);
+            card.appendChild(name);
+            card.appendChild(cost);
+
+            this.selectorDiv.appendChild(card);
+            this.towerCards.push(card);
+        });
+
+        this.container.appendChild(this.selectorDiv);
     }
 
     setupListeners() {
         this.game.economy.on('goldChanged', () => this.updateDisplay());
         this.game.economy.on('livesChanged', () => this.updateDisplay());
-        // Poll for wave info in update loop or add event to WaveManager
     }
 
     updateDisplay() {
@@ -39,11 +90,25 @@ export class HUD {
       <div>Lives: <span style="color: red">${lives}</span></div>
       <div>Wave: ${wave}</div>
     `;
+
+        this.updateSelection();
+    }
+
+    updateSelection() {
+        const selected = this.game.selectedTowerType;
+        this.towerCards.forEach((card, index) => {
+            if (index === selected) {
+                card.classList.add('selected');
+            } else {
+                card.classList.remove('selected');
+            }
+
+            // Optional: Dim if can't afford
+            // const cost = ...
+        });
     }
 
     update() {
-        // Called every frame if needed, but event-based is better for static stats
-        // For wave timer, we might want to update here
         this.updateDisplay();
     }
 }

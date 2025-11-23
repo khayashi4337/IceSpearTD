@@ -281,31 +281,6 @@ export class Game {
                 this.renderer.ctx.fillStyle = 'rgba(255, 0, 0, 0.3)'; // Red
                 this.renderer.ctx.strokeStyle = 'red';
             }
-
-            this.renderer.ctx.fill();
-            this.renderer.ctx.stroke();
-        }
-
-        // UI Text
-        const towerCosts = [50, 80, 120];
-        const towerNames = ["Ice Spear", "Ice Crystal", "Glacier"];
-
-        let uiText = "Selected: ";
-        towerNames.forEach((name, index) => {
-            const cost = towerCosts[index];
-            const isSelected = this.selectedTowerType === index;
-            const prefix = isSelected ? "> " : "  ";
-            const suffix = isSelected ? " <" : "";
-            uiText += `${prefix}[${index + 1}] ${name} ($${cost})${suffix}   `;
-        });
-
-        this.renderer.drawText(uiText, 20, this.renderer.canvas.height - 50, '#fff', 16);
-
-        // Victory Text
-        if (this.victoryTimer > 0) {
-            this.renderer.ctx.save();
-            this.renderer.ctx.fillStyle = 'yellow';
-            this.renderer.ctx.strokeStyle = 'black';
             this.renderer.ctx.lineWidth = 3;
             this.renderer.ctx.font = 'bold 60px Arial';
             this.renderer.ctx.textAlign = 'center';
