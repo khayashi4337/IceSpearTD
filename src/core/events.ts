@@ -39,6 +39,9 @@ export type GameEvent =
   | { type: 'omikuji_stock'; stock: number; reason: string }
   | { type: 'gold'; amount: number; total: number }
   | { type: 'core_damage'; remaining: number }
+  | { type: 'boss_skill'; enemyId: number; skill: string; pos: Pos }
+  | { type: 'wave_prep'; nextWave: number; seconds: number }
+  | { type: 'enemy_split'; enemyId: number; pos: Pos; count: number }
   | { type: 'stage_clear' }
   | { type: 'stage_fail' };
 
