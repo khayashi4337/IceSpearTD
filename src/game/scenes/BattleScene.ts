@@ -4,6 +4,8 @@ import { FixedStepper, World } from '@core/sim/World';
 import { STAGES } from '@data/stages';
 import { gridToScreen, isoDepth, screenToCell, TILE_H, TILE_W, type IsoOrigin } from '../render/iso';
 import { Sfx } from '../audio/sfx';
+import { animKey, DIRS } from '../render/anims';
+import type { Manifest } from '../render/placeholders';
 
 /**
  * 戦闘画面（M0 時点：盤面表示・カーソル・壁の仮設置だけ）。
@@ -49,6 +51,7 @@ export class BattleScene extends Phaser.Scene {
       if (p.leftButtonDown()) this.tryPlaceWall(p);
     });
     this.input.mouse?.disableContextMenu();
+    this.showcase();
 
     this.add
       .text(16, 16, `氷槍の塔 — ${stage.name}（M0 土台）  左クリック：氷壁`, { fontFamily: 'sans-serif', fontSize: '18px', color: '#e0f2fe' })
@@ -77,12 +80,76 @@ export class BattleScene extends Phaser.Scene {
     if (!this.world.grid.canBuild(c.x, c.y)) return;
     const id = this.nextWallId++;
     this.world.grid.setOccupant(c.x, c.y, { kind: 'wall', wallId: id });
-    const s = gridToScreen(c.x, c.y, this.origin);
-    // 壁テクスチャは高さ 48px ぶん下に伸びるので、上面がタイル位置に来るよう持ち上げる
-    const img = this.add.image(s.x, s.y - 48, 'wall').setOrigin(0.5, 0).setDepth(isoDepth(c.x, c.y, 1));
-    img.setScale(1, 0.1);
-    this.tweens.add({ targets: img, scaleY: 1, duration: 180, ease: 'Back.easeOut' });
+    const center = gridToScreen(c.x + 0.5, c.y + 0.5, this.origin);
+    const wall = this.entry('wall');
+    if (wall) {
+      // Blender 素材：足元の anchor をタイル中心に合わせ、build アニメを再生
+      const spr = this.add.sprite(center.x, center.y, 'wall', 'build_00').setOrigin(wall.anchor[0], wall.anchor[1]);
+      spr.setDepth(isoDepth(c.x, c.y, 1)).play(animKey('wall', 'build'));
+    } else {
+      const s = gridToScreen(c.x, c.y, this.origin);
+      // プレースホルダー：高さ 48px ぶん持ち上げて上面をタイル位置に
+      const img = this.add.image(s.x, s.y - 48, 'wall').setOrigin(0.5, 0).setDepth(isoDepth(c.x, c.y, 1));
+      img.setScale(1, 0.1);
+      this.tweens.add({ targets: img, scaleY: 1, duration: 180, ease: 'Back.easeOut' });
+    }
     this.sfx.play('build_wall');
+  }
+
+  private entry(id: string) {
+    const m = this.registry.get('manifest') as Manifest | undefined;
+    return m?.entries.find((e) => e.id === id && this.textures.exists(id));
+  }
+
+  /** M0 の確認用：Blender 素材が届いているものを盤面の端に並べて動かす（tasks/05 で置き換える） */
+  private showcase(): void {
+    const put = (id: string, anim: string, gx: number, gy: number, dir?: (typeof DIRS)[number]) => {
+      const e = this.entry(id);
+      if (!e) return null;
+      const p = gridToScreen(gx + 0.5, gy + 0.5, this.origin);
+      const first = Object.keys(e.anims)[0] ?? anim;
+      const spr = this.add.sprite(p.x, p.y, id, e.anims[anim]?.directional ? `${anim}_${dir ?? 's'}_00` : `${first}_00`);
+      spr.setOrigin(e.anchor[0], e.anchor[1]).setDepth(isoDepth(gx, gy, 2));
+      spr.play(animKey(id, anim, e.anims[anim]?.directional ? (dir ?? 's') : undefined));
+      return spr;
+    };
+    put('tower_spear', 'idle', 9, 5);
+    const towerAtk = put('tower_spear', 'attack', 12, 5, 'e');
+    if (towerAtk) towerAtk.anims.repeat = -1;
+    // 歩く敵：8方向を順に切り替えながら円を描いて歩く
+    for (const [id, cx, cy, r] of [
+      ['enemy_ember', 6, 10, 1.6],
+      ['enemy_golem', 14, 10, 1.8],
+    ] as const) {
+      const e = this.entry(id);
+      if (!e) continue;
+      const spr = put(id, 'walk', cx, cy, 's');
+      if (!spr) continue;
+      let ang = 0;
+      let last = '';
+      this.time.addEvent({
+        loop: true,
+        delay: 16,
+        callback: () => {
+          ang += id === 'enemy_ember' ? 0.012 : 0.006;
+          const gx = cx + 0.5 + Math.cos(ang) * r;
+          const gy = cy + 0.5 + Math.sin(ang) * r;
+          const p = gridToScreen(gx, gy, this.origin);
+          spr.setPosition(p.x, p.y).setDepth(isoDepth(gx, gy, 2));
+          const dx = -Math.sin(ang);
+          const dy = Math.cos(ang);
+          const sx = dx - dy;
+          const sy = (dx + dy) / 2;
+          const idx = (Math.round(Math.atan2(sy, sx) / (Math.PI / 4)) + 8) % 8;
+          const dir = (['e', 'se', 's', 'sw', 'w', 'nw', 'n', 'ne'] as const)[idx] ?? 's';
+          const key = animKey(id, 'walk', dir);
+          if (key !== last) {
+            spr.play({ key, startFrame: spr.anims.currentFrame?.index ?? 0 });
+            last = key;
+          }
+        },
+      });
+    }
   }
 
   override update(_time: number, delta: number): void {

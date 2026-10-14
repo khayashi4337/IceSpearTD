@@ -14,7 +14,7 @@ export interface ManifestEntry {
   kind: 'unit' | 'tower' | 'wall' | 'tile' | 'fx' | 'ui';
   frameSize: [number, number];
   anchor: [number, number];
-  anims: Record<string, { frames: number; fps: number; loop: boolean }>;
+  anims: Record<string, { frames: number; fps: number; loop: boolean; directional: boolean }>;
 }
 
 export interface Manifest {

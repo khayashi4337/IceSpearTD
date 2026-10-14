@@ -1,0 +1,434 @@
+{
+ "frames": {
+  "build_00": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 192
+   }
+  },
+  "build_01": {
+   "frame": {
+    "x": 160,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 192
+   }
+  },
+  "build_02": {
+   "frame": {
+    "x": 320,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 192
+   }
+  },
+  "build_03": {
+   "frame": {
+    "x": 480,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 192
+   }
+  },
+  "build_04": {
+   "frame": {
+    "x": 640,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 192
+   }
+  },
+  "build_05": {
+   "frame": {
+    "x": 800,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 192
+   }
+  },
+  "build_06": {
+   "frame": {
+    "x": 960,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 192
+   }
+  },
+  "build_07": {
+   "frame": {
+    "x": 1120,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 192
+   }
+  },
+  "crack1_00": {
+   "frame": {
+    "x": 1280,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 192
+   }
+  },
+  "crack2_00": {
+   "frame": {
+    "x": 1440,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 192
+   }
+  },
+  "crack3_00": {
+   "frame": {
+    "x": 1600,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 192
+   }
+  },
+  "shatter_00": {
+   "frame": {
+    "x": 1760,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 192
+   }
+  },
+  "shatter_01": {
+   "frame": {
+    "x": 1920,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 192
+   }
+  },
+  "shatter_02": {
+   "frame": {
+    "x": 2080,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 192
+   }
+  },
+  "shatter_03": {
+   "frame": {
+    "x": 2240,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 192
+   }
+  },
+  "shatter_04": {
+   "frame": {
+    "x": 2400,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 192
+   }
+  },
+  "shatter_05": {
+   "frame": {
+    "x": 2560,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 192
+   }
+  },
+  "shatter_06": {
+   "frame": {
+    "x": 2720,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 192
+   }
+  },
+  "shatter_07": {
+   "frame": {
+    "x": 2880,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 192
+   }
+  },
+  "shatter_08": {
+   "frame": {
+    "x": 3040,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 192
+   }
+  },
+  "shatter_09": {
+   "frame": {
+    "x": 3200,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 160,
+    "h": 192
+   },
+   "sourceSize": {
+    "w": 160,
+    "h": 192
+   }
+  }
+ },
+ "meta": {
+  "app": "IceSpearTD art/blender",
+  "image": "wall.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 3360,
+   "h": 192
+  },
+  "scale": "1"
+ }
+}

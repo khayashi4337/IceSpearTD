@@ -25,6 +25,12 @@ Blender 素材（Claude が並行して作る）が届いたとき、コード�
   - 主人公：`hero_fumiya`（戦闘画面の聖域の横に立つ。`idle`, `cheer`, `worry`）
 - 描画層は manifest に ID があれば atlas を使い、無ければ下記のプレースホルダーを同じキー・同じフレーム名で生成する。
 
+## すでにあるもの（Claude が実装済み。これを土台に拡張する）
+- `public/assets/` に Blender 素材 4件：`enemy_ember`, `enemy_golem`, `tower_spear`, `wall`（manifest に登録済み）。
+- `src/game/render/anims.ts`：manifest からアニメを `<id>:<anim>_<dir>` で一括登録する `registerAnims`、`animKey`、`frameName`。BootScene で呼んでいる。
+- manifest の各アニメには `directional`（8方向か）が入っている。
+- `BattleScene.showcase()` は確認用の仮表示。タスク05 で本実装に置き換えたら消す。
+
 ## 作るもの
 - `src/game/render/placeholders.ts` を拡張：
   - 上の ID **全部** について、Graphics で描いたフレームを `RenderTexture` → テクスチャ化し、同じフレーム名を登録する。

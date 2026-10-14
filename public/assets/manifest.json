@@ -1,1 +1,163 @@
-{ "version": 1, "entries": [] }
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "enemy_ember",
+      "kind": "unit",
+      "frameSize": [
+        128,
+        128
+      ],
+      "anchor": [
+        0.5,
+        0.6531
+      ],
+      "anims": {
+        "walk": {
+          "frames": 8,
+          "fps": 12,
+          "loop": true,
+          "directional": true
+        },
+        "melt": {
+          "frames": 8,
+          "fps": 12,
+          "loop": true,
+          "directional": true
+        },
+        "hit": {
+          "frames": 3,
+          "fps": 15,
+          "loop": false,
+          "directional": true
+        },
+        "die": {
+          "frames": 10,
+          "fps": 15,
+          "loop": false,
+          "directional": false
+        }
+      }
+    },
+    {
+      "id": "enemy_golem",
+      "kind": "unit",
+      "frameSize": [
+        192,
+        192
+      ],
+      "anchor": [
+        0.5,
+        0.6837
+      ],
+      "anims": {
+        "walk": {
+          "frames": 10,
+          "fps": 10,
+          "loop": true,
+          "directional": true
+        },
+        "melt": {
+          "frames": 8,
+          "fps": 10,
+          "loop": true,
+          "directional": true
+        },
+        "hit": {
+          "frames": 3,
+          "fps": 15,
+          "loop": false,
+          "directional": true
+        },
+        "die": {
+          "frames": 12,
+          "fps": 15,
+          "loop": false,
+          "directional": false
+        }
+      }
+    },
+    {
+      "id": "tower_spear",
+      "kind": "tower",
+      "frameSize": [
+        160,
+        256
+      ],
+      "anchor": [
+        0.5,
+        0.7603
+      ],
+      "anims": {
+        "idle": {
+          "frames": 12,
+          "fps": 10,
+          "loop": true,
+          "directional": false
+        },
+        "attack": {
+          "frames": 8,
+          "fps": 16,
+          "loop": false,
+          "directional": true
+        },
+        "build": {
+          "frames": 8,
+          "fps": 16,
+          "loop": false,
+          "directional": false
+        },
+        "levelup": {
+          "frames": 10,
+          "fps": 15,
+          "loop": false,
+          "directional": false
+        }
+      }
+    },
+    {
+      "id": "wall",
+      "kind": "wall",
+      "frameSize": [
+        160,
+        192
+      ],
+      "anchor": [
+        0.5,
+        0.6225
+      ],
+      "anims": {
+        "build": {
+          "frames": 8,
+          "fps": 16,
+          "loop": false,
+          "directional": false
+        },
+        "crack1": {
+          "frames": 1,
+          "fps": 1,
+          "loop": true,
+          "directional": false
+        },
+        "crack2": {
+          "frames": 1,
+          "fps": 1,
+          "loop": true,
+          "directional": false
+        },
+        "crack3": {
+          "frames": 1,
+          "fps": 1,
+          "loop": true,
+          "directional": false
+        },
+        "shatter": {
+          "frames": 10,
+          "fps": 20,
+          "loop": false,
+          "directional": false
+        }
+      }
+    }
+  ]
+}
